@@ -3,6 +3,7 @@ import { useLanguages } from '../api/languages.js';
 
 interface LanguageContextValue {
   lang: string;
+  isReady: boolean;
   setLang: (code: string) => void;
   availableLanguages: { code: string; name: string }[];
 }
@@ -39,9 +40,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const availableLanguages = (languages ?? []).map(l => ({ code: l.code, name: l.name }));
+  const isReady = lang !== '';
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, availableLanguages }}>
+    <LanguageContext.Provider value={{ lang, isReady, setLang, availableLanguages }}>
       {children}
     </LanguageContext.Provider>
   );
