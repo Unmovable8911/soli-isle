@@ -12,3 +12,5 @@ export { momentTranslations } from './moment-translations.js';
 export { momentTags } from './moment-tags.js';
 export { resources } from './resources.js';
 export { resourceTranslations } from './resource-translations.js';
+export { pages } from './pages.js';
+export { pageTranslations } from './page-translations.js';
