@@ -7,6 +7,9 @@ export function HomePage() {
   const articles = useArticles();
   const moments = useMoments();
 
+  if (articles.isLoading || moments.isLoading) return <div className="page-loading">Loading…</div>;
+  if (articles.error || moments.error) return <div className="page-error">Failed to load feed</div>;
+
   const recentArticles = articles.data?.pages.flatMap(p => p.data) ?? [];
   const recentMoments = moments.data?.pages.flatMap(p => p.data) ?? [];
 
