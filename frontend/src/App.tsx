@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router';
+import { LanguageProvider } from './contexts/LanguageContext.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -10,11 +11,13 @@ const queryClient = new QueryClient({
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<div>Hello Soli Isle</div>} />
-        </Routes>
-      </BrowserRouter>
+      <LanguageProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<div>Hello Soli Isle</div>} />
+          </Routes>
+        </BrowserRouter>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
