@@ -6,6 +6,7 @@ import session from '@fastify/session';
 import multipart from '@fastify/multipart';
 import * as schema from '../src/db/schema/index.js';
 import { initPassword } from '../src/lib/password.js';
+import { adminAuthRoutes } from '../src/routes/admin/auth.js';
 import type { FastifyInstance } from 'fastify';
 
 // Must be set before importing createApp
@@ -66,7 +67,11 @@ export async function createTestApp(): Promise<FastifyInstance> {
   await initPassword('test-password');
 
   app.addHook('onRequest', async (request, reply) => {
-    if (request.url.startsWith('/api/admin/') && request.url !== '/api/admin/login') {
+    if (
+      request.url.startsWith('/api/admin/') &&
+      request.url !== '/api/admin/login' &&
+      request.url !== '/api/admin/me'
+    ) {
       if (!request.isAuthenticated()) {
         return reply.status(401).send({ error: 'Unauthorized' });
       }
@@ -74,6 +79,8 @@ export async function createTestApp(): Promise<FastifyInstance> {
   });
 
   app.get('/api/health', async () => ({ status: 'ok' }));
+
+  await app.register(adminAuthRoutes);
 
   return app;
 }

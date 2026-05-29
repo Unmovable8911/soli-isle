@@ -5,6 +5,7 @@ import multipart from '@fastify/multipart';
 import { readConfig } from './config.js';
 import { createDb } from './db/index.js';
 import { initPassword } from './lib/password.js';
+import { adminAuthRoutes } from './routes/admin/auth.js';
 import './types.js';
 
 export async function createApp(opts?: { dbPath?: string; disableListen?: boolean }) {
@@ -33,9 +34,13 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   // Hash admin password at startup
   await initPassword(config.adminPassword);
 
-  // Auth middleware — runs before every /api/admin/* except login
+  // Auth middleware — runs before every /api/admin/* except login and me
   app.addHook('onRequest', async (request, reply) => {
-    if (request.url.startsWith('/api/admin/') && request.url !== '/api/admin/login') {
+    if (
+      request.url.startsWith('/api/admin/') &&
+      request.url !== '/api/admin/login' &&
+      request.url !== '/api/admin/me'
+    ) {
       if (!request.isAuthenticated()) {
         return reply.status(401).send({ error: 'Unauthorized' });
       }
@@ -44,6 +49,8 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
 
   // Health check
   app.get('/api/health', async () => ({ status: 'ok' }));
+
+  await app.register(adminAuthRoutes);
 
   return app;
 }
