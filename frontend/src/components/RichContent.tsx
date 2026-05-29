@@ -6,13 +6,22 @@ import { useEffect } from 'react';
 
 const extensions = [StarterKit, Link.configure({ openOnClick: true }), Image];
 
+function safeParse(content: string): object | null {
+  try {
+    return JSON.parse(content) as object;
+  } catch {
+    return null;
+  }
+}
+
 export function RichContent({ content }: { content: string }) {
-  const editor = useEditor({ extensions, editable: false, content: JSON.parse(content) });
+  const parsed = safeParse(content);
+  const editor = useEditor({ extensions, editable: false, content: parsed ?? undefined });
 
   useEffect(() => {
     if (editor && content) {
-      const parsed = JSON.parse(content);
-      editor.commands.setContent(parsed);
+      const next = safeParse(content);
+      if (next) editor.commands.setContent(next);
     }
   }, [editor, content]);
 

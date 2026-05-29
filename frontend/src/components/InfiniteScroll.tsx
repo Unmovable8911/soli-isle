@@ -29,7 +29,7 @@ export function InfiniteScroll({ children, hasNextPage, isFetchingNextPage, fetc
     <div>
       {children}
       <div ref={sentinelRef} style={{ height: 1 }} />
-      {isFetchingNextPage && <div>Loading more...</div>}
+      {isFetchingNextPage && <div role="status" aria-live="polite">Loading more...</div>}
     </div>
   );
 }

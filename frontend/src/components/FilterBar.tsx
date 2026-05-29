@@ -26,6 +26,7 @@ export function FilterBar({ show }: { show: 'categories' | 'tags' | 'both' }) {
         <div className="filter-group">
           {categories.map(cat => (
             <button
+              type="button"
               key={cat.id}
               className={`filter-pill ${activeCategory === cat.slug ? 'active' : ''}`}
               onClick={() => toggleParam('category', cat.slug)}
@@ -39,6 +40,7 @@ export function FilterBar({ show }: { show: 'categories' | 'tags' | 'both' }) {
         <div className="filter-group">
           {tags.map(tag => (
             <button
+              type="button"
               key={tag.id}
               className={`filter-pill ${activeTag === tag.slug ? 'active' : ''}`}
               onClick={() => toggleParam('tag', tag.slug)}
