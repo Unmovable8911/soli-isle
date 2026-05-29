@@ -15,6 +15,17 @@ import { AdminLayout } from './admin/components/AdminLayout.js';
 import { DashboardPage } from './pages/admin/DashboardPage.js';
 import { ArticleListPage } from './pages/admin/ArticleListPage.js';
 import { ArticleEditorPage } from './pages/admin/ArticleEditorPage.js';
+import { MomentListPage } from './pages/admin/MomentListPage.js';
+import { MomentEditorPage } from './pages/admin/MomentEditorPage.js';
+import { ResourceListPage } from './pages/admin/ResourceListPage.js';
+import { ResourceEditorPage } from './pages/admin/ResourceEditorPage.js';
+import { PageListPage } from './pages/admin/PageListPage.js';
+import { PageEditorPage } from './pages/admin/PageEditorPage.js';
+import { CategoryManagerPage } from './pages/admin/CategoryManagerPage.js';
+import { TagManagerPage } from './pages/admin/TagManagerPage.js';
+import { LanguageManagerPage } from './pages/admin/LanguageManagerPage.js';
+import { UIStringsPage } from './pages/admin/UIStringsPage.js';
+import { MediaPage } from './pages/admin/MediaPage.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +55,20 @@ export function App() {
                   <Route path="admin/articles" element={<ArticleListPage />} />
                   <Route path="admin/articles/new" element={<ArticleEditorPage />} />
                   <Route path="admin/articles/:id" element={<ArticleEditorPage />} />
+                  <Route path="admin/moments" element={<MomentListPage />} />
+                  <Route path="admin/moments/new" element={<MomentEditorPage />} />
+                  <Route path="admin/moments/:id" element={<MomentEditorPage />} />
+                  <Route path="admin/resources" element={<ResourceListPage />} />
+                  <Route path="admin/resources/new" element={<ResourceEditorPage />} />
+                  <Route path="admin/resources/:id" element={<ResourceEditorPage />} />
+                  <Route path="admin/pages" element={<PageListPage />} />
+                  <Route path="admin/pages/new" element={<PageEditorPage />} />
+                  <Route path="admin/pages/:id" element={<PageEditorPage />} />
+                  <Route path="admin/categories" element={<CategoryManagerPage />} />
+                  <Route path="admin/tags" element={<TagManagerPage />} />
+                  <Route path="admin/languages" element={<LanguageManagerPage />} />
+                  <Route path="admin/ui-strings" element={<UIStringsPage />} />
+                  <Route path="admin/media" element={<MediaPage />} />
                 </Route>
               </Route>
             </Routes>
