@@ -9,6 +9,17 @@ interface TipTapEditorProps {
   onChange: (json: string) => void;
 }
 
+const EMPTY_DOC = { type: 'doc', content: [] };
+
+function safeParse(content: string): object {
+  if (!content) return EMPTY_DOC;
+  try {
+    return JSON.parse(content) as object;
+  } catch {
+    return EMPTY_DOC;
+  }
+}
+
 export function TipTapEditor({ content, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -16,7 +27,7 @@ export function TipTapEditor({ content, onChange }: TipTapEditorProps) {
       Link.configure({ openOnClick: false }),
       Image.configure({ allowBase64: false }),
     ],
-    content: content ? JSON.parse(content) : { type: 'doc', content: [] },
+    content: safeParse(content),
     onUpdate: ({ editor }) => {
       onChange(JSON.stringify(editor.getJSON()));
     },
