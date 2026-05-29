@@ -6,6 +6,7 @@ import { readConfig } from './config.js';
 import { createDb } from './db/index.js';
 import { initPassword } from './lib/password.js';
 import { adminAuthRoutes } from './routes/admin/auth.js';
+import { adminArticleRoutes } from './routes/admin/articles.js';
 import { publicLanguageRoutes } from './routes/public/languages.js';
 import { publicCategoryRoutes } from './routes/public/categories.js';
 import { publicTagRoutes } from './routes/public/tags.js';
@@ -59,6 +60,7 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   app.get('/api/health', async () => ({ status: 'ok' }));
 
   await app.register(adminAuthRoutes);
+  await app.register(adminArticleRoutes);
   await app.register(publicLanguageRoutes);
   await app.register(publicCategoryRoutes);
   await app.register(publicTagRoutes);

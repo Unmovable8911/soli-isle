@@ -7,6 +7,7 @@ import multipart from '@fastify/multipart';
 import * as schema from '../src/db/schema/index.js';
 import { initPassword } from '../src/lib/password.js';
 import { adminAuthRoutes } from '../src/routes/admin/auth.js';
+import { adminArticleRoutes } from '../src/routes/admin/articles.js';
 import { publicLanguageRoutes } from '../src/routes/public/languages.js';
 import { publicCategoryRoutes } from '../src/routes/public/categories.js';
 import { publicTagRoutes } from '../src/routes/public/tags.js';
@@ -89,6 +90,7 @@ export async function createTestApp(): Promise<FastifyInstance> {
   app.get('/api/health', async () => ({ status: 'ok' }));
 
   await app.register(adminAuthRoutes);
+  await app.register(adminArticleRoutes);
   await app.register(publicLanguageRoutes);
   await app.register(publicCategoryRoutes);
   await app.register(publicTagRoutes);
