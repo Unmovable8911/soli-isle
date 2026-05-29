@@ -1,13 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import { LanguageProvider } from './contexts/LanguageContext.js';
+import { AuthProvider } from './contexts/AuthContext.js';
 import { Layout } from './components/Layout.js';
+import { ProtectedRoute } from './components/ProtectedRoute.js';
 import { HomePage } from './pages/public/HomePage.js';
 import { ArticlesPage } from './pages/public/ArticlesPage.js';
 import { ArticleDetailPage } from './pages/public/ArticleDetailPage.js';
 import { MomentsPage } from './pages/public/MomentsPage.js';
 import { ResourcesPage } from './pages/public/ResourcesPage.js';
 import { PageDetailPage } from './pages/public/PageDetailPage.js';
+import { LoginPage } from './pages/admin/LoginPage.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,18 +22,24 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route index element={<HomePage />} />
-              <Route path="articles" element={<ArticlesPage />} />
-              <Route path="articles/:slug" element={<ArticleDetailPage />} />
-              <Route path="moments" element={<MomentsPage />} />
-              <Route path="resources" element={<ResourcesPage />} />
-              <Route path=":slug" element={<PageDetailPage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route index element={<HomePage />} />
+                <Route path="articles" element={<ArticlesPage />} />
+                <Route path="articles/:slug" element={<ArticleDetailPage />} />
+                <Route path="moments" element={<MomentsPage />} />
+                <Route path="resources" element={<ResourcesPage />} />
+                <Route path=":slug" element={<PageDetailPage />} />
+              </Route>
+              <Route path="admin/login" element={<LoginPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="admin" element={<div>Dashboard (WIP)</div>} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </LanguageProvider>
     </QueryClientProvider>
   );
