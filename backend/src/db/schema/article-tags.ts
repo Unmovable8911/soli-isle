@@ -5,6 +5,6 @@ import { tags } from './tags.js';
 export const articleTags = sqliteTable('article_tags', {
   article_id: text('article_id').notNull().references(() => articles.id),
   tag_id: text('tag_id').notNull().references(() => tags.id),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.article_id, table.tag_id] }),
-}));
+}, (table) => [
+  primaryKey({ columns: [table.article_id, table.tag_id] }),
+]);
