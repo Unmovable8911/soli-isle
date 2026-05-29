@@ -10,3 +10,5 @@ export { articleTags } from './article-tags.js';
 export { moments } from './moments.js';
 export { momentTranslations } from './moment-translations.js';
 export { momentTags } from './moment-tags.js';
+export { resources } from './resources.js';
+export { resourceTranslations } from './resource-translations.js';
