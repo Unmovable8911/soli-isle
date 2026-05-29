@@ -11,6 +11,9 @@ import { publicCategoryRoutes } from './routes/public/categories.js';
 import { publicTagRoutes } from './routes/public/tags.js';
 import { publicUIStringsRoutes } from './routes/public/ui-strings.js';
 import { publicArticleRoutes } from './routes/public/articles.js';
+import { publicMomentRoutes } from './routes/public/moments.js';
+import { publicResourceRoutes } from './routes/public/resources.js';
+import { publicPageRoutes } from './routes/public/pages.js';
 import './types.js';
 
 export async function createApp(opts?: { dbPath?: string; disableListen?: boolean }) {
@@ -61,6 +64,9 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   await app.register(publicTagRoutes);
   await app.register(publicUIStringsRoutes);
   await app.register(publicArticleRoutes);
+  await app.register(publicMomentRoutes);
+  await app.register(publicResourceRoutes);
+  await app.register(publicPageRoutes);
 
   return app;
 }

@@ -12,6 +12,9 @@ import { publicCategoryRoutes } from '../src/routes/public/categories.js';
 import { publicTagRoutes } from '../src/routes/public/tags.js';
 import { publicUIStringsRoutes } from '../src/routes/public/ui-strings.js';
 import { publicArticleRoutes } from '../src/routes/public/articles.js';
+import { publicMomentRoutes } from '../src/routes/public/moments.js';
+import { publicResourceRoutes } from '../src/routes/public/resources.js';
+import { publicPageRoutes } from '../src/routes/public/pages.js';
 import type { FastifyInstance } from 'fastify';
 
 // Must be set before importing createApp
@@ -91,6 +94,9 @@ export async function createTestApp(): Promise<FastifyInstance> {
   await app.register(publicTagRoutes);
   await app.register(publicUIStringsRoutes);
   await app.register(publicArticleRoutes);
+  await app.register(publicMomentRoutes);
+  await app.register(publicResourceRoutes);
+  await app.register(publicPageRoutes);
 
   return app;
 }
