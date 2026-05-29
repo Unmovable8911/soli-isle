@@ -1,2 +1,6 @@
 export { languages } from './languages.js';
 export { uiTranslations } from './ui-translations.js';
+export { categories } from './categories.js';
+export { categoryTranslations } from './category-translations.js';
+export { tags } from './tags.js';
+export { tagTranslations } from './tag-translations.js';
