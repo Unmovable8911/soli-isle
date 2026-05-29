@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { checkAuth, login as apiLogin, logout as apiLogout } from '../api/admin.js';
 
 interface AuthContextValue {
@@ -29,12 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (password: string) => {
     await apiLogin(password);
     setIsAuthenticated(true);
+    setIsLoading(false);
   }, []);
 
   const logout = useCallback(async () => {
     await apiLogout();
     setIsAuthenticated(false);
   }, []);
+
+  useEffect(() => { check(); }, [check]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout, check }}>

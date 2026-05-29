@@ -20,6 +20,7 @@ export async function apiFetch<T>(
 
   const res = await fetch(url.toString(), {
     method: options?.method ?? 'GET',
+    credentials: 'same-origin',
     headers: options?.body ? { 'Content-Type': 'application/json' } : undefined,
     body: options?.body ? JSON.stringify(options.body) : undefined,
   });

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Navigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext.js';
 
 export function LoginPage() {
@@ -9,8 +9,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
 
   if (isAuthenticated) {
-    navigate('/admin', { replace: true });
-    return null;
+    return <Navigate to="/admin" replace />;
   }
 
   async function handleSubmit(e: FormEvent) {
