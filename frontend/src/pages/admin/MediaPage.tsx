@@ -13,6 +13,7 @@ export function MediaPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-media'],
@@ -47,13 +48,17 @@ export function MediaPage() {
     mutationFn: (id: string) => adminDelete('media', id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-media'] });
+      setDeleteError('');
+    },
+    onError: (err) => {
+      setDeleteError((err as Error)?.message ?? 'Delete failed');
     },
   });
 
-  function handleFiles(files: FileList | null) {
+  async function handleFiles(files: FileList | null) {
     if (!files) return;
     for (const file of Array.from(files)) {
-      uploadMutation.mutate(file);
+      await uploadMutation.mutateAsync(file).catch(() => {/* onError handles display */});
     }
   }
 
@@ -117,6 +122,7 @@ export function MediaPage() {
       </div>
 
       {uploadError && <p className="error" style={{ marginBottom: '1rem' }}>{uploadError}</p>}
+      {deleteError && <p className="error" style={{ marginBottom: '1rem' }}>{deleteError}</p>}
 
       {/* Media grid */}
       {data?.data.length === 0 ? (

@@ -21,6 +21,7 @@ export function CategoryManagerPage() {
   const [slug, setSlug] = useState('');
   const [names, setNames] = useState<Record<string, string>>({});
   const [createError, setCreateError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -47,6 +48,10 @@ export function CategoryManagerPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setDeleteError('');
+    },
+    onError: (err) => {
+      setDeleteError((err as Error)?.message ?? 'Delete failed');
     },
   });
 
@@ -119,6 +124,7 @@ export function CategoryManagerPage() {
                 {createMutation.isPending ? 'Creating...' : 'Create'}
               </button>
               {createError && <p className="error">{createError}</p>}
+          {deleteError && <p className="error">{deleteError}</p>}
             </div>
           </form>
         </section>

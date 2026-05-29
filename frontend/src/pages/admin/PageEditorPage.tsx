@@ -59,6 +59,7 @@ export function PageEditorPage() {
   // Populate form when editing existing page
   useEffect(() => {
     if (page) {
+      setSlugError('');
       setSlug(page.slug);
       setSortOrder(page.sort_order ?? 0);
       setIsDraft(page.is_draft === 1);
