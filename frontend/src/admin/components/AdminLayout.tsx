@@ -6,7 +6,11 @@ export function AdminLayout() {
   const navigate = useNavigate();
 
   async function handleLogout() {
-    await logout();
+    try {
+      await logout();
+    } catch {
+      // proceed to login regardless — session may already be invalid
+    }
     navigate('/admin/login');
   }
 

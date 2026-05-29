@@ -46,6 +46,14 @@ export function ArticleEditorPage() {
     enabled: !isNew,
   });
 
+  // Reset form state when switching between new and edit (e.g., navigating edit→new)
+  useEffect(() => {
+    if (isNew) {
+      setSlug(''); setCategoryId(''); setSelectedTagIds([]);
+      setIsDraft(true); setCoverImage(''); setTranslations({}); setActiveLang('');
+    }
+  }, [isNew]);
+
   // Set default active lang from available languages
   useEffect(() => {
     if (languages && languages.length > 0 && !activeLang) {
@@ -66,6 +74,9 @@ export function ArticleEditorPage() {
         transMap[t.language_code] = { title: t.title, body: t.body, excerpt: t.excerpt ?? '' };
       }
       setTranslations(transMap);
+      // Prefer the first translation's language so the form shows real content immediately
+      const firstLang = article.translations?.[0]?.language_code;
+      if (firstLang) setActiveLang(firstLang);
     }
   }, [article]);
 
@@ -165,7 +176,7 @@ export function ArticleEditorPage() {
           <button type="submit" disabled={saveMutation.isPending}>
             {saveMutation.isPending ? 'Saving...' : 'Save'}
           </button>
-          {saveMutation.isError && <p className="error">Failed to save</p>}
+          {saveMutation.isError && <p className="error">{(saveMutation.error as Error)?.message ?? 'Failed to save'}</p>}
         </div>
       </form>
     </div>
