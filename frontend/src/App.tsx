@@ -11,6 +11,10 @@ import { MomentsPage } from './pages/public/MomentsPage.js';
 import { ResourcesPage } from './pages/public/ResourcesPage.js';
 import { PageDetailPage } from './pages/public/PageDetailPage.js';
 import { LoginPage } from './pages/admin/LoginPage.js';
+import { AdminLayout } from './admin/components/AdminLayout.js';
+import { DashboardPage } from './pages/admin/DashboardPage.js';
+import { ArticleListPage } from './pages/admin/ArticleListPage.js';
+import { ArticleEditorPage } from './pages/admin/ArticleEditorPage.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,7 +39,12 @@ export function App() {
               </Route>
               <Route path="admin/login" element={<LoginPage />} />
               <Route element={<ProtectedRoute />}>
-                <Route path="admin" element={<div>Dashboard (WIP)</div>} />
+                <Route element={<AdminLayout />}>
+                  <Route path="admin" element={<DashboardPage />} />
+                  <Route path="admin/articles" element={<ArticleListPage />} />
+                  <Route path="admin/articles/new" element={<ArticleEditorPage />} />
+                  <Route path="admin/articles/:id" element={<ArticleEditorPage />} />
+                </Route>
               </Route>
             </Routes>
           </BrowserRouter>

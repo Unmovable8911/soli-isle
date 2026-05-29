@@ -937,3 +937,447 @@ article.page-detail > h1 {
   float: left;
   height: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN INTERFACE
+   Aesthetic: The composing room — purposeful, dense, formal.
+   Same dark foundations, stripped to utility.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Admin Layout Shell ───────────────────────────────────── */
+.admin-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--bg);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.admin-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-lg) 0 var(--space-md);
+  overflow-y: auto;
+}
+
+/* Sidebar brand mark / wordmark at top */
+.admin-sidebar::before {
+  content: 'soli isle';
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 0 20px var(--space-lg);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-md);
+}
+
+/* Nav links */
+.admin-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.admin-sidebar nav a {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 10px 20px;
+  border-left: 2px solid transparent;
+  transition: color var(--ease), background-color var(--ease), border-color var(--ease);
+  white-space: nowrap;
+}
+
+.admin-sidebar nav a:hover {
+  color: var(--text);
+  background-color: color-mix(in srgb, var(--text) 4%, transparent);
+  border-left-color: var(--border-mid);
+}
+
+/* Active sidebar link (when navigated to) */
+.admin-sidebar nav a.active,
+.admin-sidebar nav a[aria-current="page"] {
+  color: var(--accent);
+  border-left-color: var(--accent-dim);
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* Logout button — lives at sidebar bottom */
+.admin-sidebar > button {
+  display: block;
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: left;
+  padding: 10px 20px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  transition: color var(--ease), background-color var(--ease);
+  margin-top: var(--space-md);
+}
+
+.admin-sidebar > button:hover {
+  color: var(--text-muted);
+  background-color: color-mix(in srgb, var(--text) 3%, transparent);
+}
+
+/* ── Content Area ─────────────────────────────────────────── */
+.admin-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-xl);
+  /* Subtle scroll fade at bottom */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── List Page ────────────────────────────────────────────── */
+.admin-list-page {
+  max-width: 900px;
+  animation: fadein 280ms ease both;
+}
+
+.admin-list-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Override the global h1 rule inside admin */
+.admin-list-header h1 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+/* ── New Button ───────────────────────────────────────────── */
+.admin-new-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  background: transparent;
+  cursor: pointer;
+  transition: color var(--ease), border-color var(--ease), background-color var(--ease);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.admin-new-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ── Table ────────────────────────────────────────────────── */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-table thead th {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-mid);
+  font-weight: normal;
+}
+
+.admin-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: middle;
+  transition: color var(--ease);
+}
+
+/* Alternating row tint — barely perceptible */
+.admin-table tbody tr:nth-child(odd) td {
+  background-color: color-mix(in srgb, var(--bg-surface) 40%, transparent);
+}
+
+.admin-table tbody tr:hover td {
+  background-color: var(--bg-surface);
+  color: var(--text);
+}
+
+/* Actions column — right-align edit links */
+.admin-table tbody td:last-child {
+  text-align: right;
+}
+
+.admin-table tbody td:last-child a {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  transition: color var(--ease);
+}
+
+.admin-table tbody td:last-child a:hover {
+  color: var(--accent);
+}
+
+/* ── Dashboard ────────────────────────────────────────────── */
+.admin-dashboard {
+  animation: fadein 280ms ease both;
+}
+
+.admin-dashboard h1 {
+  margin-bottom: var(--space-xl);
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+
+.admin-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+  max-width: 480px;
+}
+
+.admin-quick-actions a {
+  display: block;
+  padding: var(--space-md) var(--space-lg);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  transition: color var(--ease), border-color var(--ease), background-color var(--ease);
+}
+
+.admin-quick-actions a:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+  background-color: var(--bg-elevated);
+}
+
+/* ── Editor Page ──────────────────────────────────────────── */
+.admin-editor {
+  max-width: 780px;
+  animation: fadein 280ms ease both;
+}
+
+.admin-editor > h1 {
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Form ─────────────────────────────────────────────────── */
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 680px;
+  margin-top: var(--space-lg);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row > label:not(.tag-checkbox):not(.checkbox-label) {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.form-row input:not([type="checkbox"]),
+.form-row textarea {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border-mid);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  outline: none;
+  border-radius: 0;
+  transition: border-color var(--ease);
+  caret-color: var(--accent);
+}
+
+/* Override global select styles inside form-row */
+.form-row select {
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid var(--border-mid);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  outline: none;
+  border-radius: 0;
+  transition: border-color var(--ease);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.form-row input:not([type="checkbox"]):focus,
+.form-row textarea:focus,
+.form-row select:focus {
+  border-color: var(--accent-dim);
+}
+
+.form-row input:not([type="checkbox"]):hover,
+.form-row textarea:hover,
+.form-row select:hover {
+  border-color: var(--border-mid);
+}
+
+.form-row textarea {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.form-row input::placeholder,
+.form-row textarea::placeholder {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+/* ── Tag Checkboxes ───────────────────────────────────────── */
+.tag-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: 8px 0;
+}
+
+.tag-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--ease);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  transition: color var(--ease), border-color var(--ease), background-color var(--ease);
+}
+
+.tag-checkbox:has(input:checked) {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+  background-color: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.tag-checkbox input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+}
+
+/* ── Checkbox Label (standalone) ─────────────────────────── */
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* ── Form Actions ─────────────────────────────────────────── */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.form-actions button[type="submit"] {
+  padding: 8px 24px;
+  background: transparent;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--ease), border-color var(--ease), background-color var(--ease);
+}
+
+.form-actions button[type="submit"]:hover {
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.form-actions button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Error Message ────────────────────────────────────────── */
+.error {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a4040;
+  animation: fadein 200ms ease both;
+}
