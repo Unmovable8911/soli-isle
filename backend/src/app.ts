@@ -10,6 +10,7 @@ import { publicLanguageRoutes } from './routes/public/languages.js';
 import { publicCategoryRoutes } from './routes/public/categories.js';
 import { publicTagRoutes } from './routes/public/tags.js';
 import { publicUIStringsRoutes } from './routes/public/ui-strings.js';
+import { publicArticleRoutes } from './routes/public/articles.js';
 import './types.js';
 
 export async function createApp(opts?: { dbPath?: string; disableListen?: boolean }) {
@@ -59,6 +60,7 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   await app.register(publicCategoryRoutes);
   await app.register(publicTagRoutes);
   await app.register(publicUIStringsRoutes);
+  await app.register(publicArticleRoutes);
 
   return app;
 }

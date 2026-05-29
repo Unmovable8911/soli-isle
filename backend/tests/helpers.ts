@@ -11,6 +11,7 @@ import { publicLanguageRoutes } from '../src/routes/public/languages.js';
 import { publicCategoryRoutes } from '../src/routes/public/categories.js';
 import { publicTagRoutes } from '../src/routes/public/tags.js';
 import { publicUIStringsRoutes } from '../src/routes/public/ui-strings.js';
+import { publicArticleRoutes } from '../src/routes/public/articles.js';
 import type { FastifyInstance } from 'fastify';
 
 // Must be set before importing createApp
@@ -89,6 +90,7 @@ export async function createTestApp(): Promise<FastifyInstance> {
   await app.register(publicCategoryRoutes);
   await app.register(publicTagRoutes);
   await app.register(publicUIStringsRoutes);
+  await app.register(publicArticleRoutes);
 
   return app;
 }
