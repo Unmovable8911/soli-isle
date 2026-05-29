@@ -13,7 +13,7 @@ interface AdminPage {
 export function PageListPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-pages'],
-    queryFn: () => adminList<{ data: AdminPage[] }>('pages'),
+    queryFn: () => adminList<AdminPage[]>('pages'),
   });
 
   if (isLoading) return <div className="page-loading">Loading...</div>;
@@ -35,7 +35,7 @@ export function PageListPage() {
           </tr>
         </thead>
         <tbody>
-          {data?.data.map(p => (
+          {data?.map(p => (
             <tr key={p.id}>
               <td>{p.translation_title || '—'}</td>
               <td>{p.slug}</td>

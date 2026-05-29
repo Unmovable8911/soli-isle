@@ -15,7 +15,7 @@ export function CategoryManagerPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-categories'],
-    queryFn: () => adminList<{ data: AdminCategory[] }>('categories'),
+    queryFn: () => adminList<AdminCategory[]>('categories'),
   });
 
   const [slug, setSlug] = useState('');
@@ -72,11 +72,11 @@ export function CategoryManagerPage() {
       <div className="admin-manager-layout">
         <section className="admin-manager-list">
           <h2 className="admin-section-title">Existing</h2>
-          {data?.data.length === 0 && (
+          {data?.length === 0 && (
             <p className="admin-empty">No categories yet.</p>
           )}
           <ul className="admin-item-list">
-            {data?.data.map(cat => (
+            {data?.map(cat => (
               <li key={cat.id} className="admin-item-row">
                 <span className="admin-item-slug">{cat.slug}</span>
                 <span className="admin-item-names">

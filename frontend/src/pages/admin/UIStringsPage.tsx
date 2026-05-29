@@ -19,7 +19,7 @@ export function UIStringsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-ui-strings'],
-    queryFn: () => adminList<{ data: UIStringItem[] }>('ui-strings'),
+    queryFn: () => adminList<UIStringItem[]>('ui-strings'),
   });
 
   // Local edits: key -> lang_code -> value
@@ -29,9 +29,9 @@ export function UIStringsPage() {
 
   // Populate local edits from fetched data
   useEffect(() => {
-    if (data?.data) {
+    if (data) {
       const initial: Record<string, Record<string, string>> = {};
-      for (const item of data.data) {
+      for (const item of data) {
         if (!initial[item.key]) initial[item.key] = {};
         initial[item.key]![item.language_code] = item.value;
       }
@@ -41,8 +41,8 @@ export function UIStringsPage() {
 
   // Build grouped view for rendering
   const grouped: StringsByKey = {};
-  if (data?.data) {
-    for (const item of data.data) {
+  if (data) {
+    for (const item of data) {
       if (!grouped[item.key]) grouped[item.key] = {};
       grouped[item.key]![item.language_code] = { id: item.id, value: item.value };
     }
@@ -52,9 +52,9 @@ export function UIStringsPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!data?.data) return;
+      if (!data) return;
       const updates: Promise<unknown>[] = [];
-      for (const item of data.data) {
+      for (const item of data) {
         const editedValue = edits[item.key]?.[item.language_code];
         if (editedValue !== undefined && editedValue !== item.value) {
           updates.push(adminUpdate('ui-strings', item.id, { value: editedValue }));

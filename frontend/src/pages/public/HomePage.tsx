@@ -19,12 +19,20 @@ export function HomePage() {
   ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20);
 
   return (
-    <div className="home-feed">
-      {items.map(item =>
+    <>
+      <section className="home-hero">
+        <h1 className="home-hero__title">Notes from a small,<br /><em>bright</em> isle.</h1>
+        <p className="home-hero__sub">
+          Essays, fleeting moments, and things worth keeping — in whatever language finds you.
+        </p>
+      </section>
+      <div className="home-feed">
+        {items.map(item =>
         item.type === 'article'
           ? <ArticleCard key={item.data.id} article={item.data} />
           : <MomentCard key={item.data.id} moment={item.data} />
       )}
-    </div>
+      </div>
+    </>
   );
 }

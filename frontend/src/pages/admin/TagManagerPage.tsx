@@ -15,7 +15,7 @@ export function TagManagerPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-tags'],
-    queryFn: () => adminList<{ data: AdminTag[] }>('tags'),
+    queryFn: () => adminList<AdminTag[]>('tags'),
   });
 
   const [slug, setSlug] = useState('');
@@ -72,11 +72,11 @@ export function TagManagerPage() {
       <div className="admin-manager-layout">
         <section className="admin-manager-list">
           <h2 className="admin-section-title">Existing</h2>
-          {data?.data.length === 0 && (
+          {data?.length === 0 && (
             <p className="admin-empty">No tags yet.</p>
           )}
           <ul className="admin-item-list">
-            {data?.data.map(tag => (
+            {data?.map(tag => (
               <li key={tag.id} className="admin-item-row">
                 <span className="admin-item-slug">{tag.slug}</span>
                 <span className="admin-item-names">

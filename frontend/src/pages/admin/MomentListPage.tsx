@@ -11,7 +11,7 @@ interface AdminMoment {
 export function MomentListPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-moments'],
-    queryFn: () => adminList<{ data: AdminMoment[] }>('moments'),
+    queryFn: () => adminList<AdminMoment[]>('moments'),
   });
 
   if (isLoading) return <div className="page-loading">Loading...</div>;
@@ -31,7 +31,7 @@ export function MomentListPage() {
           </tr>
         </thead>
         <tbody>
-          {data?.data.map(m => (
+          {data?.map(m => (
             <tr key={m.id}>
               <td><time>{m.published_at ? new Date(m.published_at).toLocaleDateString() : '—'}</time></td>
               <td className="admin-table-preview">{m.translation_body ? String(m.translation_body).slice(0, 80) : '—'}</td>

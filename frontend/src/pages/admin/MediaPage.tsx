@@ -17,7 +17,7 @@ export function MediaPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-media'],
-    queryFn: () => adminList<{ data: MediaItem[] }>('media'),
+    queryFn: () => adminList<MediaItem[]>('media'),
   });
 
   const uploadMutation = useMutation({
@@ -125,11 +125,11 @@ export function MediaPage() {
       {deleteError && <p className="error" style={{ marginBottom: '1rem' }}>{deleteError}</p>}
 
       {/* Media grid */}
-      {data?.data.length === 0 ? (
+      {data?.length === 0 ? (
         <p className="admin-empty">No media uploaded yet.</p>
       ) : (
         <div className="admin-media-grid">
-          {data?.data.map(item => (
+          {data?.map(item => (
             <div key={item.id} className="admin-media-item">
               <div className="admin-media-thumb">
                 <img src={item.url} alt={item.filename} loading="lazy" />

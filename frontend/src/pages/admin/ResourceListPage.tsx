@@ -11,7 +11,7 @@ interface AdminResource {
 export function ResourceListPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-resources'],
-    queryFn: () => adminList<{ data: AdminResource[] }>('resources'),
+    queryFn: () => adminList<AdminResource[]>('resources'),
   });
 
   if (isLoading) return <div className="page-loading">Loading...</div>;
@@ -31,7 +31,7 @@ export function ResourceListPage() {
           </tr>
         </thead>
         <tbody>
-          {data?.data.map(r => (
+          {data?.map(r => (
             <tr key={r.id}>
               <td>{r.translation_title || '—'}</td>
               <td className="admin-table-url">{r.url}</td>
