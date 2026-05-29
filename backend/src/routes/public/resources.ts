@@ -52,16 +52,19 @@ export const publicResourceRoutes: FastifyPluginAsync = async (app) => {
       for (const ct of catTrans) { catNames[ct.category_id] = ct.name; }
     }
 
-    const data = rows.map(r => ({
+    const withCursor = rows.map(r => ({
       id: r.id,
       url: r.url,
       cover_image: r.cover_image,
+      created_at: r.created_at,
       translation: { title: r.title, description: r.description },
       category: r.category_id
         ? { id: r.category_id, slug: r.category_slug!, translation: { name: catNames[r.category_id] ?? null } }
         : null,
     }));
 
-    return paginatedResult(data, 'created_at', limit);
+    const { data: pagedData, next_cursor } = paginatedResult(withCursor, 'created_at', limit);
+    const data = pagedData.map(({ created_at: _ts, ...rest }) => rest);
+    return { data, next_cursor };
   });
 };
