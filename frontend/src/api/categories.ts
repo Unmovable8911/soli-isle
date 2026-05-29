@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from './client.js';
 
-interface CategoryItem {
+export interface CategoryItem {
   id: string;
   slug: string;
   translation: { name: string | null };

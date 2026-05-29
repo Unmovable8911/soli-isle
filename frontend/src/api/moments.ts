@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { apiFetch } from './client.js';
 
-interface MomentListItem {
+export interface MomentListItem {
   id: string;
   published_at: string;
   translation: { body: string };

@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { apiFetch } from './client.js';
 
-interface ResourceListItem {
+export interface ResourceListItem {
   id: string;
   url: string;
   cover_image: string | null;

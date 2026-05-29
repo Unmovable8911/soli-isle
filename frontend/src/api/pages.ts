@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from './client.js';
 
-interface PageDetail {
+export interface PageDetail {
   id: string;
   slug: string;
   published_at: string | null;

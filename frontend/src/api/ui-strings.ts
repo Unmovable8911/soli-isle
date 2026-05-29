@@ -4,7 +4,7 @@ import { apiFetch } from './client.js';
 export function useUIStrings(lang: string) {
   return useQuery({
     queryKey: ['ui-strings', lang],
-    queryFn: () => apiFetch<Record<string, string>>(`/ui-strings?lang=${lang}`),
+    queryFn: () => apiFetch<Record<string, string>>('/ui-strings', { lang }),
     staleTime: Infinity,
     enabled: !!lang,
   });
