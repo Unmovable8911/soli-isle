@@ -10,3 +10,9 @@ declare module 'fastify' {
     isAuthenticated: () => boolean;
   }
 }
+
+declare module 'fastify' {
+  interface Session {
+    authenticated: boolean;
+  }
+}
