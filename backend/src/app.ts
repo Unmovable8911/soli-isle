@@ -2,11 +2,22 @@ import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import session from '@fastify/session';
 import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import { existsSync, mkdirSync } from 'fs';
+import { resolve } from 'path';
 import { readConfig } from './config.js';
 import { createDb } from './db/index.js';
 import { initPassword } from './lib/password.js';
 import { adminAuthRoutes } from './routes/admin/auth.js';
 import { adminArticleRoutes } from './routes/admin/articles.js';
+import { adminCategoryRoutes } from './routes/admin/categories.js';
+import { adminTagRoutes } from './routes/admin/tags.js';
+import { adminLanguageRoutes } from './routes/admin/languages.js';
+import { adminUIStringsRoutes } from './routes/admin/ui-strings.js';
+import { adminMomentRoutes } from './routes/admin/moments.js';
+import { adminResourceRoutes } from './routes/admin/resources.js';
+import { adminPageRoutes } from './routes/admin/pages.js';
+import { adminMediaRoutes } from './routes/admin/media.js';
 import { publicLanguageRoutes } from './routes/public/languages.js';
 import { publicCategoryRoutes } from './routes/public/categories.js';
 import { publicTagRoutes } from './routes/public/tags.js';
@@ -35,6 +46,14 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
 
+  // Static file serving for media uploads
+  const mediaDir = resolve(config.mediaDir);
+  if (!existsSync(mediaDir)) mkdirSync(mediaDir, { recursive: true });
+  await app.register(fastifyStatic, {
+    root: mediaDir,
+    prefix: '/media/',
+  });
+
   // Auth decorator
   app.decorateRequest('isAuthenticated', function (this: any) {
     return this.session.get('authenticated') === true;
@@ -61,6 +80,14 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
 
   await app.register(adminAuthRoutes);
   await app.register(adminArticleRoutes);
+  await app.register(adminMomentRoutes);
+  await app.register(adminResourceRoutes);
+  await app.register(adminPageRoutes);
+  await app.register(adminCategoryRoutes);
+  await app.register(adminTagRoutes);
+  await app.register(adminLanguageRoutes);
+  await app.register(adminUIStringsRoutes);
+  await app.register(adminMediaRoutes);
   await app.register(publicLanguageRoutes);
   await app.register(publicCategoryRoutes);
   await app.register(publicTagRoutes);

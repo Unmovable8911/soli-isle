@@ -142,6 +142,15 @@ export const adminArticleRoutes: FastifyPluginAsync = async (app) => {
 
     await db.update(articles).set(updateData).where(eq(articles.id, id));
 
+    if (body.slug !== undefined) {
+      // Update the slugs table to reflect the new slug
+      try {
+        await db.update(slugs).set({ slug: body.slug }).where(eq(slugs.entity_id, id));
+      } catch {
+        return reply.status(409).send({ error: 'Slug already exists' });
+      }
+    }
+
     if (body.translations) {
       await db.delete(articleTranslations).where(eq(articleTranslations.article_id, id));
       for (const t of body.translations) {
