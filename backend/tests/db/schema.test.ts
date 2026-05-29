@@ -76,6 +76,7 @@ describe('full schema integration', () => {
 
   it('cascades deletes — removing an article removes its translations', () => {
     const sqlite2 = new Database(':memory:');
+    sqlite2.pragma('foreign_keys = ON');
     const db2 = drizzle(sqlite2, { schema });
     sqlite2.exec(`
       CREATE TABLE languages (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, is_default INTEGER NOT NULL DEFAULT 0);
