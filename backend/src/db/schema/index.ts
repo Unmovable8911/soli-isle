@@ -16,6 +16,7 @@ import { resourceTranslations } from './resource-translations.js';
 import { pages } from './pages.js';
 import { pageTranslations } from './page-translations.js';
 import { slugs } from './slugs.js';
+import { socialLinks } from './social-links.js';
 
 // Language relations
 export const languagesRelations = relations(languages, ({ many }) => ({
@@ -130,4 +131,5 @@ export {
   pages,
   pageTranslations,
   slugs,
+  socialLinks,
 };
