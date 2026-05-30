@@ -58,6 +58,34 @@
   font-weight: 500; background: var(--color-accent); color: #fff; transition: background var(--ease); }
 .login-button:hover { background: var(--color-accent-hover); }
 
+/* ── Admin tables ─────────────────────────────────── */
+.admin-new-btn { display: inline-flex; align-items: center; padding: .5rem 1rem; border-radius: var(--radius-sm);
+  background: var(--color-accent); color: #fff; text-decoration: none; font-family: var(--font-ui);
+  font-weight: 500; font-size: .9rem; transition: background var(--ease); }
+.admin-new-btn:hover { background: var(--color-accent-hover); }
+.btn--sm { padding: .3rem .7rem; font-size: .82rem; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.admin-table thead th { text-align: left; font-family: var(--font-ui); font-size: .72rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--color-muted); font-weight: 600; padding: .6rem .75rem;
+  border-bottom: 1px solid var(--color-border); }
+.admin-table tbody td { padding: .7rem .75rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+.admin-table tbody tr:hover { background: var(--color-elevated); }
+.admin-table-preview, .admin-table-url { color: var(--color-muted); max-width: 360px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.admin-row-actions { display: flex; gap: .5rem; justify-content: flex-end; }
+
+@media (max-width: 640px) {
+  .admin-table, .admin-table thead, .admin-table tbody, .admin-table tr, .admin-table td { display: block; }
+  .admin-table thead { display: none; }
+  .admin-table tr { background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius); padding: var(--space-sm) var(--space-md); margin-bottom: var(--space-md); }
+  .admin-table tbody td { border: none; padding: .35rem 0; display: flex; justify-content: space-between;
+    align-items: center; gap: var(--space-md); }
+  .admin-table tbody td[data-label]::before { content: attr(data-label); font-size: .7rem;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--color-muted); font-weight: 600; }
+  .admin-actions-cell .admin-row-actions { justify-content: flex-start; }
+}
+
 /* ── Responsive: sidebar → drawer ─────────────────── */
 @media (max-width: 1024px) {
   .admin-layout { grid-template-columns: 1fr; }
