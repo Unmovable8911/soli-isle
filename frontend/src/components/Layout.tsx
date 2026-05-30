@@ -1,32 +1,30 @@
+import { useState } from 'react';
 import { Outlet, Link, NavLink } from 'react-router';
 import { LanguageSwitcher } from './LanguageSwitcher.js';
+import { ThemeToggle } from './ThemeToggle.js';
+import { Footer } from './Footer.js';
 
 export function Layout() {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="layout">
-      <div className="bg-decor" aria-hidden="true">
-        <span className="bg-blob bg-blob--a" />
-        <span className="bg-blob bg-blob--b" />
-        <span className="bg-grain" />
-      </div>
       <header className="masthead">
-        <Link to="/" className="brand">
-          <span className="brand__mark" aria-hidden="true" />
-          <span className="brand__name">Soli&nbsp;Isle</span>
-        </Link>
-        <nav>
-          <NavLink to="/" end>Home</NavLink>
-          <NavLink to="/articles">Articles</NavLink>
-          <NavLink to="/moments">Moments</NavLink>
-          <NavLink to="/resources">Resources</NavLink>
+        <Link to="/" className="brand" onClick={() => setMenuOpen(false)}>Soli&nbsp;Isle</Link>
+        <button type="button" className="masthead__burger" aria-label="Menu"
+          aria-expanded={menuOpen} onClick={() => setMenuOpen(o => !o)}>≡</button>
+        <nav className={`masthead__nav${menuOpen ? ' is-open' : ''}`} onClick={() => setMenuOpen(false)}>
+          <NavLink to="/" end className="link-underline">Home</NavLink>
+          <NavLink to="/articles" className="link-underline">Articles</NavLink>
+          <NavLink to="/moments" className="link-underline">Moments</NavLink>
+          <NavLink to="/resources" className="link-underline">Resources</NavLink>
         </nav>
-        <LanguageSwitcher />
+        <div className="masthead__actions">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
       </header>
       <main><Outlet /></main>
-      <footer>
-        <strong>Soli Isle</strong>
-        <p>An archipelago of essays, moments &amp; finds</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
