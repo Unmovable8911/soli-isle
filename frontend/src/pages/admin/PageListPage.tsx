@@ -14,7 +14,7 @@ export function PageListPage() {
   const [deleteError, setDeleteError] = useState('');
   const del = useMutation({
     mutationFn: (id: string) => adminDelete('pages', id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-pages'] }); setDeleteError(''); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-pages'] }); queryClient.invalidateQueries({ queryKey: ['pages'] }); setDeleteError(''); },
     onError: (e) => setDeleteError((e as Error)?.message ?? 'Delete failed'),
   });
   function handleDelete(id: string) { if (window.confirm('Delete this page? This cannot be undone.')) del.mutate(id); }
