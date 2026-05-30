@@ -124,54 +124,42 @@ export function PageEditorPage() {
 
   return (
     <div className="admin-editor">
-      <h1>{isNew ? 'New Page' : 'Edit Page'}</h1>
-      <TranslationTabs activeLang={activeLang} onSelectLang={setActiveLang} />
-      <form onSubmit={handleSubmit} className="admin-form">
-        <div className="form-row">
-          <label htmlFor="slug">Slug</label>
-          <input
-            id="slug"
-            value={slug}
-            onChange={e => handleSlugChange(e.target.value)}
-            required
-          />
-          {slugError && <p className="error">{slugError}</p>}
+      <div className="admin-editor__head">
+        <h1>{isNew ? 'New Page' : 'Edit Page'}</h1>
+        <TranslationTabs activeLang={activeLang} onSelectLang={setActiveLang} />
+      </div>
+      <form onSubmit={handleSubmit} className="admin-editor__grid">
+        <div className="admin-editor__main">
+          <div className="form-row">
+            <label htmlFor="title">Title</label>
+            <input id="title" value={current.title} onChange={e => updateField('title', e.target.value)} />
+          </div>
+          <div className="form-row">
+            <label>Body</label>
+            <TipTapEditor content={current.body} onChange={(json) => updateField('body', json)} />
+          </div>
         </div>
-        <div className="form-row">
-          <label htmlFor="title">Title</label>
-          <input
-            id="title"
-            value={current.title}
-            onChange={e => updateField('title', e.target.value)}
-          />
-        </div>
-        <div className="form-row">
-          <label>Body</label>
-          <TipTapEditor content={current.body} onChange={(json) => updateField('body', json)} />
-        </div>
-        <div className="form-row">
-          <label htmlFor="sort-order">Sort Order</label>
-          <input
-            id="sort-order"
-            type="number"
-            value={sortOrder}
-            onChange={e => setSortOrder(Number(e.target.value))}
-          />
-        </div>
-        <div className="form-row">
-          <label className="checkbox-label">
-            <input type="checkbox" checked={isDraft} onChange={e => setIsDraft(e.target.checked)} />
-            Draft
-          </label>
-        </div>
-        <div className="form-actions">
-          <button type="submit" disabled={saveMutation.isPending || !!slugError}>
-            {saveMutation.isPending ? 'Saving...' : 'Save'}
-          </button>
-          {saveMutation.isError && (
-            <p className="error">{(saveMutation.error as Error)?.message ?? 'Failed to save'}</p>
-          )}
-        </div>
+        <aside className="admin-editor__aside">
+          <div className="form-row">
+            <label htmlFor="slug">Slug</label>
+            <input id="slug" value={slug} onChange={e => handleSlugChange(e.target.value)} required />
+            {slugError && <p className="error">{slugError}</p>}
+          </div>
+          <div className="form-row">
+            <label htmlFor="sort-order">Sort Order</label>
+            <input id="sort-order" type="number" value={sortOrder} onChange={e => setSortOrder(Number(e.target.value))} />
+          </div>
+          <div className="form-row">
+            <label className="checkbox-label">
+              <input type="checkbox" checked={isDraft} onChange={e => setIsDraft(e.target.checked)} />
+              Draft
+            </label>
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn" disabled={saveMutation.isPending || !!slugError}>{saveMutation.isPending ? 'Saving…' : 'Save'}</button>
+            {saveMutation.isError && <p className="error">{(saveMutation.error as Error)?.message ?? 'Failed to save'}</p>}
+          </div>
+        </aside>
       </form>
     </div>
   );

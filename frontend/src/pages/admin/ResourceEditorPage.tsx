@@ -107,62 +107,42 @@ export function ResourceEditorPage() {
 
   return (
     <div className="admin-editor">
-      <h1>{isNew ? 'New Resource' : 'Edit Resource'}</h1>
-      <TranslationTabs activeLang={activeLang} onSelectLang={setActiveLang} />
-      <form onSubmit={handleSubmit} className="admin-form">
-        <div className="form-row">
-          <label htmlFor="url">URL</label>
-          <input
-            id="url"
-            type="url"
-            value={url}
-            onChange={e => setUrl(e.target.value)}
-            required
-            placeholder="https://..."
-          />
+      <div className="admin-editor__head">
+        <h1>{isNew ? 'New Resource' : 'Edit Resource'}</h1>
+        <TranslationTabs activeLang={activeLang} onSelectLang={setActiveLang} />
+      </div>
+      <form onSubmit={handleSubmit} className="admin-editor__grid">
+        <div className="admin-editor__main">
+          <div className="form-row">
+            <label htmlFor="title">Title</label>
+            <input id="title" value={current.title} onChange={e => updateField('title', e.target.value)} />
+          </div>
+          <div className="form-row">
+            <label htmlFor="description">Description</label>
+            <textarea id="description" value={current.description} onChange={e => updateField('description', e.target.value)} />
+          </div>
         </div>
-        <div className="form-row">
-          <label htmlFor="title">Title</label>
-          <input
-            id="title"
-            value={current.title}
-            onChange={e => updateField('title', e.target.value)}
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            value={current.description}
-            onChange={e => updateField('description', e.target.value)}
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="cover-image">Cover Image URL</label>
-          <input
-            id="cover-image"
-            value={coverImage}
-            onChange={e => setCoverImage(e.target.value)}
-            placeholder="https://..."
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="category">Category</label>
-          <select id="category" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-            <option value="">None</option>
-            {categories?.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.translation.name ?? cat.slug}</option>
-            ))}
-          </select>
-        </div>
-        <div className="form-actions">
-          <button type="submit" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? 'Saving...' : 'Save'}
-          </button>
-          {saveMutation.isError && (
-            <p className="error">{(saveMutation.error as Error)?.message ?? 'Failed to save'}</p>
-          )}
-        </div>
+        <aside className="admin-editor__aside">
+          <div className="form-row">
+            <label htmlFor="url">URL</label>
+            <input id="url" type="url" value={url} onChange={e => setUrl(e.target.value)} required placeholder="https://..." />
+          </div>
+          <div className="form-row">
+            <label htmlFor="cover-image">Cover Image URL</label>
+            <input id="cover-image" value={coverImage} onChange={e => setCoverImage(e.target.value)} placeholder="https://..." />
+          </div>
+          <div className="form-row">
+            <label htmlFor="category">Category</label>
+            <select id="category" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
+              <option value="">None</option>
+              {categories?.map(cat => (<option key={cat.id} value={cat.id}>{cat.translation.name ?? cat.slug}</option>))}
+            </select>
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving…' : 'Save'}</button>
+            {saveMutation.isError && <p className="error">{(saveMutation.error as Error)?.message ?? 'Failed to save'}</p>}
+          </div>
+        </aside>
       </form>
     </div>
   );

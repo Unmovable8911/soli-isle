@@ -120,64 +120,63 @@ export function ArticleEditorPage() {
 
   return (
     <div className="admin-editor">
-      <h1>{isNew ? 'New Article' : 'Edit Article'}</h1>
-      <TranslationTabs activeLang={activeLang} onSelectLang={setActiveLang} />
-      <form onSubmit={handleSubmit} className="admin-form">
-        <div className="form-row">
-          <label htmlFor="slug">Slug</label>
-          <input id="slug" value={slug} onChange={e => setSlug(e.target.value)} required />
-        </div>
-        <div className="form-row">
-          <label htmlFor="title">Title</label>
-          <input id="title" value={current.title} onChange={e => updateField('title', e.target.value)} required />
-        </div>
-        <div className="form-row">
-          <label htmlFor="excerpt">Excerpt</label>
-          <textarea id="excerpt" value={current.excerpt} onChange={e => updateField('excerpt', e.target.value)} />
-        </div>
-        <div className="form-row">
-          <label>Body</label>
-          <TipTapEditor content={current.body} onChange={(json) => updateField('body', json)} />
-        </div>
-        <div className="form-row">
-          <label htmlFor="cover-image">Cover Image URL</label>
-          <input id="cover-image" value={coverImage} onChange={e => setCoverImage(e.target.value)} />
-        </div>
-        <div className="form-row">
-          <label htmlFor="category">Category</label>
-          <select id="category" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-            <option value="">None</option>
-            {categories?.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.translation.name ?? cat.slug}</option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label>Tags</label>
-          <div className="tag-checkboxes">
-            {tags?.map(tag => (
-              <label key={tag.id} className="tag-checkbox">
-                <input type="checkbox" checked={selectedTagIds.includes(tag.id)}
-                  onChange={() => setSelectedTagIds(prev =>
-                    prev.includes(tag.id) ? prev.filter(tid => tid !== tag.id) : [...prev, tag.id]
-                  )} />
-                {tag.translation.name ?? tag.slug}
-              </label>
-            ))}
+      <div className="admin-editor__head">
+        <h1>{isNew ? 'New Article' : 'Edit Article'}</h1>
+        <TranslationTabs activeLang={activeLang} onSelectLang={setActiveLang} />
+      </div>
+      <form onSubmit={handleSubmit} className="admin-editor__grid">
+        <div className="admin-editor__main">
+          <div className="form-row">
+            <label htmlFor="title">Title</label>
+            <input id="title" value={current.title} onChange={e => updateField('title', e.target.value)} required />
+          </div>
+          <div className="form-row">
+            <label htmlFor="excerpt">Excerpt</label>
+            <textarea id="excerpt" value={current.excerpt} onChange={e => updateField('excerpt', e.target.value)} />
+          </div>
+          <div className="form-row">
+            <label>Body</label>
+            <TipTapEditor content={current.body} onChange={(json) => updateField('body', json)} />
           </div>
         </div>
-        <div className="form-row">
-          <label className="checkbox-label">
-            <input type="checkbox" checked={isDraft} onChange={e => setIsDraft(e.target.checked)} />
-            Draft
-          </label>
-        </div>
-        <div className="form-actions">
-          <button type="submit" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? 'Saving...' : 'Save'}
-          </button>
-          {saveMutation.isError && <p className="error">{(saveMutation.error as Error)?.message ?? 'Failed to save'}</p>}
-        </div>
+        <aside className="admin-editor__aside">
+          <div className="form-row">
+            <label htmlFor="slug">Slug</label>
+            <input id="slug" value={slug} onChange={e => setSlug(e.target.value)} required />
+          </div>
+          <div className="form-row">
+            <label htmlFor="category">Category</label>
+            <select id="category" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
+              <option value="">None</option>
+              {categories?.map(cat => (<option key={cat.id} value={cat.id}>{cat.translation.name ?? cat.slug}</option>))}
+            </select>
+          </div>
+          <div className="form-row">
+            <label>Tags</label>
+            <div className="tag-checkboxes">
+              {tags?.map(tag => (
+                <label key={tag.id} className="tag-checkbox">
+                  <input type="checkbox" checked={selectedTagIds.includes(tag.id)} onChange={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(tid => tid !== tag.id) : [...prev, tag.id])} />
+                  {tag.translation.name ?? tag.slug}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="form-row">
+            <label htmlFor="cover-image">Cover Image URL</label>
+            <input id="cover-image" value={coverImage} onChange={e => setCoverImage(e.target.value)} />
+          </div>
+          <div className="form-row">
+            <label className="checkbox-label">
+              <input type="checkbox" checked={isDraft} onChange={e => setIsDraft(e.target.checked)} />
+              Draft
+            </label>
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving…' : 'Save'}</button>
+            {saveMutation.isError && <p className="error">{(saveMutation.error as Error)?.message ?? 'Failed to save'}</p>}
+          </div>
+        </aside>
       </form>
     </div>
   );
