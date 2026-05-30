@@ -12,10 +12,10 @@ export function ResourcesPage() {
   const resources = query.data?.pages.flatMap(p => p.data) ?? [];
 
   return (
-    <div>
-      <h1>Resources</h1>
+    <div className="list-page">
+      <header className="list-page__header"><h1>Resources</h1></header>
       <FilterBar show="categories" />
-      <InfiniteScroll hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
+      <InfiniteScroll className="resource-grid" hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
         {resources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}
       </InfiniteScroll>
     </div>

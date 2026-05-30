@@ -1,3 +1,5 @@
+import { useScrollReveal } from '../hooks/useScrollReveal.js';
+
 interface ResourceCardProps {
   resource: {
     id: string;
@@ -9,14 +11,18 @@ interface ResourceCardProps {
 }
 
 export function ResourceCard({ resource }: ResourceCardProps) {
+  const reveal = useScrollReveal<HTMLAnchorElement>();
   return (
-    <a href={resource.url} className="resource-card" target="_blank" rel="noopener noreferrer">
+    <a ref={reveal} href={resource.url} className="resource-card card card--interactive reveal"
+      target="_blank" rel="noopener noreferrer">
       {resource.cover_image && <img src={resource.cover_image} alt="" />}
-      <h3>{resource.translation.title}</h3>
-      <p>{resource.translation.description}</p>
-      {resource.category && (
-        <span className="category-label">{resource.category.translation.name ?? resource.category.slug}</span>
-      )}
+      <div className="resource-card__body">
+        {resource.category && (
+          <span className="eyebrow">{resource.category.translation.name ?? resource.category.slug}</span>
+        )}
+        <h3>{resource.translation.title} <span className="resource-card__ext" aria-hidden="true">↗</span></h3>
+        <p>{resource.translation.description}</p>
+      </div>
     </a>
   );
 }

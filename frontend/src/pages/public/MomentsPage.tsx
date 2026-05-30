@@ -12,10 +12,10 @@ export function MomentsPage() {
   const moments = query.data?.pages.flatMap(p => p.data) ?? [];
 
   return (
-    <div>
-      <h1>Moments</h1>
+    <div className="list-page">
+      <header className="list-page__header"><h1>Moments</h1></header>
       <FilterBar show="tags" />
-      <InfiniteScroll hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
+      <InfiniteScroll className="timeline" hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
         {moments.map(moment => <MomentCard key={moment.id} moment={moment} />)}
       </InfiniteScroll>
     </div>
