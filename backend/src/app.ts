@@ -18,7 +18,9 @@ import { adminMomentRoutes } from './routes/admin/moments.js';
 import { adminResourceRoutes } from './routes/admin/resources.js';
 import { adminPageRoutes } from './routes/admin/pages.js';
 import { adminMediaRoutes } from './routes/admin/media.js';
+import { adminSocialLinkRoutes } from './routes/admin/social-links.js';
 import { publicLanguageRoutes } from './routes/public/languages.js';
+import { publicSocialLinkRoutes } from './routes/public/social-links.js';
 import { publicCategoryRoutes } from './routes/public/categories.js';
 import { publicTagRoutes } from './routes/public/tags.js';
 import { publicUIStringsRoutes } from './routes/public/ui-strings.js';
@@ -88,6 +90,7 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   await app.register(adminLanguageRoutes);
   await app.register(adminUIStringsRoutes);
   await app.register(adminMediaRoutes);
+  await app.register(adminSocialLinkRoutes);
   await app.register(publicLanguageRoutes);
   await app.register(publicCategoryRoutes);
   await app.register(publicTagRoutes);
@@ -96,6 +99,7 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   await app.register(publicMomentRoutes);
   await app.register(publicResourceRoutes);
   await app.register(publicPageRoutes);
+  await app.register(publicSocialLinkRoutes);
 
   return app;
 }

@@ -16,7 +16,9 @@ import { adminMomentRoutes } from '../src/routes/admin/moments.js';
 import { adminResourceRoutes } from '../src/routes/admin/resources.js';
 import { adminPageRoutes } from '../src/routes/admin/pages.js';
 import { adminMediaRoutes } from '../src/routes/admin/media.js';
+import { adminSocialLinkRoutes } from '../src/routes/admin/social-links.js';
 import { publicLanguageRoutes } from '../src/routes/public/languages.js';
+import { publicSocialLinkRoutes } from '../src/routes/public/social-links.js';
 import { publicCategoryRoutes } from '../src/routes/public/categories.js';
 import { publicTagRoutes } from '../src/routes/public/tags.js';
 import { publicUIStringsRoutes } from '../src/routes/public/ui-strings.js';
@@ -108,6 +110,7 @@ export async function createTestApp(): Promise<FastifyInstance> {
   await app.register(adminLanguageRoutes);
   await app.register(adminUIStringsRoutes);
   await app.register(adminMediaRoutes);
+  await app.register(adminSocialLinkRoutes);
   await app.register(publicLanguageRoutes);
   await app.register(publicCategoryRoutes);
   await app.register(publicTagRoutes);
@@ -116,6 +119,7 @@ export async function createTestApp(): Promise<FastifyInstance> {
   await app.register(publicMomentRoutes);
   await app.register(publicResourceRoutes);
   await app.register(publicPageRoutes);
+  await app.register(publicSocialLinkRoutes);
 
   return app;
 }
