@@ -6,7 +6,7 @@ import { ThemeToggle } from '../../components/ThemeToggle.js';
 const NAV: { group: string; links: [string, string][] }[] = [
   { group: 'Content', links: [['/admin', 'Dashboard'], ['/admin/articles', 'Articles'], ['/admin/moments', 'Moments'], ['/admin/resources', 'Resources'], ['/admin/pages', 'Pages']] },
   { group: 'Taxonomy', links: [['/admin/categories', 'Categories'], ['/admin/tags', 'Tags']] },
-  { group: 'System', links: [['/admin/languages', 'Languages'], ['/admin/ui-strings', 'UI Strings'], ['/admin/media', 'Media']] },
+  { group: 'System', links: [['/admin/languages', 'Languages'], ['/admin/ui-strings', 'UI Strings'], ['/admin/media', 'Media'], ['/admin/social-links', 'Social Links']] },
 ];
 
 export function AdminLayout() {

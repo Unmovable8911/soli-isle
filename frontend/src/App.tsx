@@ -27,6 +27,7 @@ import { TagManagerPage } from './pages/admin/TagManagerPage.js';
 import { LanguageManagerPage } from './pages/admin/LanguageManagerPage.js';
 import { UIStringsPage } from './pages/admin/UIStringsPage.js';
 import { MediaPage } from './pages/admin/MediaPage.js';
+import { SocialLinksPage } from './pages/admin/SocialLinksPage.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +72,7 @@ export function App() {
                   <Route path="admin/languages" element={<LanguageManagerPage />} />
                   <Route path="admin/ui-strings" element={<UIStringsPage />} />
                   <Route path="admin/media" element={<MediaPage />} />
+                  <Route path="admin/social-links" element={<SocialLinksPage />} />
                 </Route>
               </Route>
             </Routes>
