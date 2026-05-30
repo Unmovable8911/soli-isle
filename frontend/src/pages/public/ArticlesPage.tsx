@@ -13,10 +13,10 @@ export function ArticlesPage() {
   const articles = query.data?.pages.flatMap(p => p.data) ?? [];
 
   return (
-    <div>
-      <h1>Articles</h1>
+    <div className="list-page">
+      <header className="list-page__header"><h1>Articles</h1></header>
       <FilterBar show="both" />
-      <InfiniteScroll hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
+      <InfiniteScroll className="articles-grid" hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
         {articles.map(article => <ArticleCard key={article.id} article={article} />)}
       </InfiniteScroll>
     </div>

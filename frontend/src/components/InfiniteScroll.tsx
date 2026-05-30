@@ -5,9 +5,10 @@ interface InfiniteScrollProps {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
+  className?: string;
 }
 
-export function InfiniteScroll({ children, hasNextPage, isFetchingNextPage, fetchNextPage }: InfiniteScrollProps) {
+export function InfiniteScroll({ children, hasNextPage, isFetchingNextPage, fetchNextPage, className }: InfiniteScrollProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,10 +27,10 @@ export function InfiniteScroll({ children, hasNextPage, isFetchingNextPage, fetc
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div>
+    <div className={className}>
       {children}
-      <div ref={sentinelRef} style={{ height: 1 }} />
-      {isFetchingNextPage && <div role="status" aria-live="polite">Loading more...</div>}
+      <div ref={sentinelRef} className="infinite-scroll__sentinel" aria-hidden="true" />
+      {isFetchingNextPage && <div className="infinite-scroll__status" role="status" aria-live="polite">Loading more…</div>}
     </div>
   );
 }
