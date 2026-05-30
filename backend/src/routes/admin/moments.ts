@@ -7,7 +7,9 @@ export const adminMomentRoutes: FastifyPluginAsync = async (app) => {
     const db = app.db;
     const defaultLang = await db.select({ id: languages.id }).from(languages)
       .where(eq(languages.is_default, 1)).limit(1);
-    const defaultLangId = defaultLang[0]?.id;
+    // Sentinel that cannot match a real UUID, so the join yields no translation
+    // (rather than ALL translations → duplicate rows) when no default language exists.
+    const defaultLangId = defaultLang[0]?.id ?? '__no_default__';
     return db
       .select({
         id: moments.id,
@@ -21,7 +23,7 @@ export const adminMomentRoutes: FastifyPluginAsync = async (app) => {
         momentTranslations,
         and(
           eq(momentTranslations.moment_id, moments.id),
-          defaultLangId ? eq(momentTranslations.language_id, defaultLangId) : undefined,
+          eq(momentTranslations.language_id, defaultLangId),
         ),
       )
       .orderBy(desc(moments.published_at));

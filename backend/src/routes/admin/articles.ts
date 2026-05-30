@@ -21,7 +21,9 @@ export const adminArticleRoutes: FastifyPluginAsync = async (app) => {
     // Resolve the default language so the list can show a human-readable title.
     const defaultLang = await db.select({ id: languages.id }).from(languages)
       .where(eq(languages.is_default, 1)).limit(1);
-    const defaultLangId = defaultLang[0]?.id;
+    // Sentinel that cannot match a real UUID, so the join yields no translation
+    // (rather than ALL translations → duplicate rows) when no default language exists.
+    const defaultLangId = defaultLang[0]?.id ?? '__no_default__';
 
     const rows = await db
       .select({
@@ -38,7 +40,7 @@ export const adminArticleRoutes: FastifyPluginAsync = async (app) => {
         articleTranslations,
         and(
           eq(articleTranslations.article_id, articles.id),
-          defaultLangId ? eq(articleTranslations.language_id, defaultLangId) : undefined,
+          eq(articleTranslations.language_id, defaultLangId),
         ),
       )
       .where(conditions.length > 0 ? and(...conditions) : undefined)
