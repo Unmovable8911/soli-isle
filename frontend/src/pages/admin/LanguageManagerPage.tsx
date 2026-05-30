@@ -104,8 +104,8 @@ export function LanguageManagerPage() {
               )}
             </div>
             <div className="form-actions">
-              <button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Adding...' : 'Add Language'}
+              <button type="submit" className="btn" disabled={createMutation.isPending}>
+                {createMutation.isPending ? 'Adding…' : 'Add Language'}
               </button>
               {createError && <p className="error">{createError}</p>}
             </div>

@@ -72,6 +72,7 @@ export function TagManagerPage() {
       <div className="admin-manager-layout">
         <section className="admin-manager-list">
           <h2 className="admin-section-title">Existing</h2>
+          {deleteError && <p className="error">{deleteError}</p>}
           {data?.length === 0 && (
             <p className="admin-empty">No tags yet.</p>
           )}
@@ -120,11 +121,10 @@ export function TagManagerPage() {
               </div>
             ))}
             <div className="form-actions">
-              <button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Creating...' : 'Create'}
+              <button type="submit" className="btn" disabled={createMutation.isPending}>
+                {createMutation.isPending ? 'Creating…' : 'Create'}
               </button>
               {createError && <p className="error">{createError}</p>}
-          {deleteError && <p className="error">{deleteError}</p>}
             </div>
           </form>
         </section>
