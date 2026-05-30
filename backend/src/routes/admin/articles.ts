@@ -18,6 +18,11 @@ export const adminArticleRoutes: FastifyPluginAsync = async (app) => {
       conditions.push(lt(articles.created_at, decodeCursor(query.cursor)));
     }
 
+    // Resolve the default language so the list can show a human-readable title.
+    const defaultLang = await db.select({ id: languages.id }).from(languages)
+      .where(eq(languages.is_default, 1)).limit(1);
+    const defaultLangId = defaultLang[0]?.id;
+
     const rows = await db
       .select({
         id: articles.id,
@@ -26,8 +31,16 @@ export const adminArticleRoutes: FastifyPluginAsync = async (app) => {
         published_at: articles.published_at,
         created_at: articles.created_at,
         updated_at: articles.updated_at,
+        translation_title: articleTranslations.title,
       })
       .from(articles)
+      .leftJoin(
+        articleTranslations,
+        and(
+          eq(articleTranslations.article_id, articles.id),
+          defaultLangId ? eq(articleTranslations.language_id, defaultLangId) : undefined,
+        ),
+      )
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(articles.created_at))
       .limit(limit + 1);
@@ -180,6 +193,10 @@ export const adminArticleRoutes: FastifyPluginAsync = async (app) => {
     const existing = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
     if (existing.length === 0) return reply.status(404).send({ error: 'Not found' });
 
+    // Delete child rows first: FK constraints (no ON DELETE CASCADE in the
+    // migration) would otherwise reject deleting the parent article.
+    await db.delete(articleTranslations).where(eq(articleTranslations.article_id, id));
+    await db.delete(articleTags).where(eq(articleTags.article_id, id));
     await db.delete(articles).where(eq(articles.id, id));
     await db.delete(slugs).where(eq(slugs.entity_id, id));
     return { ok: true };

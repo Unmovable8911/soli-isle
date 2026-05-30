@@ -1,12 +1,35 @@
 import { FastifyPluginAsync } from 'fastify';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { pages, pageTranslations, slugs, languages } from '../../db/schema/index.js';
 
 const RESERVED_SLUGS = ['articles', 'moments', 'resources', 'api', 'admin', 'media'];
 
 export const adminPageRoutes: FastifyPluginAsync = async (app) => {
   app.get('/api/admin/pages', async () => {
-    return app.db.select().from(pages).orderBy(pages.sort_order);
+    const db = app.db;
+    const defaultLang = await db.select({ id: languages.id }).from(languages)
+      .where(eq(languages.is_default, 1)).limit(1);
+    const defaultLangId = defaultLang[0]?.id;
+    return db
+      .select({
+        id: pages.id,
+        slug: pages.slug,
+        published_at: pages.published_at,
+        is_draft: pages.is_draft,
+        sort_order: pages.sort_order,
+        created_at: pages.created_at,
+        updated_at: pages.updated_at,
+        translation_title: pageTranslations.title,
+      })
+      .from(pages)
+      .leftJoin(
+        pageTranslations,
+        and(
+          eq(pageTranslations.page_id, pages.id),
+          defaultLangId ? eq(pageTranslations.language_id, defaultLangId) : undefined,
+        ),
+      )
+      .orderBy(pages.sort_order);
   });
 
   app.get('/api/admin/pages/:id', async (request, reply) => {
@@ -97,6 +120,8 @@ export const adminPageRoutes: FastifyPluginAsync = async (app) => {
     const db = app.db;
     const existing = await db.select().from(pages).where(eq(pages.id, id)).limit(1);
     if (existing.length === 0) return reply.status(404).send({ error: 'Not found' });
+    // Delete child rows first to satisfy FK constraints (no ON DELETE CASCADE).
+    await db.delete(pageTranslations).where(eq(pageTranslations.page_id, id));
     await db.delete(pages).where(eq(pages.id, id));
     await db.delete(slugs).where(eq(slugs.entity_id, id));
     return { ok: true };

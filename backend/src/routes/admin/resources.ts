@@ -1,10 +1,32 @@
 import { FastifyPluginAsync } from 'fastify';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { resources, resourceTranslations, languages } from '../../db/schema/index.js';
 
 export const adminResourceRoutes: FastifyPluginAsync = async (app) => {
   app.get('/api/admin/resources', async () => {
-    return app.db.select().from(resources).orderBy(desc(resources.created_at));
+    const db = app.db;
+    const defaultLang = await db.select({ id: languages.id }).from(languages)
+      .where(eq(languages.is_default, 1)).limit(1);
+    const defaultLangId = defaultLang[0]?.id;
+    return db
+      .select({
+        id: resources.id,
+        url: resources.url,
+        cover_image: resources.cover_image,
+        category_id: resources.category_id,
+        created_at: resources.created_at,
+        updated_at: resources.updated_at,
+        translation_title: resourceTranslations.title,
+      })
+      .from(resources)
+      .leftJoin(
+        resourceTranslations,
+        and(
+          eq(resourceTranslations.resource_id, resources.id),
+          defaultLangId ? eq(resourceTranslations.language_id, defaultLangId) : undefined,
+        ),
+      )
+      .orderBy(desc(resources.created_at));
   });
 
   app.get('/api/admin/resources/:id', async (request, reply) => {
@@ -70,6 +92,8 @@ export const adminResourceRoutes: FastifyPluginAsync = async (app) => {
     const db = app.db;
     const existing = await db.select().from(resources).where(eq(resources.id, id)).limit(1);
     if (existing.length === 0) return reply.status(404).send({ error: 'Not found' });
+    // Delete child rows first to satisfy FK constraints (no ON DELETE CASCADE).
+    await db.delete(resourceTranslations).where(eq(resourceTranslations.resource_id, id));
     await db.delete(resources).where(eq(resources.id, id));
     return { ok: true };
   });

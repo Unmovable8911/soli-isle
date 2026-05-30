@@ -1,11 +1,30 @@
 import { FastifyPluginAsync } from 'fastify';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { moments, momentTranslations, momentTags, languages } from '../../db/schema/index.js';
 
 export const adminMomentRoutes: FastifyPluginAsync = async (app) => {
   app.get('/api/admin/moments', async () => {
     const db = app.db;
-    return db.select().from(moments).orderBy(desc(moments.published_at));
+    const defaultLang = await db.select({ id: languages.id }).from(languages)
+      .where(eq(languages.is_default, 1)).limit(1);
+    const defaultLangId = defaultLang[0]?.id;
+    return db
+      .select({
+        id: moments.id,
+        published_at: moments.published_at,
+        created_at: moments.created_at,
+        updated_at: moments.updated_at,
+        translation_body: momentTranslations.body,
+      })
+      .from(moments)
+      .leftJoin(
+        momentTranslations,
+        and(
+          eq(momentTranslations.moment_id, moments.id),
+          defaultLangId ? eq(momentTranslations.language_id, defaultLangId) : undefined,
+        ),
+      )
+      .orderBy(desc(moments.published_at));
   });
 
   app.get('/api/admin/moments/:id', async (request, reply) => {
@@ -83,6 +102,9 @@ export const adminMomentRoutes: FastifyPluginAsync = async (app) => {
     const db = app.db;
     const existing = await db.select().from(moments).where(eq(moments.id, id)).limit(1);
     if (existing.length === 0) return reply.status(404).send({ error: 'Not found' });
+    // Delete child rows first to satisfy FK constraints (no ON DELETE CASCADE).
+    await db.delete(momentTranslations).where(eq(momentTranslations.moment_id, id));
+    await db.delete(momentTags).where(eq(momentTags.moment_id, id));
     await db.delete(moments).where(eq(moments.id, id));
     return { ok: true };
   });
