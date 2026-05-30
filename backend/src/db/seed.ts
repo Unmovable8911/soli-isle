@@ -16,6 +16,7 @@ import { pages } from './schema/pages.js';
 import { pageTranslations } from './schema/page-translations.js';
 import { resources } from './schema/resources.js';
 import { resourceTranslations } from './schema/resource-translations.js';
+import { socialLinks } from './schema/social-links.js';
 import type { InferInsertModel } from 'drizzle-orm';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -93,6 +94,12 @@ async function seed() {
   await db.insert(resourceTranslations).values([
     { id: crypto.randomUUID(), resource_id: resId, language_id: enId, title: 'Example Resource', description: 'A useful example' },
     { id: crypto.randomUUID(), resource_id: resId, language_id: zhId, title: '示例资源', description: '一个有用的示例' },
+  ]);
+
+  // Sample social links (disabled by default — enable + set real URLs in the admin)
+  await db.insert(socialLinks).values([
+    { id: crypto.randomUUID(), platform: 'github', url: 'https://github.com/your-handle', is_enabled: 0, sort_order: 0, created_at: now, updated_at: now },
+    { id: crypto.randomUUID(), platform: 'rss', url: '/rss.xml', is_enabled: 0, sort_order: 1, created_at: now, updated_at: now },
   ]);
 
   console.log('Seed data inserted successfully.');
