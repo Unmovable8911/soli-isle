@@ -187,3 +187,9 @@
 .card-skeleton__lines { padding: var(--space-lg); display: flex; flex-direction: column; gap: .6rem; }
 .card-skeleton__lines .skeleton { display: block; }
 .empty-state .btn { margin-top: var(--space-md); }
+
+/* ── Footer social links ──────────────────────────── */
+.site-footer__social { display: flex; gap: .5rem; flex-wrap: wrap; }
+.social-icon { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); transition: transform var(--ease); }
+.social-icon:hover { transform: translateY(-2px); }
