@@ -3,6 +3,7 @@ import { useArticles } from '../../api/articles.js';
 import { ArticleCard } from '../../components/ArticleCard.js';
 import { FilterBar } from '../../components/FilterBar.js';
 import { InfiniteScroll } from '../../components/InfiniteScroll.js';
+import { CardSkeleton, FeedError, FeedEmpty } from '../../components/Feedback.js';
 
 export function ArticlesPage() {
   const [searchParams] = useSearchParams();
@@ -16,9 +17,15 @@ export function ArticlesPage() {
     <div className="list-page">
       <header className="list-page__header"><h1>Articles</h1></header>
       <FilterBar show="both" />
-      <InfiniteScroll className="articles-grid" hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
-        {articles.map(article => <ArticleCard key={article.id} article={article} />)}
-      </InfiniteScroll>
+      {query.isLoading
+        ? <div className="articles-grid">{Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}</div>
+        : query.error
+          ? <FeedError onRetry={() => query.refetch()} />
+          : articles.length === 0
+            ? <FeedEmpty message="No articles here yet." />
+            : <InfiniteScroll className="articles-grid" hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
+                {articles.map(article => <ArticleCard key={article.id} article={article} />)}
+              </InfiniteScroll>}
     </div>
   );
 }

@@ -180,3 +180,10 @@
 
 /* ── Standalone page (no TOC) ─────────────────────── */
 .page-detail { max-width: var(--content-width); margin: 0 auto; }
+
+/* ── Skeleton card ────────────────────────────────── */
+.card-skeleton { overflow: hidden; }
+.card-skeleton__img { display: block; width: 100%; aspect-ratio: 16 / 9; }
+.card-skeleton__lines { padding: var(--space-lg); display: flex; flex-direction: column; gap: .6rem; }
+.card-skeleton__lines .skeleton { display: block; }
+.empty-state .btn { margin-top: var(--space-md); }
