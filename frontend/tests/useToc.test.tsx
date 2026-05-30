@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useToc, slugify } from '../src/hooks/useToc.js';
 
 describe('slugify', () => {
@@ -34,5 +34,20 @@ describe('useToc', () => {
     let result: any;
     render(<Probe html="<h2>Dup</h2><h2>Dup</h2>" onToc={(t) => { result = t; }} />);
     expect(result.map((e: any) => e.id)).toEqual(['dup', 'dup-2']);
+  });
+
+  it('rebuilds when content is injected asynchronously (MutationObserver)', async () => {
+    const { waitFor } = await import('@testing-library/react');
+    function Async({ onToc }: { onToc: (t: any) => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      const toc = useToc(ref, []);
+      onToc(toc);
+      // start empty; inject a heading after mount
+      useEffect(() => { if (ref.current) ref.current.innerHTML = '<h2>Injected</h2>'; }, []);
+      return <div ref={ref} />;
+    }
+    let result: any = null;
+    render(<Async onToc={(t) => { result = t; }} />);
+    await waitFor(() => { expect(result).toEqual([{ id: 'injected', text: 'Injected', level: 2 }]); });
   });
 });
