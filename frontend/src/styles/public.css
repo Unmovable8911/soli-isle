@@ -57,3 +57,36 @@
   .masthead__nav a { padding: var(--space-md) var(--space-lg); border-top: 1px solid var(--color-border); }
   .layout > main { padding: var(--space-lg) var(--space-md); }
 }
+
+/* ── Home hero ────────────────────────────────────── */
+.home-hero { max-width: var(--content-width); margin: 0 auto var(--space-2xl); padding-top: var(--space-lg); }
+.home-hero__title { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.05; letter-spacing: -0.02em; }
+.home-hero__title em { font-style: italic; color: var(--color-accent); }
+.home-hero__sub { margin-top: var(--space-md); color: var(--color-muted); font-size: 1.1rem; max-width: 48ch; }
+
+/* ── Home feed (single reading column) ────────────── */
+.home-feed { max-width: var(--content-width); margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-xl); }
+
+/* ── Article card ─────────────────────────────────── */
+.article-card { overflow: hidden; display: flex; flex-direction: column; }
+.article-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.article-card > h2 { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.2;
+  margin: var(--space-md) var(--space-lg) 0; }
+.article-card > h2 a { color: var(--color-text); text-decoration: none; transition: color var(--ease); }
+.article-card > h2 a:hover { color: var(--color-accent); }
+.article-card > p { color: var(--color-muted); margin: var(--space-sm) var(--space-lg) 0; font-size: .95rem; }
+.article-card > time { font-family: var(--font-mono); font-size: .78rem; color: var(--color-muted);
+  margin: var(--space-md) var(--space-lg) var(--space-lg); margin-top: auto; padding-top: var(--space-md); }
+
+/* ── Moment card (compact, accent rail) ───────────── */
+.moment-card { background: var(--color-surface); border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent); border-radius: var(--radius); padding: var(--space-lg); }
+.moment-card__body { color: var(--color-text); }
+.moment-card__body :where(p) { margin: 0 0 var(--space-sm); }
+.moment-card__body :where(p):last-child { margin-bottom: 0; }
+.moment-card__tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: var(--space-md); }
+.moment-card > time { display: block; font-family: var(--font-mono); font-size: .78rem;
+  color: var(--color-muted); margin-top: var(--space-md); }
+.tag-pill { display: inline-flex; padding: .15rem .6rem; border-radius: 999px; font-size: .75rem;
+  background: var(--color-accent-soft); color: var(--color-accent); text-decoration: none; }

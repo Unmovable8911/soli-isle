@@ -1,4 +1,5 @@
 import { RichContent } from './RichContent.js';
+import { useScrollReveal } from '../hooks/useScrollReveal.js';
 
 interface MomentCardProps {
   moment: {
@@ -10,9 +11,10 @@ interface MomentCardProps {
 }
 
 export function MomentCard({ moment }: MomentCardProps) {
+  const reveal = useScrollReveal<HTMLDivElement>();
   return (
-    <div className="moment-card">
-      <RichContent content={moment.translation.body} />
+    <div ref={reveal} className="moment-card reveal">
+      <div className="moment-card__body"><RichContent content={moment.translation.body} /></div>
       {moment.tags.length > 0 && (
         <div className="moment-card__tags">
           {moment.tags.map(tag => (
@@ -20,9 +22,7 @@ export function MomentCard({ moment }: MomentCardProps) {
           ))}
         </div>
       )}
-      <time dateTime={moment.published_at}>
-        {new Date(moment.published_at).toLocaleDateString()}
-      </time>
+      <time dateTime={moment.published_at}>{new Date(moment.published_at).toLocaleDateString()}</time>
     </div>
   );
 }
