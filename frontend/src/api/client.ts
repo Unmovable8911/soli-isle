@@ -10,7 +10,8 @@ export async function apiFetch<T>(
   }
 ): Promise<T> {
   const url = new URL(`${BASE}${path}`, window.location.origin);
-  const lang = options?.lang ?? localStorage.getItem('soli-isle-lang');
+  const isAdmin = path.startsWith('/admin/');
+  const lang = options?.lang ?? (isAdmin ? null : localStorage.getItem('soli-isle-lang'));
   if (lang) url.searchParams.set('lang', lang);
   if (options?.params) {
     Object.entries(options.params).forEach(([k, v]) => {
