@@ -1,0 +1,36 @@
+@import '@fontsource-variable/fraunces';
+@import '@fontsource/schibsted-grotesk/400.css';
+@import '@fontsource/schibsted-grotesk/500.css';
+@import '@fontsource/schibsted-grotesk/700.css';
+@import '@fontsource-variable/newsreader';
+@import '@fontsource/space-mono/400.css';
+@import '@fontsource/space-mono/700.css';
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+img, video, svg { display: block; max-width: 100%; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+html {
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 100dvh;
+  transition: background-color var(--ease), color var(--ease);
+}
+::selection { background-color: var(--color-accent); color: var(--color-bg); }
+
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; font-weight: 600; }
+:where(a) { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
