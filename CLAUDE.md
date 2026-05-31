@@ -31,6 +31,26 @@ npm test               # Vitest + Testing Library (jsdom)
 Env (backend `src/config.ts`): `ADMIN_PASSWORD` (required), `SESSION_SECRET`, `PORT`
 (3000), `HOST`, `DB_PATH` (./data/soli-isle.db), `MEDIA_DIR`.
 
+## Docker (dev)
+
+```bash
+docker compose up --build   # then open http://localhost:5173
+```
+
+One **dev-only** `app` service (`compose.yaml`) builds a single image (`Dockerfile`)
+running **both** backend (`tsx watch`) and frontend (`vite`) in one container via
+`docker-entrypoint.sh`. Gotchas / conventions:
+- Base is **`node:24-alpine`**; native modules (`better-sqlite3`, `bcrypt`) compile
+  from source at build time, so the image needs `python3 make g++`.
+- **Source is bind-mounted** (`./backend`, `./frontend`) for hot reload; it is NOT
+  copied into the image. `node_modules` are installed in the image and preserved at
+  runtime via **anonymous volumes** that shadow the bind mounts — don't remove them or
+  the host dirs will hide the compiled binaries.
+- The entrypoint runs `db:migrate` on startup (idempotent), then launches both
+  processes and exits if either dies. Uses POSIX `sh` (no `wait -n` on busybox).
+- Env comes from **`.env`** (gitignored; `env_file` in compose). Template is
+  `.env.example`. SQLite db + media persist via the `./backend/data` bind mount.
+
 ## Frontend conventions
 
 - **Local imports use `.js` extensions** (e.g. `import { X } from './foo.js'`), even for `.ts`/`.tsx`.

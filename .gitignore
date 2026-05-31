@@ -1,3 +1,4 @@
 .claude
-.conversations
 docs/superpowers
+.env
+backend/data

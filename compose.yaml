@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "3000:3000" # Fastify API
+      - "5173:5173" # Vite dev server (open this in the browser)
+    volumes:
+      # Live source mounts for hot reload.
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      # Anonymous volumes shadow the bind mounts so the image-built node_modules
+      # (with compiled native binaries) are used instead of the host's.
+      - /app/backend/node_modules
+      - /app/frontend/node_modules
+      # SQLite db + uploaded media persist on the host (already inside ./backend,
+      # listed explicitly for clarity).
+      - ./backend/data:/app/backend/data

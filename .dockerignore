@@ -1,0 +1,10 @@
+**/node_modules
+backend/data
+**/dist
+.git
+.gitignore
+.claude
+.conversations
+.env
+docs
+*.md
