@@ -39,4 +39,14 @@ describe('GET /api/resources', () => {
     const res = await app.inject({ method: 'GET', url: '/api/resources?lang=en&category=nope' });
     expect(res.json().data).toHaveLength(0);
   });
+
+  it('falls back to the default language instead of disappearing', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/resources?lang=zh' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0].translation.title).toBe('Example');
+    expect(body.data[0].lang).toBe('en');
+    expect(body.data[0].category.translation.name).toBe('Tools');
+  });
 });

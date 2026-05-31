@@ -30,9 +30,16 @@ describe('GET /api/admin/ui-strings', () => {
     expect(res.json().length).toBeGreaterThanOrEqual(1);
   });
 
-  it('returns 400 without language_id', async () => {
+  it('lists all languages with language_code when no language_id given', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/admin/ui-strings', headers: { cookie } });
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(200);
+    const rows = res.json() as Array<{ id: string; key: string; language_code: string; value: string }>;
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    const home = rows.find(r => r.key === 'nav.home');
+    expect(home).toBeDefined();
+    expect(home!.language_code).toBe('en');
+    expect(home!.value).toBe('Home');
+    expect(home!.id).toBeTruthy();
   });
 });
 

@@ -1,7 +1,7 @@
 import { apiFetch } from './client.js';
 
-export async function login(password: string): Promise<void> {
-  await apiFetch('/admin/login', { method: 'POST', body: { password } });
+export async function login(password: string, rememberMe = false): Promise<void> {
+  await apiFetch('/admin/login', { method: 'POST', body: { password, rememberMe } });
 }
 
 export async function logout(): Promise<void> {

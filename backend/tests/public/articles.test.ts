@@ -78,3 +78,29 @@ describe('GET /api/articles/:slug', () => {
     expect(res.statusCode).toBe(404);
   });
 });
+
+describe('language fallback (zh configured but untranslated)', () => {
+  it('falls back to the default language in the list instead of disappearing', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/articles?lang=zh' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0].title).toBe('Hello World');
+    expect(body.data[0].lang).toBe('en');
+  });
+
+  it('falls back to the default language on detail, including tags and category', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/articles/hello-world?lang=zh' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.translation.title).toBe('Hello World');
+    expect(body.lang).toBe('en');
+    expect(body.tags[0].translation.name).toBe('Rust');
+    expect(body.category.translation.name).toBe('Technology');
+  });
+
+  it('reports the active language when a translation exists', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/articles?lang=en' });
+    expect(res.json().data[0].lang).toBe('en');
+  });
+});

@@ -24,6 +24,29 @@ describe('POST /api/admin/login', () => {
     expect(res.json()).toEqual({ ok: true });
     expect(res.headers['set-cookie']).toBeDefined();
   });
+
+  it('sets the session cookie to expire ~30 minutes out, not seconds', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/admin/login', payload: { password: 'test-password' } });
+    const setCookie = res.headers['set-cookie'];
+    const raw = Array.isArray(setCookie) ? setCookie[0]! : setCookie!;
+    const match = /expires=([^;]+)/i.exec(raw);
+    expect(match).not.toBeNull();
+    const minutesOut = (new Date(match![1]!).getTime() - Date.now()) / 60000;
+    expect(minutesOut).toBeGreaterThan(25);
+    expect(minutesOut).toBeLessThan(35);
+  });
+
+  it('extends the session cookie to ~7 days when rememberMe is set', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/admin/login', payload: { password: 'test-password', rememberMe: true } });
+    expect(res.statusCode).toBe(200);
+    const setCookie = res.headers['set-cookie'];
+    const raw = Array.isArray(setCookie) ? setCookie[0]! : setCookie!;
+    const match = /expires=([^;]+)/i.exec(raw);
+    expect(match).not.toBeNull();
+    const daysOut = (new Date(match![1]!).getTime() - Date.now()) / 86400000;
+    expect(daysOut).toBeGreaterThan(6.5);
+    expect(daysOut).toBeLessThan(7.5);
+  });
 });
 
 describe('GET /api/admin/me', () => {

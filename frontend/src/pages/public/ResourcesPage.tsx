@@ -4,9 +4,11 @@ import { ResourceCard } from '../../components/ResourceCard.js';
 import { FilterBar } from '../../components/FilterBar.js';
 import { InfiniteScroll } from '../../components/InfiniteScroll.js';
 import { CardSkeleton, FeedError, FeedEmpty } from '../../components/Feedback.js';
+import { useLanguage } from '../../contexts/LanguageContext.js';
 
 export function ResourcesPage() {
   const [searchParams] = useSearchParams();
+  const { t } = useLanguage();
   const category = searchParams.get('category') ?? undefined;
 
   const query = useResources({ category });
@@ -14,14 +16,14 @@ export function ResourcesPage() {
 
   return (
     <div className="list-page">
-      <header className="list-page__header"><h1>Resources</h1></header>
+      <header className="list-page__header"><h1>{t('nav.resources', 'Resources')}</h1></header>
       <FilterBar show="categories" />
       {query.isLoading
         ? <div className="resource-grid">{Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}</div>
         : query.error
           ? <FeedError onRetry={() => query.refetch()} />
           : resources.length === 0
-            ? <FeedEmpty message="No resources here yet." />
+            ? <FeedEmpty message={t('no_content', 'No resources here yet.')} />
             : <InfiniteScroll className="resource-grid" hasNextPage={!!query.hasNextPage} isFetchingNextPage={query.isFetchingNextPage} fetchNextPage={query.fetchNextPage}>
                 {resources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}
               </InfiniteScroll>}

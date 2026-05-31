@@ -1,9 +1,11 @@
 import { Link } from 'react-router';
 import { usePublicSocialLinks } from '../api/social-links.js';
 import { SOCIAL_META } from '../lib/social-catalog.js';
+import { useLanguage } from '../contexts/LanguageContext.js';
 
 export function Footer() {
   const { data: socials } = usePublicSocialLinks();
+  const { t } = useLanguage();
   return (
     <footer className="site-footer">
       <div className="site-footer__brand">
@@ -11,9 +13,9 @@ export function Footer() {
         <p>An archipelago of essays, moments &amp; finds</p>
       </div>
       <nav className="site-footer__nav" aria-label="Footer">
-        <Link to="/articles">Articles</Link>
-        <Link to="/moments">Moments</Link>
-        <Link to="/resources">Resources</Link>
+        <Link to="/articles">{t('nav.articles', 'Articles')}</Link>
+        <Link to="/moments">{t('nav.moments', 'Moments')}</Link>
+        <Link to="/resources">{t('nav.resources', 'Resources')}</Link>
       </nav>
       {socials && socials.length > 0 && (
         <div className="site-footer__social">

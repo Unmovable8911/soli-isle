@@ -4,24 +4,28 @@ import { useArticle } from '../../api/articles.js';
 import { RichContent } from '../../components/RichContent.js';
 import { useToc } from '../../hooks/useToc.js';
 import { ArticleToc } from '../../components/ArticleToc.js';
+import { FallbackBadge } from '../../components/FallbackBadge.js';
+import { useLanguage } from '../../contexts/LanguageContext.js';
 
 export function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { t } = useLanguage();
   const { data: article, isLoading, error } = useArticle(slug!);
   const bodyRef = useRef<HTMLDivElement>(null);
   const toc = useToc(bodyRef, [article?.translation.body]);
 
   if (isLoading) return <div className="page-loading"><span className="skeleton" style={{ height: '2rem', width: '60%', display: 'block' }} /></div>;
-  if (error || !article) return <div className="empty-state">Article not found</div>;
+  if (error || !article) return <div className="empty-state">{t('no_content', 'Article not found')}</div>;
 
   return (
     <div className="article-layout">
       <article className="article-detail">
-        <Link to="/articles" className="back-link link-underline">← Articles</Link>
+        <Link to="/articles" className="back-link link-underline">← {t('back_to_list', 'Back to articles')}</Link>
         <header className="article-detail__header">
           {article.category && <span className="eyebrow">{article.category.translation.name ?? article.category.slug}</span>}
+          <FallbackBadge lang={article.lang} />
           <h1>{article.translation.title}</h1>
-          <time className="meta" dateTime={article.published_at}>{new Date(article.published_at).toLocaleDateString()}</time>
+          <time className="meta" dateTime={article.published_at}>{t('published_on', 'Published on')} {new Date(article.published_at).toLocaleDateString()}</time>
         </header>
         {article.cover_image && <img src={article.cover_image} alt="" className="article-cover" />}
         <div className="article-body" ref={bodyRef}>

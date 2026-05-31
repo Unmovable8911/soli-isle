@@ -24,4 +24,12 @@ describe('GET /api/categories', () => {
     expect(body[0].slug).toBe('tech');
     expect(body[0].translation.name).toBe('Technology');
   });
+
+  it('falls back to the default language instead of disappearing', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/categories?lang=zh' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].translation.name).toBe('Technology');
+  });
 });

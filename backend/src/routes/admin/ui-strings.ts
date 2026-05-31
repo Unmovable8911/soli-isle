@@ -1,12 +1,23 @@
 import { FastifyPluginAsync } from 'fastify';
 import { eq, and } from 'drizzle-orm';
-import { uiTranslations } from '../../db/schema/index.js';
+import { uiTranslations, languages } from '../../db/schema/index.js';
 
 export const adminUIStringsRoutes: FastifyPluginAsync = async (app) => {
-  app.get('/api/admin/ui-strings', async (request, reply) => {
+  app.get('/api/admin/ui-strings', async (request) => {
     const { language_id } = request.query as { language_id?: string };
-    if (!language_id) return reply.status(400).send({ error: 'language_id is required' });
-    return app.db.select().from(uiTranslations).where(eq(uiTranslations.language_id, language_id));
+    const query = app.db
+      .select({
+        id: uiTranslations.id,
+        key: uiTranslations.key,
+        language_id: uiTranslations.language_id,
+        language_code: languages.code,
+        value: uiTranslations.value,
+      })
+      .from(uiTranslations)
+      .innerJoin(languages, eq(uiTranslations.language_id, languages.id));
+    // No language_id => return strings across all languages (admin grid view).
+    if (language_id) return query.where(eq(uiTranslations.language_id, language_id));
+    return query;
   });
 
   app.post('/api/admin/ui-strings', async (request, reply) => {

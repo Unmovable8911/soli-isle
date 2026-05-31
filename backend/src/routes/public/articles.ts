@@ -1,10 +1,11 @@
 import { FastifyPluginAsync } from 'fastify';
-import { eq, and, desc, inArray, lt } from 'drizzle-orm';
+import { eq, and, or, desc, inArray, lt, isNotNull, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import {
   articles, articleTranslations, articleTags,
   tags, tagTranslations, categories, categoryTranslations,
 } from '../../db/schema/index.js';
-import { resolveLanguage } from '../../lib/i18n.js';
+import { resolveLanguages } from '../../lib/i18n.js';
 import { decodeCursor, paginatedResult } from '../../lib/pagination.js';
 
 const DEFAULT_LIMIT = 20;
@@ -15,8 +16,13 @@ export const publicArticleRoutes: FastifyPluginAsync = async (app) => {
   app.get('/api/articles', async (request) => {
     const db = app.db;
     const query = request.query as { lang?: string; cursor?: string; limit?: string; category?: string; tag?: string };
-    const { id: langId } = await resolveLanguage(db, query.lang);
+    const { active, fallback } = await resolveLanguages(db, query.lang);
     const limit = Math.min(parseInt(query.limit || String(DEFAULT_LIMIT), 10), MAX_LIMIT);
+
+    // Active + default-language translation joins; an article appears as long as
+    // EITHER exists (falling back to the default language per-item).
+    const ta = alias(articleTranslations, 'ta');
+    const tf = alias(articleTranslations, 'tf');
 
     // Build tag filter
     let articleIds: string[] | undefined;
@@ -29,10 +35,10 @@ export const publicArticleRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Build conditions array
-    const conditions = [
+    const conditions: SQL[] = [
       eq(articles.is_draft, 0),
-      eq(articleTranslations.language_id, langId),
-    ] as ReturnType<typeof eq>[];
+      or(isNotNull(ta.id), isNotNull(tf.id))!,
+    ];
 
     if (query.category) {
       const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.slug, query.category));
@@ -57,16 +63,35 @@ export const publicArticleRoutes: FastifyPluginAsync = async (app) => {
         published_at: articles.published_at,
         created_at: articles.created_at,
         updated_at: articles.updated_at,
-        title: articleTranslations.title,
-        excerpt: articleTranslations.excerpt,
+        active_id: ta.id,
+        active_title: ta.title,
+        active_excerpt: ta.excerpt,
+        fb_title: tf.title,
+        fb_excerpt: tf.excerpt,
       })
       .from(articles)
-      .innerJoin(articleTranslations, eq(articles.id, articleTranslations.article_id))
+      .leftJoin(ta, and(eq(articles.id, ta.article_id), eq(ta.language_id, active.id)))
+      .leftJoin(tf, and(eq(articles.id, tf.article_id), eq(tf.language_id, fallback.id)))
       .where(and(...conditions))
       .orderBy(desc(articles.published_at))
       .limit(limit + 1);
 
-    return paginatedResult(rows, 'published_at', limit);
+    const mapped = rows.map(r => {
+      const useActive = r.active_id != null;
+      return {
+        id: r.id,
+        slug: r.slug,
+        cover_image: r.cover_image,
+        published_at: r.published_at,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+        lang: useActive ? active.code : fallback.code,
+        title: useActive ? r.active_title : r.fb_title,
+        excerpt: useActive ? r.active_excerpt : r.fb_excerpt,
+      };
+    });
+
+    return paginatedResult(mapped, 'published_at', limit);
   });
 
   // GET /api/articles/:slug — detail by slug
@@ -74,7 +99,10 @@ export const publicArticleRoutes: FastifyPluginAsync = async (app) => {
     const db = app.db;
     const { slug } = request.params as { slug: string };
     const { lang } = request.query as { lang?: string };
-    const { id: langId } = await resolveLanguage(db, lang);
+    const { active, fallback } = await resolveLanguages(db, lang);
+
+    const ta = alias(articleTranslations, 'ta');
+    const tf = alias(articleTranslations, 'tf');
 
     const rows = await db
       .select({
@@ -86,36 +114,52 @@ export const publicArticleRoutes: FastifyPluginAsync = async (app) => {
         updated_at: articles.updated_at,
         category_id: categories.id,
         category_slug: categories.slug,
-        translation_title: articleTranslations.title,
-        translation_body: articleTranslations.body,
-        translation_excerpt: articleTranslations.excerpt,
+        active_id: ta.id,
+        active_title: ta.title,
+        active_body: ta.body,
+        active_excerpt: ta.excerpt,
+        fb_id: tf.id,
+        fb_title: tf.title,
+        fb_body: tf.body,
+        fb_excerpt: tf.excerpt,
       })
       .from(articles)
-      .innerJoin(articleTranslations, and(eq(articles.id, articleTranslations.article_id), eq(articleTranslations.language_id, langId)))
+      .leftJoin(ta, and(eq(articles.id, ta.article_id), eq(ta.language_id, active.id)))
+      .leftJoin(tf, and(eq(articles.id, tf.article_id), eq(tf.language_id, fallback.id)))
       .leftJoin(categories, eq(articles.category_id, categories.id))
       .where(and(eq(articles.slug, slug), eq(articles.is_draft, 0)))
       .limit(1);
 
     if (rows.length === 0) return reply.status(404).send({ error: 'Not found' });
     const row = rows[0]!;
+    // No translation in either language → nothing to show.
+    if (row.active_id == null && row.fb_id == null) return reply.status(404).send({ error: 'Not found' });
+    const useActive = row.active_id != null;
 
-    // Fetch tags
+    // Fetch tags (each falls back to the default language independently).
+    const tta = alias(tagTranslations, 'tta');
+    const ttf = alias(tagTranslations, 'ttf');
     const tagRows = await db
-      .select({ id: tags.id, slug: tags.slug, name: tagTranslations.name })
+      .select({ id: tags.id, slug: tags.slug, active_name: tta.name, fb_name: ttf.name })
       .from(articleTags)
       .innerJoin(tags, eq(articleTags.tag_id, tags.id))
-      .innerJoin(tagTranslations, and(eq(tags.id, tagTranslations.tag_id), eq(tagTranslations.language_id, langId)))
+      .leftJoin(tta, and(eq(tags.id, tta.tag_id), eq(tta.language_id, active.id)))
+      .leftJoin(ttf, and(eq(tags.id, ttf.tag_id), eq(ttf.language_id, fallback.id)))
       .where(eq(articleTags.article_id, row.id));
 
-    // Fetch category translation if category exists
+    // Fetch category translation if category exists (active, else default).
     let categoryResult = null;
     if (row.category_id) {
       const catTrans = await db
-        .select({ name: categoryTranslations.name })
+        .select({ name: categoryTranslations.name, language_id: categoryTranslations.language_id })
         .from(categoryTranslations)
-        .where(and(eq(categoryTranslations.category_id, row.category_id), eq(categoryTranslations.language_id, langId)))
-        .limit(1);
-      categoryResult = { id: row.category_id, slug: row.category_slug, translation: { name: catTrans[0]?.name ?? null } };
+        .where(and(
+          eq(categoryTranslations.category_id, row.category_id),
+          inArray(categoryTranslations.language_id, [active.id, fallback.id]),
+        ));
+      const activeName = catTrans.find(c => c.language_id === active.id)?.name;
+      const fbName = catTrans.find(c => c.language_id === fallback.id)?.name;
+      categoryResult = { id: row.category_id, slug: row.category_slug, translation: { name: activeName ?? fbName ?? null } };
     }
 
     return {
@@ -125,9 +169,14 @@ export const publicArticleRoutes: FastifyPluginAsync = async (app) => {
       published_at: row.published_at,
       created_at: row.created_at,
       updated_at: row.updated_at,
+      lang: useActive ? active.code : fallback.code,
       category: categoryResult,
-      tags: tagRows.map(t => ({ id: t.id, slug: t.slug, translation: { name: t.name } })),
-      translation: { title: row.translation_title, body: row.translation_body, excerpt: row.translation_excerpt },
+      tags: tagRows.map(t => ({ id: t.id, slug: t.slug, translation: { name: t.active_name ?? t.fb_name ?? null } })),
+      translation: {
+        title: useActive ? row.active_title : row.fb_title,
+        body: useActive ? row.active_body : row.fb_body,
+        excerpt: useActive ? row.active_excerpt : row.fb_excerpt,
+      },
     };
   });
 };

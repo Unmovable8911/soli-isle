@@ -1,6 +1,7 @@
 import { useParams } from 'react-router';
 import { usePage } from '../../api/pages.js';
 import { RichContent } from '../../components/RichContent.js';
+import { FallbackBadge } from '../../components/FallbackBadge.js';
 
 export function PageDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -11,7 +12,7 @@ export function PageDetailPage() {
 
   return (
     <article className="page-detail">
-      <header className="article-detail__header"><h1>{page.translation.title}</h1></header>
+      <header className="article-detail__header"><FallbackBadge lang={page.lang} /><h1>{page.translation.title}</h1></header>
       <div className="article-body"><RichContent content={page.translation.body} /></div>
     </article>
   );

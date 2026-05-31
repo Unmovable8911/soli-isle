@@ -1,10 +1,12 @@
 import { useScrollReveal } from '../hooks/useScrollReveal.js';
+import { FallbackBadge } from './FallbackBadge.js';
 
 interface ResourceCardProps {
   resource: {
     id: string;
     url: string;
     cover_image: string | null;
+    lang: string;
     translation: { title: string; description: string };
     category: { id: string; slug: string; translation: { name: string | null } } | null;
   };
@@ -17,6 +19,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
       target="_blank" rel="noopener noreferrer">
       {resource.cover_image && <img src={resource.cover_image} alt="" />}
       <div className="resource-card__body">
+        <FallbackBadge lang={resource.lang} />
         {resource.category && (
           <span className="eyebrow">{resource.category.translation.name ?? resource.category.slug}</span>
         )}

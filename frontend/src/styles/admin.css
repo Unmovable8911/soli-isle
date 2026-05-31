@@ -49,6 +49,9 @@
   padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-md); }
 .login-title { font-family: var(--font-display); font-size: 1.6rem; text-align: center; margin-bottom: var(--space-sm); }
 .login-error { color: var(--color-danger); font-size: .9rem; text-align: center; }
+.login-notice { color: var(--color-muted); font-size: .9rem; text-align: center; }
+.login-remember { display: flex; align-items: center; gap: var(--space-xs); font-size: .9rem; color: var(--color-muted); cursor: pointer; }
+.login-remember input { accent-color: var(--color-accent); cursor: pointer; }
 .login-field { display: flex; flex-direction: column; }
 .login-input { width: 100%; padding: .6rem .75rem; font: inherit; background: var(--color-bg);
   color: var(--color-text); border: 1px solid var(--color-border); border-radius: var(--radius-sm);

@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
+
+vi.mock('../../src/contexts/LanguageContext.js', () => ({
+  useLanguage: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
+}));
+
 import { ArticleCard } from '../../src/components/ArticleCard.js';
 
 const mockArticle = {

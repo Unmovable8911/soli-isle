@@ -1,7 +1,8 @@
 import { FastifyPluginAsync } from 'fastify';
-import { eq, and, desc, inArray, lt } from 'drizzle-orm';
+import { eq, and, or, desc, inArray, lt, isNotNull, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import { moments, momentTranslations, momentTags, tags, tagTranslations } from '../../db/schema/index.js';
-import { resolveLanguage } from '../../lib/i18n.js';
+import { resolveLanguages } from '../../lib/i18n.js';
 import { decodeCursor, paginatedResult } from '../../lib/pagination.js';
 
 const DEFAULT_LIMIT = 20;
@@ -10,10 +11,13 @@ export const publicMomentRoutes: FastifyPluginAsync = async (app) => {
   app.get('/api/moments', async (request) => {
     const db = app.db;
     const query = request.query as { lang?: string; cursor?: string; limit?: string; tag?: string };
-    const { id: langId } = await resolveLanguage(db, query.lang);
+    const { active, fallback } = await resolveLanguages(db, query.lang);
     const limit = Math.min(parseInt(query.limit || String(DEFAULT_LIMIT), 10), 50);
 
-    const conditions = [eq(momentTranslations.language_id, langId)] as ReturnType<typeof eq>[];
+    const ma = alias(momentTranslations, 'ma');
+    const mf = alias(momentTranslations, 'mf');
+
+    const conditions: SQL[] = [or(isNotNull(ma.id), isNotNull(mf.id))!];
 
     if (query.cursor) {
       conditions.push(lt(moments.published_at, decodeCursor(query.cursor)));
@@ -33,10 +37,13 @@ export const publicMomentRoutes: FastifyPluginAsync = async (app) => {
         id: moments.id,
         published_at: moments.published_at,
         created_at: moments.created_at,
-        body: momentTranslations.body,
+        active_id: ma.id,
+        active_body: ma.body,
+        fb_body: mf.body,
       })
       .from(moments)
-      .innerJoin(momentTranslations, eq(moments.id, momentTranslations.moment_id))
+      .leftJoin(ma, and(eq(moments.id, ma.moment_id), eq(ma.language_id, active.id)))
+      .leftJoin(mf, and(eq(moments.id, mf.moment_id), eq(mf.language_id, fallback.id)))
       .where(and(...conditions))
       .orderBy(desc(moments.published_at))
       .limit(limit + 1);
@@ -44,23 +51,36 @@ export const publicMomentRoutes: FastifyPluginAsync = async (app) => {
     const momentIds = rows.map(r => r.id);
     const tagMap: Record<string, { id: string; slug: string; name: string | null }[]> = {};
     if (momentIds.length > 0) {
+      const tta = alias(tagTranslations, 'tta');
+      const ttf = alias(tagTranslations, 'ttf');
       const tagRows = await db
-        .select({ moment_id: momentTags.moment_id, id: tags.id, slug: tags.slug, name: tagTranslations.name })
+        .select({
+          moment_id: momentTags.moment_id,
+          id: tags.id,
+          slug: tags.slug,
+          active_name: tta.name,
+          fb_name: ttf.name,
+        })
         .from(momentTags)
         .innerJoin(tags, eq(momentTags.tag_id, tags.id))
-        .innerJoin(tagTranslations, and(eq(tags.id, tagTranslations.tag_id), eq(tagTranslations.language_id, langId)))
+        .leftJoin(tta, and(eq(tags.id, tta.tag_id), eq(tta.language_id, active.id)))
+        .leftJoin(ttf, and(eq(tags.id, ttf.tag_id), eq(ttf.language_id, fallback.id)))
         .where(inArray(momentTags.moment_id, momentIds));
       for (const t of tagRows) {
-        (tagMap[t.moment_id] ??= []).push({ id: t.id, slug: t.slug, name: t.name });
+        (tagMap[t.moment_id] ??= []).push({ id: t.id, slug: t.slug, name: t.active_name ?? t.fb_name ?? null });
       }
     }
 
-    const data = rows.map(r => ({
-      id: r.id,
-      published_at: r.published_at,
-      translation: { body: r.body },
-      tags: (tagMap[r.id] ?? []).map(t => ({ id: t.id, slug: t.slug, translation: { name: t.name } })),
-    }));
+    const data = rows.map(r => {
+      const useActive = r.active_id != null;
+      return {
+        id: r.id,
+        published_at: r.published_at,
+        lang: useActive ? active.code : fallback.code,
+        translation: { body: useActive ? r.active_body : r.fb_body },
+        tags: (tagMap[r.id] ?? []).map(t => ({ id: t.id, slug: t.slug, translation: { name: t.name } })),
+      };
+    });
 
     return paginatedResult(data, 'published_at', limit);
   });

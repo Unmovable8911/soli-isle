@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { useLanguages } from '../api/languages.js';
+import { useUIStrings } from '../api/ui-strings.js';
 
 interface LanguageContextValue {
   lang: string;
   isReady: boolean;
   setLang: (code: string) => void;
   availableLanguages: { code: string; name: string }[];
+  /** Translate a UI-chrome key for the active language; falls back to `fallback` (then the key). */
+  t: (key: string, fallback?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -39,11 +42,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLangState(code);
   }, []);
 
+  const { data: uiStrings } = useUIStrings(lang);
+  const t = useCallback(
+    (key: string, fallback?: string) => uiStrings?.[key] ?? fallback ?? key,
+    [uiStrings]
+  );
+
   const availableLanguages = (languages ?? []).map(l => ({ code: l.code, name: l.name }));
   const isReady = lang !== '';
 
   return (
-    <LanguageContext.Provider value={{ lang, isReady, setLang, availableLanguages }}>
+    <LanguageContext.Provider value={{ lang, isReady, setLang, availableLanguages, t }}>
       {children}
     </LanguageContext.Provider>
   );

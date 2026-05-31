@@ -49,3 +49,22 @@ describe('GET /api/pages/:slug', () => {
     expect(res.statusCode).toBe(404);
   });
 });
+
+describe('language fallback (zh configured but untranslated)', () => {
+  it('falls back to the default language in the list', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/pages?lang=zh' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].translation.title).toBe('About');
+    expect(body[0].lang).toBe('en');
+  });
+
+  it('falls back to the default language on detail', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/pages/about?lang=zh' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.translation.title).toBe('About');
+    expect(body.lang).toBe('en');
+  });
+});

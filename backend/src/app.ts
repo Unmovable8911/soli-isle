@@ -43,7 +43,7 @@ export async function createApp(opts?: { dbPath?: string; disableListen?: boolea
   await app.register(cookie);
   await app.register(session, {
     secret: config.sessionSecret,
-    cookie: { secure: false, httpOnly: true, maxAge: 86400 },
+    cookie: { secure: false, httpOnly: true, maxAge: config.sessionMaxAge },
     saveUninitialized: false,
   });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });

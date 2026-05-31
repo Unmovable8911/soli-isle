@@ -37,11 +37,24 @@ async function seed() {
     { id: zhId, code: 'zh', name: '中文', is_default: 0 },
   ]);
 
-  // UI translations for both languages
+  // UI-chrome translations for both languages. These are the strings rendered
+  // by the public layout (nav, footer, cards, detail pages); the admin UI Strings
+  // page lets the owner edit them. Keep en + zh in sync with the keys consumed in
+  // the frontend (see useLanguage().t calls).
   type NewUiTranslation = InferInsertModel<typeof uiTranslations>;
-  const uiKeys = ['nav.home', 'nav.articles', 'nav.moments', 'nav.resources', 'nav.about', 'published_on', 'read_more', 'no_content', 'back_to_list'];
-  const enUi: NewUiTranslation[] = uiKeys.map(k => ({ id: crypto.randomUUID(), key: k, language_id: enId, value: k.replace('nav.', '').replace(/_/g, ' ') }));
-  const zhUi: NewUiTranslation[] = uiKeys.map(k => ({ id: crypto.randomUUID(), key: k, language_id: zhId, value: k }));
+  const uiStrings: Record<string, { en: string; zh: string }> = {
+    'nav.home': { en: 'Home', zh: '首页' },
+    'nav.articles': { en: 'Articles', zh: '文章' },
+    'nav.moments': { en: 'Moments', zh: '瞬间' },
+    'nav.resources': { en: 'Resources', zh: '资源' },
+    'nav.about': { en: 'About', zh: '关于' },
+    'published_on': { en: 'Published on', zh: '发布于' },
+    'read_more': { en: 'Read more', zh: '阅读更多' },
+    'no_content': { en: 'Nothing here yet.', zh: '暂无内容' },
+    'back_to_list': { en: 'Back to articles', zh: '返回文章列表' },
+  };
+  const enUi: NewUiTranslation[] = Object.entries(uiStrings).map(([key, v]) => ({ id: crypto.randomUUID(), key, language_id: enId, value: v.en }));
+  const zhUi: NewUiTranslation[] = Object.entries(uiStrings).map(([key, v]) => ({ id: crypto.randomUUID(), key, language_id: zhId, value: v.zh }));
   await db.insert(uiTranslations).values([...enUi, ...zhUi]);
 
   // Create category

@@ -84,6 +84,14 @@ running **both** backend (`tsx watch`) and frontend (`vite`) in one container vi
 - Admin list endpoints left-join the **default-language** translation for display
   titles; a non-matching sentinel id is used when no default language exists (prevents
   duplicate rows).
+- **Public endpoints fall back to the default language per-item.** Use
+  `resolveLanguages()` (not the older single-language `resolveLanguage`) to get
+  `{ active, fallback }`, then LEFT-JOIN the translation table twice (active id +
+  default id) and prefer the active row, else the default — so an item lacking a
+  translation in the active language shows default-language content instead of
+  disappearing. This applies to nested tags/categories too. Each item returns a `lang`
+  field (the language actually shown) so the frontend renders a `<FallbackBadge>`.
+  Public list query keys include `lang` so switching language refetches.
 - **i18n param**: `src/api/client.ts` must NOT append the visitor's `?lang=` to
   `/admin/*` requests (admin needs all translations).
 

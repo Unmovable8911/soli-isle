@@ -8,6 +8,9 @@ vi.mock('../src/api/social-links.js', () => ({
     { id: '2', platform: 'email', url: 'mailto:me@x.com', is_enabled: 1, sort_order: 1 },
   ] }),
 }));
+vi.mock('../src/contexts/LanguageContext.js', () => ({
+  useLanguage: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
+}));
 import { Footer } from '../src/components/Footer.js';
 
 describe('Footer social links', () => {

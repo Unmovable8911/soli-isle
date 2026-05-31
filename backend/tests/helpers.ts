@@ -69,13 +69,15 @@ export async function createTestApp(): Promise<FastifyInstance> {
     host: '127.0.0.1',
     dbPath: ':memory:',
     sessionSecret: 'test-secret-must-be-32-chars-long!!',
+    sessionMaxAge: 1000 * 60 * 30,
+    sessionRememberMaxAge: 1000 * 60 * 60 * 24 * 7,
     mediaDir: '/tmp/soli-isle-test-media',
   });
 
   await app.register(cookie);
   await app.register(session, {
     secret: 'test-secret-must-be-32-chars-long!!',
-    cookie: { secure: false, httpOnly: true, maxAge: 86400 },
+    cookie: { secure: false, httpOnly: true, maxAge: 1000 * 60 * 30 },
     saveUninitialized: false,
   });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
