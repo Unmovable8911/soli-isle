@@ -1,0 +1,44 @@
+{
+  "id": "6b3f1934-8f44-4b2e-9d27-3a5e8fdb67a1",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "sqlite",
+  "tables": {
+    "health_check": {
+      "name": "health_check",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "touched_at": {
+          "name": "touched_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "enums": {},
+  "_meta": {
+    "columns": {},
+    "indexes": {},
+    "foreignKeys": {},
+    "compositePrimaryKeys": {},
+    "uniqueConstraints": {},
+    "checkConstraints": {},
+    "views": {},
+    "sequences": {}
+  }
+}
