@@ -62,3 +62,40 @@ header nav a {
 main {
   padding: 1.25rem;
 }
+
+.admin-badge {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--muted);
+  border-radius: 0.375rem;
+  color: var(--muted);
+  font-size: 0.8em;
+  font-weight: 400;
+}
+
+.admin-login-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 24rem;
+}
+
+.admin-login-form label {
+  font-weight: 600;
+}
+
+.admin-login-form input,
+.admin-login-form button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--muted);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.admin-login-form button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+}

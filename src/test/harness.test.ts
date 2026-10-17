@@ -22,14 +22,17 @@ describe("shared test harness", () => {
     const tables = readApplicationSchema(harness)
       .filter((row) => row.type === "table")
       .map((row) => row.name);
-    const columns = (
-      harness.database.sqlite.prepare("PRAGMA table_info(health_check)").all() as Array<{
-        name: string;
-      }>
-    ).map((column) => column.name);
 
-    expect(tables).toEqual(["health_check"]);
-    expect(columns).toEqual(["id", "touched_at"]);
+    expect(tables).toEqual(["auth_audit_log", "health_check", "session"]);
+    expect(columnsOf(harness, "health_check")).toEqual(["id", "touched_at"]);
+    expect(columnsOf(harness, "session")).toEqual(["id", "created_at", "last_seen_at", "expires_at"]);
+    expect(columnsOf(harness, "auth_audit_log")).toEqual([
+      "id",
+      "occurred_at",
+      "kind",
+      "source",
+      "detail",
+    ]);
   });
 
   it("can re-run migrations without changing the established schema", async () => {
@@ -106,4 +109,10 @@ function readApplicationSchema(harness: TestHarness): SchemaRow[] {
       "SELECT type, name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name <> '__drizzle_migrations' ORDER BY type, name",
     )
     .all() as SchemaRow[];
+}
+
+function columnsOf(harness: TestHarness, table: string): string[] {
+  return (
+    harness.database.sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+  ).map((column) => column.name);
 }

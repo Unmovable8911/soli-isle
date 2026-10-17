@@ -10,6 +10,7 @@ services:
       PORT: 3000
       DATABASE_PATH: /data/database/soli-isle.sqlite
       RESOURCE_DIR: /data/images
+      AUTHOR_PASSWORD_HASH: ${AUTHOR_PASSWORD_HASH:-}
     volumes:
       - ./data/database:/data/database
       - ./data/images:/data/images

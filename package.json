@@ -15,9 +15,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate": "tsx scripts/migrate.ts"
+    "db:migrate": "tsx scripts/migrate.ts",
+    "auth:hash-password": "tsx scripts/hash-password.ts",
+    "auth:reset-password": "tsx scripts/reset-password.ts"
   },
   "dependencies": {
+    "argon2": "^0.45.1",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.44.7",
     "next": "^15.5.7",

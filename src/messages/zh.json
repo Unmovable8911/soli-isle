@@ -18,5 +18,23 @@
   "home": {
     "title": "Soli Isle",
     "tagline": "基础已就绪。"
+  },
+  "admin": {
+    "login": {
+      "title": "后台登录",
+      "passwordLabel": "密码",
+      "submit": "登录",
+      "errorInvalid": "密码不正确。",
+      "errorRateLimited": "尝试次数过多，请稍后再试。"
+    },
+    "shell": {
+      "logout": "退出登录",
+      "badge": "后台"
+    },
+    "home": {
+      "title": "管理后台",
+      "tagline": "作者工作台。",
+      "hint": "内容管理入口将在后续任务中加入。"
+    }
   }
 }

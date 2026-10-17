@@ -18,5 +18,23 @@
   "home": {
     "title": "Soli Isle",
     "tagline": "The foundation is running."
+  },
+  "admin": {
+    "login": {
+      "title": "Admin sign in",
+      "passwordLabel": "Password",
+      "submit": "Sign in",
+      "errorInvalid": "Incorrect password.",
+      "errorRateLimited": "Too many attempts. Please try again later."
+    },
+    "shell": {
+      "logout": "Sign out",
+      "badge": "Admin"
+    },
+    "home": {
+      "title": "Admin console",
+      "tagline": "The Author's workbench.",
+      "hint": "Content management will arrive in a later task."
+    }
   }
 }

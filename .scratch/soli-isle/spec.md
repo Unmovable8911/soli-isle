@@ -175,6 +175,7 @@
 - `src/domain/`：纯逻辑，不引入框架与数据库。承载 Locale 解析与降级选择、可见性判定、URL 生成与解析、日期格式化、Slug 规范化、快照修剪策略。
 - `src/services/`：应用的唯一接缝。每个操作是一个明确命名的服务函数，入参出参都是普通数据，依赖通过显式注入的上下文（仓储、时钟、资源存储）获得。
 - `src/db/`：Drizzle schema、迁移、仓储实现。
+- `src/security/`：基础设施封装（如 Argon2id 密码哈希），只被服务层与 CLI 引用，不含业务判断。
 - HTTP 层（Route Handlers、Server Components、中间件）：只做解析请求、校验会话、组装响应，不含业务判断。
 - 全部写操作走 REST 风格 Route Handlers，**不使用 Server Actions**。理由：保留一个稳定的、可被非浏览器客户端调用的写接口面，供未来的移动端写作应用复用；服务层不感知调用者是谁。
 

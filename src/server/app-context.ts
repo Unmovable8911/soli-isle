@@ -1,8 +1,10 @@
+import { resolveAuthConfig } from "@/config/auth";
 import { resolveRuntimePaths } from "@/config/runtime";
 import { openDatabase, type DatabaseConnection } from "@/db/database";
 import { createDatabaseAvailabilityProbe } from "@/db/database-health";
 import { runMigrations } from "@/db/migrate";
 import { systemClock, type Clock } from "@/domain/clock";
+import { createAuthorAuthContext, type AuthorAuthContext } from "@/services/auth";
 import type { HealthContext } from "@/services/health";
 import { FileSystemResourceStorage } from "@/storage/filesystem-resource-storage";
 
@@ -11,6 +13,7 @@ export interface AppContext {
   clock: Clock;
   storage: FileSystemResourceStorage;
   health: HealthContext;
+  auth: AuthorAuthContext;
 }
 
 let cachedContext: AppContext | undefined;
@@ -30,6 +33,7 @@ export function createAppContext(
   }
 
   const storage = new FileSystemResourceStorage(paths.resourceDir);
+  const authConfig = resolveAuthConfig(env);
 
   return {
     database,
@@ -39,6 +43,12 @@ export function createAppContext(
       database: createDatabaseAvailabilityProbe(database.sqlite, paths.databasePath),
       storage,
     },
+    auth: createAuthorAuthContext(
+      database,
+      systemClock,
+      authConfig,
+      null, // TOTP 钩子：两步验证默认关闭，启用时在此注入 TotpVerifier。
+    ),
   };
 }
 
