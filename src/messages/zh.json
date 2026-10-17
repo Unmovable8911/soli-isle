@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "Soli Isle",
+    "description": "一个人的多语言博客，容纳长文与推文。"
+  },
+  "chrome": {
+    "siteName": "Soli Isle",
+    "switchLocaleLabel": "切换语言",
+    "themeLabel": "主题",
+    "themeSystem": "跟随系统",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "localeNames": {
+      "zh": "中文",
+      "en": "English"
+    }
+  },
+  "home": {
+    "title": "Soli Isle",
+    "tagline": "基础已就绪。"
+  }
+}

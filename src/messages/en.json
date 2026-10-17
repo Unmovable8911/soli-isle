@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "Soli Isle",
+    "description": "A personal, multilingual home for Articles and Posts."
+  },
+  "chrome": {
+    "siteName": "Soli Isle",
+    "switchLocaleLabel": "Switch language",
+    "themeLabel": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "localeNames": {
+      "zh": "中文",
+      "en": "English"
+    }
+  },
+  "home": {
+    "title": "Soli Isle",
+    "tagline": "The foundation is running."
+  }
+}
