@@ -3,7 +3,7 @@ import { resolveRuntimePaths } from "./runtime";
 
 describe("runtime paths", () => {
   it("uses the site data directory defaults", () => {
-    expect(resolveRuntimePaths({}, "/srv/soli-isle")).toEqual({
+    expect(resolveRuntimePaths({ NODE_ENV: "test" }, "/srv/soli-isle")).toEqual({
       databasePath: "/srv/soli-isle/data/database/soli-isle.sqlite",
       resourceDir: "/srv/soli-isle/data/images",
       migrationsDir: "/srv/soli-isle/drizzle",
@@ -14,6 +14,7 @@ describe("runtime paths", () => {
     expect(
       resolveRuntimePaths(
         {
+          NODE_ENV: "test",
           DATABASE_PATH: "storage/site.sqlite",
           RESOURCE_DIR: "/var/lib/soli-isle/images",
         },
@@ -25,8 +26,9 @@ describe("runtime paths", () => {
       migrationsDir: "/srv/soli-isle/drizzle",
     });
 
-    expect(resolveRuntimePaths({ DATABASE_PATH: ":memory:" }, "/srv/soli-isle").databasePath).toBe(
-      ":memory:",
-    );
+    expect(
+      resolveRuntimePaths({ NODE_ENV: "test", DATABASE_PATH: ":memory:" }, "/srv/soli-isle")
+        .databasePath,
+    ).toBe(":memory:");
   });
 });

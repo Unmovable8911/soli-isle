@@ -21,6 +21,7 @@ describe("application startup context", () => {
 
     const context = createAppContext(
       {
+        NODE_ENV: "test",
         DATABASE_PATH: databasePath,
         RESOURCE_DIR: resourceDir,
       },
@@ -41,6 +42,7 @@ describe("application startup context", () => {
     const databasePath = path.join(temporaryRoot, "database", "site.sqlite");
     const context = createAppContext(
       {
+        NODE_ENV: "test",
         DATABASE_PATH: databasePath,
         RESOURCE_DIR: path.join(temporaryRoot, "images"),
       },
