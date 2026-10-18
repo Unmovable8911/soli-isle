@@ -1,3 +1,9 @@
+## Development environment
+
+Development runs in WSL. Docker needs Docker Desktop started manually on the Windows host.
+
+If Docker is unavailable, stop and ask the developer to start Docker Desktop; continue only after it works.
+
 ## Agent skills
 
 ### Issue tracker
