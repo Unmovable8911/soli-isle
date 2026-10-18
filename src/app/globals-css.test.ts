@@ -318,6 +318,23 @@ describe.each(Object.keys(THEMES) as Theme[])("the %s theme", (theme) => {
   );
 });
 
+/**
+ * The line a rule draws, whichever side it names it on. A control boundary is a
+ * box, so it uses the shorthand; a separator is a line *between* two things, so
+ * it is written as a top rule. What these tables audit is the token behind that
+ * edge, and that is the same question either way.
+ */
+function drawnBorder(body: string): string | undefined {
+  const declared = declarations(body);
+  return (
+    declared.get("border") ??
+    declared.get("border-top") ??
+    declared.get("border-bottom") ??
+    declared.get("border-block") ??
+    declared.get("border-inline")
+  );
+}
+
 /** A shape only a control may draw: text fields, the writing surfaces. */
 const CONTROL_BORDERS = [
   ".post-composer-surface",
@@ -329,6 +346,7 @@ const CONTROL_BORDERS = [
   ".site-search input",
   ".site-menu summary",
   ".site-rail button",
+  ".feed-more-button",
 ] as const;
 
 /**
@@ -337,8 +355,9 @@ const CONTROL_BORDERS = [
  * --border-strong would shout every box on the page.
  */
 const DECORATIVE_BORDERS = [
-  ".post-card",
   ".article-card",
+  ".feed-heading",
+  ".post-card + .post-card",
   ".post-tag",
   ".article-meta",
   ".asset-card",
@@ -351,7 +370,7 @@ const DECORATIVE_BORDERS = [
 
 describe("control boundaries", () => {
   it.each(CONTROL_BORDERS)("%s draws its border from the control boundary token", (selector) => {
-    const border = declarations(blockBody(selector)).get("border");
+    const border = drawnBorder(blockBody(selector));
     expect(border, selector).toBeDefined();
     // A diluted mix is how a boundary ends up under 3:1 without anyone noticing.
     expect(border, selector).not.toContain("color-mix");
@@ -361,7 +380,7 @@ describe("control boundaries", () => {
   });
 
   it.each(DECORATIVE_BORDERS)("%s draws only the decorative hairline", (selector) => {
-    const border = declarations(blockBody(selector)).get("border");
+    const border = drawnBorder(blockBody(selector));
     expect(border, selector).toBeDefined();
     expect(border, selector).toMatch(/var\(--border\)/);
   });
@@ -597,6 +616,114 @@ describe("the public shell", () => {
     expect(link.get("overflow-wrap")).toBe("anywhere");
     expect(link.get("text-overflow")).toBeUndefined();
     expect(link.get("white-space")).toBeUndefined();
+  });
+});
+
+/**
+ * The Feed is a stream, not a stack of panels. Three things make it one and all
+ * three are invisible to a screenshot: one 42rem column, a hairline *between*
+ * two Posts rather than a frame around one, and silence on hover — a Post has no
+ * page of its own, so nothing about it may move to invite a click.
+ */
+describe("the Feed is a stream", () => {
+  it("sets Posts in one 42rem column", () => {
+    const feed = declarations(blockBody(".feed"));
+    expect(feed.get("display")).toBe("grid");
+    expect(feed.get("max-width")).toBe("42rem");
+  });
+
+  it("frames no Post: no card edge, no plate, no shadow", () => {
+    const card = declarations(blockBody(".post-card"));
+    expect(card.get("border")).toBeUndefined();
+    expect(card.get("border-radius")).toBeUndefined();
+    expect(card.get("background")).toBeUndefined();
+    expect(card.get("box-shadow")).toBeUndefined();
+  });
+
+  it("separates two Posts with the hairline", () => {
+    expect(declarations(blockBody(".post-card + .post-card")).get("border-top")).toBe(
+      "1px solid var(--border)",
+    );
+  });
+
+  it("moves nothing and lights nothing when a pointer crosses a Post", () => {
+    const card = rules().filter((rule) => /\bpost-card\b/.test(rule.prelude));
+    const displacement = card.flatMap((rule) => {
+      const declared = declarations(rule.body);
+      return ["transform", "translate", "scale", "box-shadow"].filter((property) =>
+        declared.has(property),
+      );
+    });
+    expect(displacement).toEqual([]);
+    expect(card.filter((rule) => rule.prelude.includes(":hover")).map((rule) => rule.prelude)).toEqual(
+      [],
+    );
+  });
+
+  it("writes the time as the kicker, at the 14px reading floor", () => {
+    const time = declarations(blockBody(".post-time"));
+    expect(time.get("color")).toBe("var(--muted)");
+    expect(time.get("text-transform")).toBe("uppercase");
+    expect(time.get("letter-spacing")).toBe("0.08em");
+  });
+});
+
+/**
+ * A gallery is the only thing in the Feed that scrolls sideways and the only
+ * thing in a Post that is cropped. Both are geometry, so both are pinned here
+ * rather than trusted to a screenshot.
+ */
+describe("a Post's gallery", () => {
+  it("keeps a cell at 85% of the track, portrait on a phone and landscape on a desk", () => {
+    const cell = blockBody(".post-gallery-cell");
+    expect(cell).toContain("flex: 0 0 85%");
+    expect(cell).toContain("aspect-ratio: 4 / 5");
+    expect(cell).toContain("aspect-ratio: 16 / 9");
+  });
+
+  it("rounds the crop to 12px", () => {
+    expect(declarations(blockBody(".post-gallery-cell")).get("border-radius")).toBe("0.75rem");
+  });
+
+  /**
+   * Forty Posts on a 360px phone must scroll inside a gallery and nowhere else.
+   * The evidence is the box, not a browser: the track is its own scroll
+   * container and its own width, and the grid children that hold it are allowed
+   * to be narrower than their content.
+   */
+  it("scrolls inside its own box instead of widening the page", () => {
+    const track = declarations(blockBody(".post-gallery-track"));
+    expect(track.get("overflow-x")).toBe("auto");
+    expect(track.get("max-width")).toBe("100%");
+    for (const holder of [".post-card", ".post-gallery"]) {
+      expect(declarations(blockBody(holder)).get("min-width"), holder).toBe("0");
+    }
+  });
+});
+
+describe("the end of the stream", () => {
+  it("closes on a centred ghost pill", () => {
+    expect(declarations(blockBody(".feed-more")).get("justify-items")).toBe("center");
+    const pill = declarations(blockBody(".feed-more-button"));
+    expect(pill.get("border-radius")).toBe("999px");
+    expect(pill.get("background")).toBe("transparent");
+    expect(pill.get("padding")).toBe("0.5rem 1.5rem");
+  });
+});
+
+describe("the Feed's page head", () => {
+  it("holds the Tag filter as a kicker, at the 12px scale", () => {
+    const filter = declarations(blockBody(".feed-filter"));
+    expect(filter.get("font-size")).toBe("0.75rem");
+    expect(filter.get("color")).toBe("var(--muted)");
+    expect(filter.get("text-transform")).toBe("uppercase");
+  });
+
+  it("ends the head with the hairline the stream grows out of", () => {
+    expect(drawnBorder(blockBody(".feed-heading"))).toBe("1px solid var(--border)");
+    // The bare header rule carries the console's side padding; the head undoes
+    // it so the title sits on the same 42rem edge as the Posts below it.
+    expect(declarations(blockBody(".feed-heading")).get("padding")).toBe("0 0 1.25rem");
   });
 });
 

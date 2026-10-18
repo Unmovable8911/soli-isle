@@ -117,13 +117,15 @@ export function FeedHeading({
 }) {
   return (
     <header className="feed-heading">
-      <h1 className="feed-title">{title}</h1>
+      {/* The Tag filter scopes the page, so it sits in the page head as a kicker
+          over the title rather than at the foot of the stream. */}
       {tag !== null && (
         <p className="feed-filter">
           <span>{labels.tagFiltered.replaceAll("{name}", tag.name)}</span>{" "}
           <Link href={buildFeedPath({ locale })}>{labels.clearTag}</Link>
         </p>
       )}
+      <h1 className="feed-title">{title}</h1>
     </header>
   );
 }
