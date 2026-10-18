@@ -30,6 +30,10 @@ _Avoid_: 栏目分类、目录、Folder、Collection
 横切主题标签，一篇内容可挂多个。回答"它和哪些内容共享一个主题"。长文与 Post 都有标签，Category 只属于 Article。
 _Avoid_: 分类、关键词、Label
 
+**Cover**:
+长文的题图。每篇一张、语言中立：同一 Article 的所有 ArticleTranslation 共用它；由作者显式选择，不从正文图片派生，用于列表卡片与长文页头部。
+_Avoid_: 封面图（中文行文可用"封面"，模型与代码中一律用 Cover）、题图、featured image
+
 ## 语言
 
 **Locale**:
