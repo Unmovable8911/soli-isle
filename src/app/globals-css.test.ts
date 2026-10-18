@@ -438,6 +438,77 @@ describe("colour literals", () => {
   );
 });
 
+/**
+ * Token registration: a role that is not in TOKEN_PAIRS is a colour nobody
+ * measured, and a var() that is not declared renders as nothing at all. Both
+ * are silence, which is the failure mode this test exists to break.
+ */
+/**
+ * The one role that may stay unmeasured: the decorative hairline. It carries no
+ * text and frames nothing a Reader has to perceive as an edge, so its 1.2:1 is
+ * the point of it rather than a failure — and CONTROL_BORDERS below is what
+ * stops it from becoming a control's outline instead.
+ */
+const UNMEASURED_ROLES = new Set(["--border"]);
+
+describe("token registration", () => {
+  it.each(Object.keys(THEMES) as Theme[])("registers a measured pair for every %s role", (theme) => {
+    const measured = new Set(TOKEN_PAIRS.flatMap((pair) => [pair.foreground, pair.background]));
+    const unregistered = [...themeTokens(theme).keys()].filter(
+      (name) => !measured.has(name.slice(2)) && !UNMEASURED_ROLES.has(name),
+    );
+    expect(unregistered).toEqual([]);
+  });
+
+  it("declares exactly the eight roles", () => {
+    expect([...themeTokens("light").keys()].sort()).toEqual(
+      TOKEN_ROLES.filter((role) => role !== "--on-accent").concat("--on-accent").sort(),
+    );
+  });
+
+  it("resolves every var() the layers name", () => {
+    const declared = new Set(themeTokens("light").keys());
+    const unknown = new Set<string>();
+    for (const match of SOURCE.matchAll(/var\((--[a-z-]+)\)/g)) {
+      const name = match[1] ?? "";
+      if (!declared.has(name)) {
+        unknown.add(name);
+      }
+    }
+    expect([...unknown]).toEqual([]);
+  });
+});
+
+/**
+ * The scale bottoms out at 12px for anything a Reader has to read. The one
+ * exception the design system allows is a kicker: 10px, uppercase, 0.1em of
+ * tracking, never a sentence. Registering a selector here is the price of going
+ * under the floor, and the other two properties are checked as well.
+ */
+const SMALL_TEXT: readonly string[] = [];
+
+describe("the type floor", () => {
+  it("never sets type below 12px without a registered kicker", () => {
+    const offenders: string[] = [];
+    for (const rule of rules()) {
+      if (rule.prelude.startsWith("@")) {
+        continue;
+      }
+      const size = declarations(rule.body).get("font-size");
+      const match = /^([\d.]+)(rem|em|px)$/.exec(size ?? "");
+      if (match === null) {
+        continue;
+      }
+      const value = Number.parseFloat(match[1] ?? "0");
+      const floor = match[2] === "px" ? 12 : 0.75;
+      if (value < floor && !SMALL_TEXT.includes(rule.prelude)) {
+        offenders.push(`${rule.prelude} { font-size: ${size} }`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 /** Controls a thumb has to hit on a 360–430px phone. */
 const READER_CONTROLS = [
   "header a",
