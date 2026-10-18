@@ -10,3 +10,4 @@ data/
 .DS_Store
 tsconfig.tsbuildinfo
 .npm-cache/
+.npm-logs/
