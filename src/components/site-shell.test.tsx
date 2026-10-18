@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { messages } from "@/messages";
-import type { ReaderCategoryNode } from "@/services/reading";
 
 import { SiteShell } from "./site-shell";
 
@@ -11,34 +10,14 @@ import { SiteShell } from "./site-shell";
 // component rendered by the layout, so the server-rendered HTML already carries
 // the marker and a Reader without JavaScript still sees where they are.
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/en/categories/tech",
+  usePathname: () => "/en/archive",
   useSearchParams: () => new URLSearchParams(),
 }));
-
-const TREE: ReaderCategoryNode[] = [
-  {
-    id: "01",
-    slug: "tech",
-    path: "tech",
-    name: "Technology",
-    count: 2,
-    children: [
-      { id: "02", slug: "web", path: "tech/web", name: "Web Development", count: 1, children: [] },
-    ],
-  },
-];
 
 function render(locale: "en" | "zh" = "en"): string {
   const t = messages[locale];
   return renderToStaticMarkup(
-    <SiteShell
-      locale={locale}
-      chrome={t.chrome}
-      nav={t.reader.nav}
-      search={t.reader.search}
-      categoriesHeading={t.reader.category.heading}
-      categories={TREE}
-    >
+    <SiteShell locale={locale} chrome={t.chrome} nav={t.reader.nav} search={t.reader.search}>
       <main id={MAIN_CONTENT_ID} tabIndex={-1}>
         The page body
       </main>
@@ -68,16 +47,28 @@ describe("the public shell", () => {
     expect(header).not.toContain("<main");
   });
 
-  it("puts the same navigation, tree and bottom controls in the rail and in the mobile drawer", () => {
+  it("puts the same navigation and bottom controls in the rail and in the mobile drawer", () => {
     const html = render();
 
     expect(html).toContain('class="site-rail"');
     expect(html).toContain(`aria-label="${messages.en.reader.nav.label}"`);
     expect(html).toContain(`aria-label="${messages.en.chrome.themeLabel}"`);
-    expect(html.match(/class="site-tree"/g)?.length).toBeGreaterThanOrEqual(2);
-    for (const href of ["/en/categories", "/en/archive", "/en/feed", "/en/search"]) {
-      expect(html.split(`href="${href}"`).length - 1, href).toBeGreaterThanOrEqual(2);
+    expect(html).not.toContain('class="site-tree"');
+
+    const navs = html.match(/<nav class="site-nav"[\s\S]*?<\/nav>/g) ?? [];
+    expect(navs).toHaveLength(2);
+    for (const nav of navs) {
+      expect(nav).toContain('href="/en/archive"');
+      expect(nav).toContain('href="/en/feed"');
+      expect(nav).not.toContain('href="/en/categories"');
+      expect(nav).not.toContain('href="/en/search"');
     }
+
+    const footer = html.match(/<footer[\s\S]*?<\/footer>/)?.[0] ?? "";
+    expect(footer).toContain('href="/en/archive"');
+    expect(footer).toContain('href="/en/feed"');
+    expect(footer).not.toContain('href="/en/categories"');
+    expect(footer).not.toContain('href="/en/search"');
   });
 
   it("opens the mobile menu closed, with no script to reopen it", () => {
@@ -88,17 +79,17 @@ describe("the public shell", () => {
     expect(html).not.toContain("onClick");
   });
 
-  it("marks the current Category in both copies of the tree", () => {
+  it("marks the current section in both copies of the navigation", () => {
     const html = render();
 
-    // The Locale switcher marks itself the same way, so the tree's markers are
-    // the ones that wrap a Category name.
-    const marked = html.match(/<a[^>]*aria-current="page"[^>]*>Technology<\/a>/g) ?? [];
+    // The Locale switcher marks itself the same way, so the section's markers
+    // are the ones that wrap a navigation label.
+    const marked = html.match(/<a[^>]*aria-current="page"[^>]*>Archive<\/a>/g) ?? [];
     expect(marked).toHaveLength(2);
     for (const anchor of marked) {
-      expect(anchor).toContain('href="/en/categories/tech"');
+      expect(anchor).toContain('href="/en/archive"');
     }
-    expect(html).not.toMatch(/<a[^>]*aria-current="page"[^>]*>Web Development/);
+    expect(html).not.toMatch(/<a[^>]*aria-current="page"[^>]*>Feed<\/a>/);
   });
 
   it("orders the tab stops skip link, then top bar, then rail, then the page body", () => {

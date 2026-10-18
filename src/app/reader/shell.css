@@ -1,12 +1,12 @@
 /* The public shell: a 64px sticky top bar that carries the wordmark, the search
    field and the theme switch; a 256px sticky rail below it that carries the
-   sections and the whole Category tree; a native <details> drawer below 64rem
-   that carries the same things; and the footer every page closes on.
+   sections; a native <details> drawer below 64rem that carries the same things;
+   and the footer every page closes on.
 
-   The rail exists because the Category tree is a tree (ADR-0001). The wordmark
-   moved up into the bar in the editorial refresh (ADR-0004), so the first thing
-   a Reader sees is the masthead and the rail starts with navigation instead of
-   repeating the name two centimetres lower.
+   The rail exists because the sections deserve a permanent place beside the
+   reading column (ADR-0001). The wordmark moved up into the bar in the
+   editorial refresh (ADR-0004), and the Category tree moved into the Archive
+   (ADR-0005), so the rail starts with navigation.
 
    Both copies of the rail's sections are in the DOM and the breakpoint decides
    which one a pointer and a Tab can reach, so the shell needs no client state
@@ -276,51 +276,6 @@
   background: var(--accent);
 }
 
-.site-categories {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.site-categories-heading {
-  margin: 0 0 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.site-tree {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* A level is a list inside a list, so the indent is structure: 12px per level,
-   and a deep Category cannot drift out of line with a shallow one. */
-.site-tree .site-tree {
-  padding-inline-start: 0.75rem;
-}
-
-.site-tree a {
-  min-height: 2.75rem;
-  padding: 0.2rem 0;
-  overflow-wrap: anywhere;
-  color: var(--muted);
-  font-size: 0.9375rem;
-  text-decoration: none;
-}
-
-.site-tree a:hover {
-  color: var(--fg);
-}
-
-.site-tree a[aria-current="page"] {
-  color: var(--accent);
-  font-weight: 600;
-}
-
 .site-rail-foot {
   display: flex;
   flex-direction: column;
@@ -527,7 +482,6 @@
 @media (prefers-reduced-motion: no-preference) {
   .site-nav a,
   .site-locale a,
-  .site-tree a,
   .site-footer-nav a,
   .site-footer-top-link,
   .site-search-submit,

@@ -8,7 +8,20 @@ export function buildHomePath(locale: Locale): string {
   return `/${locale}`;
 }
 
+export function buildArchivePath(locale: Locale): string {
+  return `/${locale}/archive`;
+}
+
+/**
+ * The Category index now sits at the top of the Archive. Category detail pages
+ * keep their `/categories/...` addresses, so old links and nested paths still
+ * work; `buildCategoryPath` uses that detail base rather than this index.
+ */
 export function buildCategoryIndexPath(locale: Locale): string {
+  return `${buildArchivePath(locale)}#categories`;
+}
+
+function buildCategoryDetailBasePath(locale: Locale): string {
   return `/${locale}/categories`;
 }
 
@@ -21,7 +34,7 @@ export function buildCategoryPath(input: { locale: Locale; categoryPath: string 
   if (segments.length === 0) {
     return buildCategoryIndexPath(input.locale);
   }
-  return `${buildCategoryIndexPath(input.locale)}/${segments.join("/")}`;
+  return `${buildCategoryDetailBasePath(input.locale)}/${segments.join("/")}`;
 }
 
 export function buildTagPath(input: { locale: Locale; slug: string }): string {
@@ -40,10 +53,6 @@ export function buildFeedPath(input: { locale: Locale; tagSlug?: string | null }
     return base;
   }
   return `${base}?${new URLSearchParams({ tag: tagSlug }).toString()}`;
-}
-
-export function buildArchivePath(locale: Locale): string {
-  return `/${locale}/archive`;
 }
 
 export function buildSearchPath(input: { locale: Locale; query?: string }): string {

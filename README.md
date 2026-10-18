@@ -34,9 +34,9 @@
 
 - 首页 `/{locale}` 直接展示最近的长文流。**没有** `/{locale}/articles` 这样的文章列表页。
 - 长文详情 `/{locale}/articles/{slug}`：封面、摘要、富文本正文、目录、脚注、上一篇/下一篇。
-- 分类 `/{locale}/categories` 与嵌套分类，例如 `/zh/categories/essays`、`/zh/categories/essays/on-writing`。
+- 分类：分类目录在归档页顶部（`/{locale}/archive#categories`），旧的 `/{locale}/categories` 索引会重定向到那里；分类详情仍为 `/{locale}/categories/...` 的嵌套地址，例如 `/zh/categories/essays`、`/zh/categories/essays/on-writing`。
 - 标签 `/{locale}/tags/{slug}`，只列长文。
-- 归档 `/{locale}/archive`，按月份列出所有读者可见的长文。
+- 归档 `/{locale}/archive`：顶部是分类目录，下面按月份列出所有读者可见的长文。
 - 搜索 `/{locale}/search?q=...`，只搜长文，匹配标题、正文、标签与分类。
 - 推文 Feed `/{locale}/feed`：短图文按时间倒序，支持 `?tag={slug}` 过滤，例如 `/zh/feed?tag=longform`。推文没有独立页面。
 - 多语言：列表只展示“有当前语言版本”的内容；长文详情页在当前语言缺版本时可以回退到默认语言，并明确提示读者。
@@ -478,11 +478,10 @@ docker compose run --rm -e NODE_ENV=development \
 | `/zh/articles/element-by-element` | 元素齐全的中文长文（可切英文版） |
 | `/zh/articles/without-a-cover` | 无封面长文的版式 |
 | `/en/articles/an-english-essay` | 只有英文版的长文 |
-| `/zh/categories` | 分类索引 |
 | `/zh/categories/essays` | 根分类“随笔” |
 | `/zh/categories/essays/on-writing` | 嵌套子分类“关于写作” |
 | `/zh/tags/writing` | 标签“写作”下的长文 |
-| `/zh/archive` | 长文归档 |
+| `/zh/archive` | 长文归档：顶部分类目录，下面按月编排 |
 | `/zh/search?q=元素` | 只搜长文 |
 | `/zh/feed` | 推文 Feed |
 | `/zh/feed?tag=longform` | 按标签过滤 Feed |

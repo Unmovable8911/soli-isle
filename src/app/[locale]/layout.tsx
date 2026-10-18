@@ -5,8 +5,6 @@ import type { ReactNode } from "react";
 import { SiteShell } from "@/components/site-shell";
 import { isLocale } from "@/config/site";
 import { messages } from "@/messages";
-import { getAppContext } from "@/server/app-context";
-import { listReaderCategories } from "@/services/reading";
 import { themeInitScript } from "../theme-init";
 
 import "katex/dist/katex.min.css";
@@ -44,9 +42,6 @@ export default async function LocaleLayout({
   }
 
   const t = messages[locale];
-  // The tree belongs to every public page now, so it is read here rather than
-  // by each one: one query for the shell, not one per surface.
-  const categories = await listReaderCategories(getAppContext().reading, { locale });
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -59,8 +54,6 @@ export default async function LocaleLayout({
           chrome={t.chrome}
           nav={t.reader.nav}
           search={t.reader.search}
-          categoriesHeading={t.reader.category.heading}
-          categories={categories}
         >
           {children}
         </SiteShell>

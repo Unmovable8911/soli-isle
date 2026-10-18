@@ -14,7 +14,7 @@ import {
 describe("reader paths", () => {
   it("builds the locale-scoped entry points", () => {
     expect(buildHomePath("zh")).toBe("/zh");
-    expect(buildCategoryIndexPath("en")).toBe("/en/categories");
+    expect(buildCategoryIndexPath("en")).toBe("/en/archive#categories");
     expect(buildArchivePath("zh")).toBe("/zh/archive");
   });
 

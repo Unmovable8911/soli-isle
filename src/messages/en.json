@@ -475,9 +475,7 @@
   },
   "reader": {
     "nav": {
-      "categories": "Categories",
       "archive": "Archive",
-      "search": "Search",
       "feed": "Feed",
       "label": "Site navigation"
     },
@@ -496,11 +494,8 @@
     },
     "category": {
       "heading": "Categories",
-      "emptyTitle": "No Categories yet",
-      "emptyIndex": "No Category has been created yet.",
       "empty": "No article in this category yet.",
-      "children": "Subcategories",
-      "lead": "Browse by subject."
+      "children": "Subcategories"
     },
     "tag": {
       "heading": "Tag",
@@ -510,7 +505,7 @@
       "title": "Archive",
       "emptyTitle": "The archive is empty",
       "empty": "No article has been published yet.",
-      "lead": "Every essay, arranged by month."
+      "lead": "Every essay, by month or by subject."
     },
     "search": {
       "title": "Search",

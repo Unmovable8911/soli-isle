@@ -6,8 +6,6 @@ import { requestLocale } from "@/components/request-locale";
 import { SiteShell } from "@/components/site-shell";
 import { LOCALE_HEADER } from "@/domain/locale";
 import { messages } from "@/messages";
-import { getAppContext } from "@/server/app-context";
-import { listReaderCategories } from "@/services/reading";
 
 import { themeInitScript } from "./theme-init";
 
@@ -30,9 +28,6 @@ export default async function GlobalNotFound() {
   const requestHeaders = await headers();
   const locale = requestLocale(requestHeaders.get(LOCALE_HEADER));
   const t = messages[locale];
-  // The shell's Category tree is part of the page a Reader lands on, even when
-  // the address they asked for does not exist.
-  const categories = await listReaderCategories(getAppContext().reading, { locale });
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -45,8 +40,6 @@ export default async function GlobalNotFound() {
           chrome={t.chrome}
           nav={t.reader.nav}
           search={t.reader.search}
-          categoriesHeading={t.reader.category.heading}
-          categories={categories}
         >
           <NotFoundView locale={locale} />
         </SiteShell>

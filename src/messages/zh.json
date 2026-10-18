@@ -475,9 +475,7 @@
   },
   "reader": {
     "nav": {
-      "categories": "分类",
       "archive": "归档",
-      "search": "搜索",
       "feed": "推文",
       "label": "站点导航"
     },
@@ -496,11 +494,8 @@
     },
     "category": {
       "heading": "分类",
-      "emptyTitle": "还没有分类",
-      "emptyIndex": "站点还没有建立分类。",
       "empty": "这个分类下还没有长文。",
-      "children": "子分类",
-      "lead": "按主题进入。"
+      "children": "子分类"
     },
     "tag": {
       "heading": "标签",
@@ -510,7 +505,7 @@
       "title": "归档",
       "emptyTitle": "归档还是空的",
       "empty": "还没有发布任何长文。",
-      "lead": "全部长文，按月编排。"
+      "lead": "全部长文，按月编排，也可按分类浏览。"
     },
     "search": {
       "title": "搜索",

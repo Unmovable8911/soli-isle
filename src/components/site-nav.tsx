@@ -1,20 +1,15 @@
 import Link from "next/link";
 
 import type { Locale } from "@/config/site";
-import {
-  buildArchivePath,
-  buildCategoryIndexPath,
-  buildFeedPath,
-  buildSearchPath,
-} from "@/domain/public-paths";
+import { buildArchivePath, buildFeedPath } from "@/domain/public-paths";
 import type { Messages } from "@/messages";
 
 export type SiteNavLabels = Messages["reader"]["nav"];
 
 /**
- * The site navigation. Its accessible name is its own — the links are
- * Categories, the archive, the Feed and search, so naming the whole navigation
- * after one of its four destinations tells a screen reader nothing.
+ * The site navigation. Its accessible name is its own — the links are the
+ * archive and the Feed, so naming the whole navigation after one of its two
+ * destinations tells a screen reader nothing.
  *
  * `currentPath` is passed in rather than read from a hook so this stays a plain
  * component: the rail and the drawer each get the marker from one client
@@ -30,10 +25,8 @@ export function SiteNav({
   currentPath?: string | null;
 }) {
   const items = [
-    { href: buildCategoryIndexPath(locale), label: labels.categories },
     { href: buildArchivePath(locale), label: labels.archive },
     { href: buildFeedPath({ locale }), label: labels.feed },
-    { href: buildSearchPath({ locale }), label: labels.search },
   ] as const;
 
   return (
@@ -55,8 +48,8 @@ export function SiteNav({
 }
 
 /**
- * A section is current at its own address and below it — a Category page is
- * still "Categories", and a Tag-filtered Feed is still "Feed".
+ * A section is current at its own address and below it — a Tag-filtered Feed is
+ * still "Feed".
  */
 function isCurrent(pathname: string | null, href: string): boolean {
   if (pathname === null) {

@@ -51,10 +51,18 @@ describe("the browse surfaces", () => {
     expect(source(BROWSE.category)).toContain("<CategoryPills");
   });
 
-  it("keeps the Archive an index of months rather than a fourth grid", () => {
+  it("sends the old Category index to the Archive's Category directory", () => {
+    expect(source(BROWSE.category)).toContain("redirect(buildCategoryIndexPath(locale))");
+  });
+
+  it("keeps the Archive an index of months, with the Category directory above them", () => {
     const text = source("archive/page.tsx");
 
+    expect(text).toContain("listReaderCategories");
+    expect(text).toContain("<CategoryPills");
+    expect(text).toContain('id="categories"');
     expect(text).toContain("<ArchiveIndex");
+    expect(text.indexOf("<CategoryPills")).toBeLessThan(text.indexOf("<ArchiveIndex"));
     expect(text).not.toContain("ArticleGrid");
     expect(text).not.toContain("ArticleCard");
   });

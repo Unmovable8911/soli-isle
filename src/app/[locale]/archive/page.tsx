@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArchiveIndex } from "@/components/archive-index";
+import { CategoryPills } from "@/components/category-pills";
 import { EmptyState } from "@/components/empty-state";
 import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
@@ -9,7 +10,7 @@ import { isLocale } from "@/config/site";
 import { archiveMonths } from "@/domain/article-time";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { listArchiveArticles } from "@/services/reading";
+import { listArchiveArticles, listReaderCategories } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,9 +36,12 @@ export default async function ArchivePage({ params }: { params: Promise<{ locale
 
   const t = messages[locale];
   const context = getAppContext();
-  const articles = await listArchiveArticles(context.reading, {
-    locale,
-  });
+  const [articles, categories] = await Promise.all([
+    listArchiveArticles(context.reading, {
+      locale,
+    }),
+    listReaderCategories(context.reading, { locale }),
+  ]);
   const months = archiveMonths(articles, (article) => article.publishTime);
 
   return (
@@ -48,6 +52,20 @@ export default async function ArchivePage({ params }: { params: Promise<{ locale
         lead={t.reader.archive.lead}
         count={articles.length}
       />
+      {categories.length > 0 && (
+        <section
+          id="categories"
+          className="archive-categories"
+          aria-labelledby="archive-categories-head"
+        >
+          <h2 id="archive-categories-head" className="archive-categories-head">
+            {t.reader.category.heading}
+          </h2>
+          <div className="reader-category-index">
+            <CategoryPills categories={categories} locale={locale} />
+          </div>
+        </section>
+      )}
       {months.length === 0 ? (
         <EmptyState title={t.reader.archive.emptyTitle} body={t.reader.archive.empty} />
       ) : (

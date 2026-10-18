@@ -384,6 +384,7 @@ const DECORATIVE_BORDERS = [
   ".article-card:not(:has(.article-card-cover))",
   ".reader-page-head",
   ".reader-pill",
+  ".archive-categories",
   ".archive-month-head",
   ".archive-row + .archive-row",
   ".feed-heading",
@@ -646,10 +647,8 @@ describe("phone width", () => {
 });
 
 /**
- * The shell is where a Reader lands before any page exists, so its two promises
- * are mechanical: the rail stays put and scrolls on its own, and the Category
- * tree indents by structure. A flat list with a guessed margin would satisfy a
- * screenshot and break the moment a Category is named at another depth.
+ * The shell is where a Reader lands before any page exists, so its promise is
+ * mechanical: the rail stays put and scrolls on its own.
  */
 describe("the public shell", () => {
   it("pins the top bar at 64px", () => {
@@ -664,19 +663,6 @@ describe("the public shell", () => {
     expect(rail.get("top")).toBe("4rem");
     expect(rail.get("overflow-y")).toBe("auto");
     expect(declarations(blockBody(".site-shell")).get("grid-template-columns")).toContain("16rem");
-  });
-
-  it("indents each Category level by 12px", () => {
-    expect(declarations(blockBody(".site-tree .site-tree")).get("padding-inline-start")).toBe(
-      "0.75rem",
-    );
-  });
-
-  it("wraps a long Category name instead of truncating it", () => {
-    const link = declarations(blockBody(".site-tree a"));
-    expect(link.get("overflow-wrap")).toBe("anywhere");
-    expect(link.get("text-overflow")).toBeUndefined();
-    expect(link.get("white-space")).toBeUndefined();
   });
 });
 

@@ -3,17 +3,15 @@ import Link from "next/link";
 import type { Locale } from "@/config/site";
 import {
   buildArchivePath,
-  buildCategoryIndexPath,
   buildFeedPath,
   buildHomePath,
-  buildSearchPath,
 } from "@/domain/public-paths";
 import type { Messages } from "@/messages";
 
 import { ArrowUpIcon, BrandMark } from "./icons";
 
 /**
- * The sign-off: the site's own name, one line about it, its four sections and
+ * The sign-off: the site's own name, one line about it, its two sections and
  * the year. A publication should end on its masthead, not on the last pixel of
  * the last paragraph — and the footer is also the only place the Reader can
  * always find every section at phone width, where the rail is a drawer.
@@ -29,10 +27,8 @@ export function SiteFooter({
 }) {
   const home = buildHomePath(locale);
   const items = [
-    { href: buildCategoryIndexPath(locale), label: nav.categories },
     { href: buildArchivePath(locale), label: nav.archive },
     { href: buildFeedPath({ locale }), label: nav.feed },
-    { href: buildSearchPath({ locale }), label: nav.search },
   ];
   const rights = chrome.footer.rights.replaceAll("{year}", String(new Date().getFullYear()));
 

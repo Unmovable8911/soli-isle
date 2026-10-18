@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { ArticleGrid } from "@/components/article-grid";
 import { Breadcrumbs } from "@/components/breadcrumbs";
@@ -11,7 +11,7 @@ import { isLocale } from "@/config/site";
 import { buildCategoryIndexPath, buildCategoryPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { findReaderCategory, listReaderCategories } from "@/services/reading";
+import { findReaderCategory } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -43,7 +43,7 @@ export async function generateMetadata({
   const t = messages[locale];
   const categoryPath = categoryPathFrom(path);
   if (categoryPath.length === 0) {
-    return { title: `${t.reader.category.heading} · ${t.meta.title}` };
+    return {};
   }
 
   const context = getAppContext();
@@ -70,7 +70,7 @@ export default async function CategoryPage({ params }: { params: Promise<Categor
   const categoryPath = categoryPathFrom(path);
 
   if (categoryPath.length === 0) {
-    return <CategoryIndex locale={locale} />;
+    redirect(buildCategoryIndexPath(locale));
   }
 
   const context = getAppContext();
@@ -108,31 +108,6 @@ export default async function CategoryPage({ params }: { params: Promise<Categor
         <EmptyState title={t.reader.list.emptyTitle} body={t.reader.category.empty} />
       ) : (
         <ArticleGrid articles={found.articles} locale={locale} />
-      )}
-    </main>
-  );
-}
-
-async function CategoryIndex({ locale }: { locale: "zh" | "en" }) {
-  const t = messages[locale];
-  const context = getAppContext();
-  const tree = await listReaderCategories(context.reading, {
-    locale,
-  });
-
-  return (
-    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <ReaderPageHead
-        locale={locale}
-        title={t.reader.category.heading}
-        lead={t.reader.category.lead}
-      />
-      {tree.length === 0 ? (
-        <EmptyState title={t.reader.category.emptyTitle} body={t.reader.category.emptyIndex} />
-      ) : (
-        <div className="reader-category-index">
-          <CategoryPills categories={tree} locale={locale} />
-        </div>
       )}
     </main>
   );

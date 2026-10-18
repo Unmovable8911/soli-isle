@@ -106,7 +106,8 @@
 }
 
 /* The Category index is a directory, not a row of pills: each Category gets a
-   card of its own name, so the way into the site reads as a table of contents. */
+   card of its own name, so the way into the site reads as a table of contents.
+   It sits at the top of the Archive now, above the month-by-month index. */
 .reader-category-index .reader-pills {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
@@ -139,6 +140,24 @@
   border-radius: 0.125rem;
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--fg);
+}
+
+/* The Category directory sits above the months, so the Archive answers both
+   "what did I write in March" and "what is there about this subject". */
+.archive-categories {
+  scroll-margin-top: 5rem;
+  margin: 0 0 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.archive-categories-head {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 /* The Archive: one block per month. */

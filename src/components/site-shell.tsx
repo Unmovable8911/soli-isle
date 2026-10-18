@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
 import { BrandMark, MenuIcon, SearchIcon } from "@/components/icons";
-import { CurrentCategoryTree } from "@/components/current-category-tree";
 import { CurrentSiteNav } from "@/components/current-site-nav";
 import LocaleSwitcher from "@/components/locale-switcher";
 import { SiteFooter } from "@/components/site-footer";
@@ -12,37 +11,26 @@ import ThemeToggle from "@/components/theme-toggle";
 import type { Locale } from "@/config/site";
 import { buildHomePath, buildSearchPath } from "@/domain/public-paths";
 import type { Messages } from "@/messages";
-import type { ReaderCategoryNode } from "@/services/reading";
 
 export interface SiteShellProps {
   locale: Locale;
   chrome: Messages["chrome"];
   nav: Messages["reader"]["nav"];
   search: Messages["reader"]["search"];
-  categoriesHeading: string;
-  categories: ReaderCategoryNode[];
   children: ReactNode;
 }
 
 /**
  * The public site's frame: a 64px sticky top bar carrying the wordmark, the
  * search field and the theme switch; a 256px sticky rail under it carrying the
- * sections and the Category tree; a native `<details>` drawer below 64rem
- * carrying the same things; and the sign-off footer every page closes on.
+ * sections; a native `<details>` drawer below 64rem carrying the same things;
+ * and the sign-off footer every page closes on.
  *
  * The rail's sections are one element rendered twice — once in the rail, once
  * in the drawer — so the shell needs no client state to open the menu, and the
  * two copies cannot drift apart. CSS shows exactly one of them at any width.
  */
-export function SiteShell({
-  locale,
-  chrome,
-  nav,
-  search,
-  categoriesHeading,
-  categories,
-  children,
-}: SiteShellProps) {
+export function SiteShell({ locale, chrome, nav, search, children }: SiteShellProps) {
   const home = buildHomePath(locale);
   const searchField = (
     <SiteSearch
@@ -63,13 +51,12 @@ export function SiteShell({
       withLabel
     />
   );
-  const navAndTree = (
+  const sections = (
     <div className="site-sections">
       <div>
         <p className="site-rail-heading">{chrome.browseLabel}</p>
         <CurrentSiteNav locale={locale} labels={nav} />
       </div>
-      <CurrentCategoryTree locale={locale} heading={categoriesHeading} nodes={categories} />
     </div>
   );
   const themeToggle = (
@@ -111,7 +98,7 @@ export function SiteShell({
             </summary>
             <div className="site-menu-panel">
               {drawerSearchField}
-              {navAndTree}
+              {sections}
               <div className="site-rail-foot">
                 <Suspense fallback={null}>
                   <LocaleSwitcher
@@ -128,7 +115,7 @@ export function SiteShell({
       </header>
       <div className="site-shell">
         <aside className="site-rail" aria-label={chrome.railLabel}>
-          {navAndTree}
+          {sections}
           <div className="site-rail-foot">
             <p className="site-rail-note">{chrome.footer.tagline}</p>
             <Suspense fallback={null}>
