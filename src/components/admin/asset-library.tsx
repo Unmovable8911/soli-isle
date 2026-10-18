@@ -246,7 +246,7 @@ export function AssetLibrary({ assets, locale, labels }: AssetLibraryProps) {
 
   return (
     <div className="asset-library">
-      <section className="asset-section">
+      <section className="asset-section" id="asset-upload">
         <h2>{labels.upload.label}</h2>
         <p className="asset-hint">{labels.upload.hint}</p>
         <div className="asset-uploader">

@@ -39,20 +39,23 @@ export default async function AdminLoginPage({
         : null;
 
   return (
-    <>
-      <h1>{t.admin.login.title}</h1>
-      {errorMessage !== null ? <p role="alert">{errorMessage}</p> : null}
-      <form action="/admin/login/submit" method="post" className="admin-login-form">
-        <label htmlFor="admin-password">{t.admin.login.passwordLabel}</label>
-        <input
-          id="admin-password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-        />
-        <button type="submit">{t.admin.login.submit}</button>
-      </form>
-    </>
+    <div className="admin-login">
+      <div className="admin-login-card">
+        <span className="admin-login-wordmark">{t.chrome.siteName}</span>
+        <h1>{t.admin.login.title}</h1>
+        {errorMessage !== null ? <p role="alert">{errorMessage}</p> : null}
+        <form action="/admin/login/submit" method="post" className="admin-login-form">
+          <label htmlFor="admin-password">{t.admin.login.passwordLabel}</label>
+          <input
+            id="admin-password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+          />
+          <button type="submit">{t.admin.login.submit}</button>
+        </form>
+      </div>
+    </div>
   );
 }

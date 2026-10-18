@@ -1,6 +1,8 @@
 import { cookies, headers } from "next/headers";
 
 import { ArticleList } from "@/components/admin/article-list";
+import { AdminPageHead } from "@/components/admin/page-head";
+import { NewWorkButton } from "@/components/admin/new-work-button";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
@@ -20,9 +22,19 @@ export default async function AdminArticlesPage() {
 
   return (
     <>
-      <h1>{t.admin.articles.title}</h1>
-      <p>{t.admin.articles.description}</p>
-      <ArticleList articles={articles} locale={locale} labels={t.admin.articles} />
+      <AdminPageHead
+        title={t.admin.articles.title}
+        description={t.admin.articles.description}
+        actions={
+          <NewWorkButton
+            kind="article"
+            locale={locale}
+            label={t.admin.articles.newArticle}
+            failedLabel={t.admin.articles.meta.createFailed}
+          />
+        }
+      />
+      <ArticleList articles={articles} labels={t.admin.articles} />
     </>
   );
 }

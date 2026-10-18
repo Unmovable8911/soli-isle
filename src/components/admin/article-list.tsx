@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
-import { siteConfig, type Locale } from "@/config/site";
+import { siteConfig } from "@/config/site";
 import { instantToSiteLocal } from "@/domain/site-time";
 import type { Messages } from "@/messages";
 import type { ArticleSummary } from "@/services/articles";
@@ -13,48 +11,12 @@ export type ArticleListLabels = Messages["admin"]["articles"];
 
 export interface ArticleListProps {
   articles: ArticleSummary[];
-  locale: Locale;
   labels: ArticleListLabels;
 }
 
-export function ArticleList({ articles, locale, labels }: ArticleListProps) {
-  const router = useRouter();
-  const [creating, setCreating] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  async function createArticle() {
-    setCreating(true);
-    setFailed(false);
-    try {
-      const response = await fetch("/api/admin/articles", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ locale }),
-      });
-      if (!response.ok) {
-        setFailed(true);
-        return;
-      }
-      const payload = (await response.json()) as { article: { id: string } };
-      router.push(`/admin/articles/${payload.article.id}`);
-    } catch {
-      setFailed(true);
-    } finally {
-      setCreating(false);
-    }
-  }
-
+export function ArticleList({ articles, labels }: ArticleListProps) {
   return (
     <div className="article-list">
-      <button type="button" onClick={() => void createArticle()} disabled={creating}>
-        {labels.newArticle}
-      </button>
-      {failed ? (
-        <p role="alert" className="article-error">
-          {labels.loadFailed}
-        </p>
-      ) : null}
-
       {articles.length === 0 ? (
         <p className="article-empty">{labels.empty}</p>
       ) : (

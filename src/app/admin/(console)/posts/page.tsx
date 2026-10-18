@@ -1,5 +1,7 @@
 import { cookies, headers } from "next/headers";
 
+import { AdminPageHead } from "@/components/admin/page-head";
+import { NewWorkButton } from "@/components/admin/new-work-button";
 import { PostList } from "@/components/admin/post-list";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
@@ -20,9 +22,19 @@ export default async function AdminPostsPage() {
 
   return (
     <>
-      <h1>{t.admin.posts.title}</h1>
-      <p>{t.admin.posts.description}</p>
-      <PostList posts={posts} locale={locale} labels={t.admin.posts} />
+      <AdminPageHead
+        title={t.admin.posts.title}
+        description={t.admin.posts.description}
+        actions={
+          <NewWorkButton
+            kind="post"
+            locale={locale}
+            label={t.admin.posts.newPost}
+            failedLabel={t.admin.articles.meta.createFailed}
+          />
+        }
+      />
+      <PostList posts={posts} labels={t.admin.posts} />
     </>
   );
 }

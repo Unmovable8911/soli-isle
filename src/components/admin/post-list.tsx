@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
-import { siteConfig, type Locale } from "@/config/site";
+import { siteConfig } from "@/config/site";
 import { instantToSiteLocal } from "@/domain/site-time";
 import type { PostSummary } from "@/services/posts";
 
@@ -12,48 +10,12 @@ import type { PostLabels } from "./post-composer";
 
 export interface PostListProps {
   posts: PostSummary[];
-  locale: Locale;
   labels: PostLabels;
 }
 
-export function PostList({ posts, locale, labels }: PostListProps) {
-  const router = useRouter();
-  const [creating, setCreating] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  async function createPost() {
-    setCreating(true);
-    setFailed(false);
-    try {
-      const response = await fetch("/api/admin/posts", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ locale }),
-      });
-      if (!response.ok) {
-        setFailed(true);
-        return;
-      }
-      const payload = (await response.json()) as { post: { id: string } };
-      router.push(`/admin/posts/${payload.post.id}`);
-    } catch {
-      setFailed(true);
-    } finally {
-      setCreating(false);
-    }
-  }
-
+export function PostList({ posts, labels }: PostListProps) {
   return (
     <div className="article-list">
-      <button type="button" onClick={() => void createPost()} disabled={creating}>
-        {labels.newPost}
-      </button>
-      {failed ? (
-        <p role="alert" className="article-error">
-          {labels.loadFailed}
-        </p>
-      ) : null}
-
       {posts.length === 0 ? (
         <p className="article-empty">{labels.empty}</p>
       ) : (
