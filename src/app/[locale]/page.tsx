@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ArticleList } from "@/components/article-list";
+import { HOME_GRID_LIMIT, ReaderHome } from "@/components/reader-home";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
-import {
-  buildArchivePath,
-  buildCategoryIndexPath,
-  buildSearchPath,
-} from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
 import { listRecentArticles } from "@/services/reading";
@@ -17,7 +11,8 @@ import { listRecentArticles } from "@/services/reading";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const RECENT_LIMIT = 20;
+/** The lead is always one more than the grid: both come from the same list. */
+const HOME_LIMIT = HOME_GRID_LIMIT + 1;
 
 type LocaleParams = { locale: string };
 
@@ -43,35 +38,15 @@ export default async function HomePage({ params }: { params: Promise<LocaleParam
     notFound();
   }
 
-  const t = messages[locale];
   const context = getAppContext();
   const articles = await listRecentArticles(context.reading, {
     locale,
-    limit: RECENT_LIMIT,
+    limit: HOME_LIMIT,
   });
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <h1>{t.reader.home.title}</h1>
-      <p className="reader-lead">{t.reader.home.lead}</p>
-      <nav className="reader-entries" aria-label={t.reader.home.title}>
-        <ul>
-          <li>
-            <Link href={buildCategoryIndexPath(locale)}>{t.reader.nav.categories}</Link>
-          </li>
-          <li>
-            <Link href={buildArchivePath(locale)}>{t.reader.nav.archive}</Link>
-          </li>
-          <li>
-            <Link href={buildSearchPath({ locale })}>{t.reader.nav.search}</Link>
-          </li>
-        </ul>
-      </nav>
-      {articles.length === 0 ? (
-        <p className="reader-empty">{t.reader.home.empty}</p>
-      ) : (
-        <ArticleList articles={articles} locale={locale} labels={t.reader.list} />
-      )}
+      <ReaderHome articles={articles} locale={locale} />
     </main>
   );
 }
