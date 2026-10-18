@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, exists, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import type { Locale } from "@/config/site";
 import type { DatabaseConnection } from "@/db/database";
@@ -24,7 +24,7 @@ import { pickLocalised } from "@/domain/localised";
 import { escapeLikeTerm, matchSnippet, parseSearchTerms } from "@/domain/search";
 import { loadCategoryViews, listCategoryTree, type CategoryContext } from "./categories";
 import { loadTagViews, listTags, type TagContext } from "./tags";
-import { visibleToReader } from "./visibility";
+import { readableByUrl, visibleToReader } from "./visibility";
 
 /**
  * Reader-facing reads: what a public page may list and how.
@@ -201,8 +201,8 @@ function loadTagLinks(
   return links;
 }
 
-/** Every Article a Reader can see in this Locale, newest Publish Time first. */
-async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArticleCard[]> {
+/** The card query, narrowed by whichever publication predicate the surface needs. */
+function queryCards(ctx: ReadingContext, locale: Locale, filter: SQL): ReaderArticleCard[] {
   const db = ctx.database.db;
   const rows = db
     .select({ article, translation: articleTranslation, slug: articleSlug.slug })
@@ -215,7 +215,7 @@ async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArt
       ),
     )
     .innerJoin(articleSlug, eq(articleSlug.articleId, article.id))
-    .where(publishedFilter(ctx.clock.now().toISOString()))
+    .where(filter)
     .orderBy(desc(article.publishTime), desc(article.id))
     .all();
 
@@ -225,6 +225,11 @@ async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArt
   );
 
   return rows.map((row) => toCard(ctx, locale, row, tagLinks.get(row.article.id) ?? []));
+}
+
+/** Every Article a Reader can see in this Locale, newest Publish Time first. */
+async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArticleCard[]> {
+  return queryCards(ctx, locale, publishedFilter(ctx.clock.now().toISOString()));
 }
 
 export async function listRecentArticles(
@@ -406,11 +411,23 @@ export async function searchArticles(
   return { terms, results: ordered };
 }
 
+/**
+ * The previous/next chain of one URL.
+ *
+ * It is built from the Articles that answer by URL — visible **and** archived —
+ * not from a list: an archived Article has no list to appear in, but its page
+ * still exists, so without this it would be the one page with no navigation.
+ */
 export async function findArticleNeighbours(
   ctx: ReadingContext,
   input: { locale: Locale; articleId: string },
 ): Promise<ArticleNeighbours | null> {
-  const cards = await loadCards(ctx, input.locale);
+  const nowIso = ctx.clock.now().toISOString();
+  const cards = await queryCards(
+    ctx,
+    input.locale,
+    readableByUrl(article.publicationState, article.publishTime, nowIso),
+  );
   const index = cards.findIndex((card) => card.id === input.articleId);
   if (index === -1) {
     return null;

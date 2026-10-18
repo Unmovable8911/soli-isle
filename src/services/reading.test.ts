@@ -539,6 +539,45 @@ describe("previous and next Article", () => {
     expect(neighbours?.newer).toMatchObject({ id: newer.id, title: "Newer" });
   });
 
+  it("keeps an archived Article in the chain, so an archived page still ends with navigation", async () => {
+    const fixture = await createFixture();
+    const older = await seedPublished(fixture, {
+      title: "Older",
+      publishTime: "2025-06-01T00:00:00.000Z",
+    });
+    const archived = await seedPublished(fixture, {
+      title: "Archived",
+      publishTime: "2025-06-02T00:00:00.000Z",
+    });
+    const newer = await seedPublished(fixture, {
+      title: "Newer",
+      publishTime: "2025-06-03T00:00:00.000Z",
+    });
+    await archiveArticle(fixture.articles, { articleId: archived.id });
+
+    const neighbours = await findArticleNeighbours(fixture.reading, {
+      locale: "zh",
+      articleId: archived.id,
+    });
+
+    expect(neighbours?.older).toMatchObject({ id: older.id });
+    expect(neighbours?.newer).toMatchObject({ id: newer.id });
+  });
+
+  it("leaves archived Articles out of the lists that are not a URL chain", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, { title: "Visible", publishTime: "2025-06-01T00:00:00.000Z" });
+    const archived = await seedPublished(fixture, {
+      title: "Archived",
+      publishTime: "2025-06-02T00:00:00.000Z",
+    });
+    await archiveArticle(fixture.articles, { articleId: archived.id });
+
+    expect(titles(await listRecentArticles(fixture.reading, { locale: "zh" }))).toEqual([
+      "Visible",
+    ]);
+  });
+
   it("has no neighbour at either end", async () => {
     const fixture = await createFixture();
     const only = await seedPublished(fixture, {

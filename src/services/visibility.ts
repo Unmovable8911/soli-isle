@@ -22,3 +22,21 @@ export function visibleToReader(
     ) ?? sql`0 = 1`
   );
 }
+
+/**
+ * The one "a Reader may open this by URL right now" predicate, the SQL twin of
+ * `isReadableByUrl` in `@/domain/publication`: visible now, **and** archived.
+ * An archived Article leaves the lists but keeps answering on its own URL, so
+ * it still belongs to that URL's previous/next chain. Only the chain uses this;
+ * every list keeps to `visibleToReader`.
+ */
+export function readableByUrl(
+  publicationState: AnySQLiteColumn,
+  publishTime: AnySQLiteColumn,
+  nowIso: string,
+): SQL {
+  return (
+    or(visibleToReader(publicationState, publishTime, nowIso), eq(publicationState, "archived")) ??
+    sql`0 = 1`
+  );
+}
