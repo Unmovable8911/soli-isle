@@ -267,6 +267,90 @@
   width: 1.5rem;
 }
 
+/* The one choice the front page offers: everything, or a top-level Category.
+   The row runs sideways instead of wrapping, so the page's width never depends
+   on how many Categories the site has. The scrollbar stays hidden because the
+   strip is short enough to read as one line. */
+.home-filter {
+  margin: 2.25rem 0 2rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.home-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.home-filter-list {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+/* A tab row, not a second set of Category chips: plain words, the quiet ink for
+   the places the Reader is not in, and the ink plus an accent underline for the
+   one they are. The underline sits under the word rather than under a pill, and
+   the box stays 44px tall so a thumb still lands on the label. */
+.home-filter-list a {
+  display: inline-flex;
+  align-items: flex-end;
+  min-height: 2.75rem;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.home-filter-list a:hover {
+  color: var(--fg);
+}
+
+.home-filter-list a[aria-current="page"] {
+  border-bottom-color: var(--accent);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* The way through the listing, under the cards: the words either side of the
+   numbers, on the site's own pill so the row reads as one control. Only the
+   layout and the current page's mark live here; the pill itself lives in
+   lists.css, where every other pill on the site is drawn. A listing that fits
+   on one page draws none of this rather than a disabled row. */
+.home-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2.75rem;
+}
+
+.home-pagination-pages {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The words either side wear the pill as the anchor itself, so they still name
+   their own ink: they leave the listing rather than count a page in it, and a
+   link's own underline would read as a third kind of control in the row. */
+.home-pagination > .reader-pill {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+/* The page being read is the only pill marked, and its mark is the accent edge
+   that already means "chosen" on every other pill on the site. */
+.home-pagination .reader-pill:has(> a[aria-current="page"]) {
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
 .article-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

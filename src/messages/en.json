@@ -483,6 +483,17 @@
       "title": "Recent articles",
       "emptyTitle": "Nothing here yet",
       "empty": "No article has been published yet.",
+      "filter": {
+        "label": "Filter by category",
+        "all": "Latest"
+      },
+      "pagination": {
+        "label": "Pagination",
+        "previous": "Previous page",
+        "next": "Next page",
+        "page": "Page {page}"
+      },
+      "emptyCategory": "No article in this category yet.",
       "hero": {
         "label": "Latest articles",
         "previous": "Previous article",

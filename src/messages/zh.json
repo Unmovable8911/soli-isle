@@ -483,6 +483,17 @@
       "title": "最近的长文",
       "emptyTitle": "这里还没有内容",
       "empty": "还没有发布任何长文。",
+      "filter": {
+        "label": "按分类筛选",
+        "all": "最新"
+      },
+      "pagination": {
+        "label": "分页",
+        "previous": "上一页",
+        "next": "下一页",
+        "page": "第 {page} 页"
+      },
+      "emptyCategory": "这个分类下还没有长文。",
       "hero": {
         "label": "最新文章",
         "previous": "上一篇",

@@ -4,6 +4,7 @@ import {
   buildArchivePath,
   buildCategoryIndexPath,
   buildCategoryPath,
+  buildHomeListingPath,
   buildHomePath,
   buildSearchPath,
   buildTagPath,
@@ -55,6 +56,52 @@ describe("reader paths", () => {
       slug: "编辑器",
     });
     expect(parseTagPath("/zh/categories/notes")).toBeNull();
+  });
+
+  it("builds the home listing URL, leaving out what is not there", () => {
+    expect(buildHomeListingPath({ locale: "en" })).toBe("/en");
+    expect(buildHomeListingPath({ locale: "en", categoryPath: null })).toBe("/en");
+    expect(buildHomeListingPath({ locale: "en", categoryPath: "notes" })).toBe("/en?category=notes");
+    expect(buildHomeListingPath({ locale: "en", page: 3 })).toBe("/en?page=3");
+    expect(buildHomeListingPath({ locale: "zh", categoryPath: "notes/tools" })).toBe(
+      "/zh?category=notes%2Ftools",
+    );
+    expect(buildHomeListingPath({ locale: "zh", categoryPath: "notes/tools", page: 2 })).toBe(
+      "/zh?category=notes%2Ftools&page=2",
+    );
+  });
+
+  it("round-trips a Category path through the query the way the page reads it", () => {
+    const read = (path: string) =>
+      new URL(`https://example.com${path}`).searchParams.get("category");
+
+    expect(read(buildHomeListingPath({ locale: "en", categoryPath: "my notes/tools" }))).toBe(
+      "my notes/tools",
+    );
+    expect(read(buildHomeListingPath({ locale: "zh", categoryPath: "编辑器/工具" }))).toBe(
+      "编辑器/工具",
+    );
+    expect(read(buildHomeListingPath({ locale: "en", categoryPath: "notes" }))).toBe("notes");
+    expect(read(buildHomeListingPath({ locale: "en", categoryPath: "notes/tools" }))).toBe(
+      "notes/tools",
+    );
+    expect(
+      read(buildHomeListingPath({ locale: "en", categoryPath: "my notes/tools", page: 2 })),
+    ).toBe("my notes/tools");
+  });
+
+  it("normalises leading, trailing and doubled slashes into one path", () => {
+    expect(buildHomeListingPath({ locale: "en", categoryPath: "/notes//tools/" })).toBe(
+      "/en?category=notes%2Ftools",
+    );
+    expect(buildHomeListingPath({ locale: "zh", categoryPath: "///" })).toBe("/zh");
+  });
+
+  it("drops a page of 1 or less so the bare listing stays the canonical URL", () => {
+    expect(buildHomeListingPath({ locale: "zh", page: 1 })).toBe("/zh");
+    expect(buildHomeListingPath({ locale: "zh", page: 0 })).toBe("/zh");
+    expect(buildHomeListingPath({ locale: "zh", page: -2 })).toBe("/zh");
+    expect(buildHomeListingPath({ locale: "zh", categoryPath: "", page: 1 })).toBe("/zh");
   });
 
   it("omits the query string when the search box is empty", () => {

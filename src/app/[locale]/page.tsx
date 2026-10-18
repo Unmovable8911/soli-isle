@@ -1,20 +1,28 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { HOME_GRID_LIMIT, HOME_HERO_LIMIT, ReaderHome } from "@/components/reader-home";
+import { ReaderHome } from "@/components/reader-home";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
+import { resolveCategoryPath } from "@/domain/home-listing";
+import { parsePageNumber } from "@/domain/pagination";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { listRecentArticles } from "@/services/reading";
+import { listReaderCategories, listRecentArticles } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-/** The hero and the grid are consecutive slices of one newest-first list. */
-const HOME_LIMIT = HOME_HERO_LIMIT + HOME_GRID_LIMIT;
-
 type LocaleParams = { locale: string };
+
+/**
+ * The query string is a URL anyone can edit, so both halves are optional: a
+ * Category path and a page number, and nothing else on Home changes.
+ */
+type HomeSearchParams = {
+  category?: string | string[];
+  page?: string | string[];
+};
 
 export async function generateMetadata({
   params,
@@ -32,21 +40,39 @@ export async function generateMetadata({
   };
 }
 
-export default async function HomePage({ params }: { params: Promise<LocaleParams> }) {
+export default async function HomePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<LocaleParams>;
+  searchParams: Promise<HomeSearchParams>;
+}) {
   const { locale } = await params;
+  const query = await searchParams;
   if (!isLocale(locale)) {
     notFound();
   }
 
   const context = getAppContext();
-  const articles = await listRecentArticles(context.reading, {
-    locale,
-    limit: HOME_LIMIT,
-  });
+  // The hero, the grid and the paging are one newest-first list, so the whole
+  // set is read once and the component decides how much of it to show.
+  const [articles, categories] = await Promise.all([
+    listRecentArticles(context.reading, { locale }),
+    listReaderCategories(context.reading, { locale }),
+  ]);
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <ReaderHome articles={articles} locale={locale} />
+      <ReaderHome
+        articles={articles}
+        categories={categories}
+        locale={locale}
+        categoryPath={resolveCategoryPath(
+          categories.map((category) => category.path),
+          query.category,
+        )}
+        page={parsePageNumber(query.page)}
+      />
     </main>
   );
 }
