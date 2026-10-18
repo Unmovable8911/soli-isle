@@ -7,11 +7,14 @@ import type { ReactNode } from "react";
  * looks like the rest of the site rather than like a gap in it.
  */
 export function EmptyState({
+  kicker,
   title,
   body,
   action,
   level = 2,
 }: {
+  /** The eyebrow a dead end carries: the response code, said plainly. */
+  kicker?: string;
   title: string;
   /** One sentence. If it needs two, the state is explaining rather than stating. */
   body: string;
@@ -24,6 +27,7 @@ export function EmptyState({
 
   return (
     <section className="empty-state">
+      {kicker !== undefined && <p className="empty-state-kicker">{kicker}</p>}
       <Heading className="empty-state-title">{title}</Heading>
       <p className="empty-state-body">{body}</p>
       {action !== undefined && <div className="empty-state-action">{action}</div>}

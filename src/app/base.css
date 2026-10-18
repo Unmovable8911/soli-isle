@@ -100,6 +100,17 @@ h6 {
   padding: 1.5rem 0 2rem;
 }
 
+/* The dead ends' eyebrow: the response code, said in the type it is said in
+   everywhere else on the site. */
+.empty-state-kicker {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .empty-state-title {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
@@ -116,24 +127,35 @@ h6 {
   margin: 1rem 0 0;
 }
 
-.empty-state-action a {
+/* A link home and the error page's retry are the same action, so they are the
+   same control: a ghost pill whose shape carries it without an underline. */
+.empty-state-action a,
+.empty-state-action button {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
   padding: 0 1rem;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
+  background: transparent;
   color: var(--fg);
+  font: inherit;
   text-decoration: none;
 }
 
-.empty-state-action a:hover {
+.empty-state-action button {
+  cursor: pointer;
+}
+
+.empty-state-action a:hover,
+.empty-state-action button:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .empty-state-action a {
+  .empty-state-action a,
+  .empty-state-action button {
     transition: color 120ms ease, border-color 120ms ease;
   }
 }

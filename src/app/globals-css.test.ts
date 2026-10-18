@@ -371,6 +371,7 @@ const CONTROL_BORDERS = [
   ".site-rail button",
   ".feed-more-button",
   ".empty-state-action a",
+  ".empty-state-action button",
 ] as const;
 
 /**
@@ -584,6 +585,7 @@ const READER_CONTROLS = [
   ".reader-tags a",
   ".reader-pill",
   ".empty-state-action a",
+  ".empty-state-action button",
 ] as const;
 
 /**

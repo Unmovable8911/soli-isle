@@ -75,6 +75,13 @@ export function isLanguageTagLike(segment: string): boolean {
   return PRIMARY_LANGUAGE_TAG.test(segment) || SUPPORTED_LOCALE_PREFIX.test(segment);
 }
 
+/**
+ * The Locale the middleware saw in the address. A page that has no params of its
+ * own — a not-found boundary, an error boundary — reads it here instead of
+ * guessing from a cookie, which may belong to a different Locale.
+ */
+export const LOCALE_HEADER = "x-soli-locale";
+
 export function localeFromPathname(pathname: string): Locale | null {
   const firstSegment = pathname.split("/")[1] ?? "";
   return isLocale(firstSegment) ? firstSegment : null;
