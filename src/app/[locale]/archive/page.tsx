@@ -7,7 +7,7 @@ import { isLocale } from "@/config/site";
 import { archiveMonths, formatArchiveMonth } from "@/domain/article-time";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { createReadingContext, listArchiveArticles } from "@/services/reading";
+import { listArchiveArticles } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -33,7 +33,7 @@ export default async function ArchivePage({ params }: { params: Promise<{ locale
 
   const t = messages[locale];
   const context = getAppContext();
-  const articles = await listArchiveArticles(createReadingContext(context.database, context.clock), {
+  const articles = await listArchiveArticles(context.reading, {
     locale,
   });
   const months = archiveMonths(articles, (article) => article.publishTime);

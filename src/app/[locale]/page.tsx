@@ -12,7 +12,7 @@ import {
 } from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { createReadingContext, listRecentArticles } from "@/services/reading";
+import { listRecentArticles } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -45,7 +45,7 @@ export default async function HomePage({ params }: { params: Promise<LocaleParam
 
   const t = messages[locale];
   const context = getAppContext();
-  const articles = await listRecentArticles(createReadingContext(context.database, context.clock), {
+  const articles = await listRecentArticles(context.reading, {
     locale,
     limit: RECENT_LIMIT,
   });

@@ -19,13 +19,8 @@ import { absoluteUrl } from "@/domain/urls";
 import { renderArticleBody } from "@/editor/render/render-article";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
+import { findReadableArticle, type ReadableArticle } from "@/services/articles";
 import {
-  createArticleContext,
-  findReadableArticle,
-  type ReadableArticle,
-} from "@/services/articles";
-import {
-  createReadingContext,
   findArticleNeighbours,
   resolveBodyImages,
 } from "@/services/reading";
@@ -37,11 +32,8 @@ type ArticleParams = { locale: string; slug: string };
 
 /** One lookup per request, shared by `generateMetadata` and the page. */
 const readArticle = cache(
-  async (locale: Locale, slug: string): Promise<ReadableArticle> => {
-    const context = getAppContext();
-    const articles = createArticleContext(context.database, context.clock, context.assets);
-    return findReadableArticle(articles, { slug, locale });
-  },
+  async (locale: Locale, slug: string): Promise<ReadableArticle> =>
+    findReadableArticle(getAppContext().articles, { slug, locale }),
 );
 
 function sharedImagePath(translation: { bodyJson: string }): string | null {
@@ -120,8 +112,7 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
   const t = messages[locale];
   const { article, translation, fellBack } = found;
   const context = getAppContext();
-  const reading = createReadingContext(context.database, context.clock);
-  const images = await resolveBodyImages(reading, translation.bodyJson);
+  const images = await resolveBodyImages(context.reading, translation.bodyJson);
   const html = await renderArticleBody(translation.bodyJson, {
     resolveImage: (src) => {
       const parsed = parseAssetAddress(src);
@@ -129,7 +120,10 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
     },
     footnoteBackLabel: t.reader.article.footnoteBack,
   });
-  const neighbours = await findArticleNeighbours(reading, { locale, articleId: article.id });
+  const neighbours = await findArticleNeighbours(context.reading, {
+    locale,
+    articleId: article.id,
+  });
   const links = articleLanguageLinks({
     slug: article.slug,
     shownLocale: translation.locale,

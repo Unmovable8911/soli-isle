@@ -9,7 +9,7 @@ import { isLocale } from "@/config/site";
 import { buildCategoryIndexPath, buildCategoryPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { createReadingContext, findReaderCategory, listReaderCategories } from "@/services/reading";
+import { findReaderCategory, listReaderCategories } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -45,7 +45,7 @@ export async function generateMetadata({
   }
 
   const context = getAppContext();
-  const found = await findReaderCategory(createReadingContext(context.database, context.clock), {
+  const found = await findReaderCategory(context.reading, {
     locale,
     categoryPath,
   });
@@ -72,7 +72,7 @@ export default async function CategoryPage({ params }: { params: Promise<Categor
   }
 
   const context = getAppContext();
-  const found = await findReaderCategory(createReadingContext(context.database, context.clock), {
+  const found = await findReaderCategory(context.reading, {
     locale,
     categoryPath,
   });
@@ -115,7 +115,7 @@ export default async function CategoryPage({ params }: { params: Promise<Categor
 async function CategoryIndex({ locale }: { locale: "zh" | "en" }) {
   const t = messages[locale];
   const context = getAppContext();
-  const tree = await listReaderCategories(createReadingContext(context.database, context.clock), {
+  const tree = await listReaderCategories(context.reading, {
     locale,
   });
 
