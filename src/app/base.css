@@ -90,6 +90,54 @@ h6 {
   top: 0.75rem;
 }
 
+/* The bare-surface state, shared by the reading pages and the console: a title
+   that names what is missing, one sentence about why, and the action where the
+   Reader has one. A rule here rather than per surface is what stops the first
+   empty page someone meets from being the one nobody styled. */
+.empty-state {
+  max-width: 42rem;
+  margin: 0;
+  padding: 1.5rem 0 2rem;
+}
+
+.empty-state-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.empty-state-body {
+  margin: 0;
+  color: var(--muted);
+}
+
+.empty-state-action {
+  margin: 1rem 0 0;
+}
+
+.empty-state-action a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.empty-state-action a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .empty-state-action a {
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+}
+
 header {
   display: flex;
   align-items: center;

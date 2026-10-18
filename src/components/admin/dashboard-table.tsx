@@ -7,6 +7,8 @@ import type { Messages } from "@/messages";
 import type { ArticleSummary } from "@/services/articles";
 import type { PostSummary } from "@/services/posts";
 
+import { EmptyState } from "../empty-state";
+
 export type DashboardLabels = Messages["admin"]["dashboard"];
 
 /** What the row actions need to know: which work, and how it stands right now. */
@@ -44,7 +46,11 @@ export function DashboardTable({ articles, posts, labels, renderActions }: Dashb
       <section className="dashboard-section" aria-labelledby="dashboard-articles">
         <h2 id="dashboard-articles">{labels.articles.title}</h2>
         {articles.length === 0 ? (
-          <p className="article-empty">{labels.articles.empty}</p>
+          <EmptyState
+            title={labels.articles.emptyTitle}
+            body={labels.articles.empty}
+            action={<Link href="/admin/articles">{labels.articles.newArticle}</Link>}
+          />
         ) : (
           <table className="article-table">
             <thead>
@@ -90,7 +96,11 @@ export function DashboardTable({ articles, posts, labels, renderActions }: Dashb
       <section className="dashboard-section" aria-labelledby="dashboard-posts">
         <h2 id="dashboard-posts">{labels.posts.title}</h2>
         {posts.length === 0 ? (
-          <p className="article-empty">{labels.posts.empty}</p>
+          <EmptyState
+            title={labels.posts.emptyTitle}
+            body={labels.posts.empty}
+            action={<Link href="/admin/posts">{labels.posts.newPost}</Link>}
+          />
         ) : (
           <table className="article-table">
             <thead>

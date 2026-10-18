@@ -370,6 +370,7 @@ const CONTROL_BORDERS = [
   ".site-menu summary",
   ".site-rail button",
   ".feed-more-button",
+  ".empty-state-action a",
 ] as const;
 
 /**
@@ -582,6 +583,7 @@ const READER_CONTROLS = [
   ".lightbox-next",
   ".reader-tags a",
   ".reader-pill",
+  ".empty-state-action a",
 ] as const;
 
 /**
@@ -604,6 +606,7 @@ const LIST_ANCHORS = [
   ".article-toc a",
   ".reader-tags a",
   ".reader-article-nav a",
+  ".empty-state-action a",
 ] as const;
 
 /** Reader surfaces that render at phone width; 0.875rem is the 14px floor. */

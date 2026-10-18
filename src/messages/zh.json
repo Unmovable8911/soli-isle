@@ -57,6 +57,7 @@
       "untitled": "（无标题）",
       "articles": {
         "title": "长文",
+        "emptyTitle": "还没有写下任何长文",
         "empty": "还没有长文。",
         "newArticle": "新建长文",
         "columns": {
@@ -69,6 +70,7 @@
       },
       "posts": {
         "title": "推文",
+        "emptyTitle": "还没有发布任何推文",
         "empty": "还没有推文。",
         "newPost": "新建推文",
         "columns": {
@@ -113,6 +115,7 @@
       },
       "list": {
         "title": "全部图片",
+        "emptyTitle": "还没有图片",
         "empty": "还没有上传任何图片，用上面的上传器添加第一张。",
         "dimensions": "尺寸",
         "size": "大小",
@@ -124,6 +127,7 @@
       },
       "orphans": {
         "title": "未引用图片",
+        "emptyTitle": "没有需要清理的图片",
         "description": "这些图片没有被任何内容引用，删除后不可恢复。",
         "empty": "没有未引用图片。",
         "delete": "删除",
@@ -473,14 +477,18 @@
     "home": {
       "title": "最近的长文",
       "lead": "按发布时间倒序，读最近写下的东西。",
+      "emptyTitle": "这里还没有内容",
       "empty": "还没有发布任何长文。"
     },
     "list": {
+      "emptyTitle": "这里还是空的",
       "empty": "这里还没有长文。",
       "count": "{count} 篇长文"
     },
     "category": {
       "heading": "分类",
+      "emptyTitle": "还没有分类",
+      "emptyIndex": "站点还没有建立分类。",
       "empty": "这个分类下还没有长文。",
       "children": "子分类"
     },
@@ -490,6 +498,7 @@
     },
     "archive": {
       "title": "归档",
+      "emptyTitle": "归档还是空的",
       "empty": "还没有发布任何长文。"
     },
     "search": {
@@ -499,6 +508,7 @@
       "submit": "搜索",
       "hint": "匹配标题、正文、标签与分类。",
       "summary": "找到 {count} 篇与“{query}”相关的长文。",
+      "emptyTitle": "没有找到",
       "empty": "没有找到匹配的长文。"
     },
     "article": {
@@ -532,6 +542,7 @@
     },
     "feed": {
       "title": "推文",
+      "emptyTitle": "信息流还是空的",
       "empty": "还没有推文。",
       "loadOlder": "加载更早",
       "loading": "加载中…",

@@ -57,6 +57,7 @@
       "untitled": "(untitled)",
       "articles": {
         "title": "Articles",
+        "emptyTitle": "Nothing written yet",
         "empty": "No Articles yet.",
         "newArticle": "New Article",
         "columns": {
@@ -69,6 +70,7 @@
       },
       "posts": {
         "title": "Posts",
+        "emptyTitle": "Nothing posted yet",
         "empty": "No Posts yet.",
         "newPost": "New Post",
         "columns": {
@@ -113,6 +115,7 @@
       },
       "list": {
         "title": "All images",
+        "emptyTitle": "No images yet",
         "empty": "No images uploaded yet. Add the first one with the uploader above.",
         "dimensions": "Dimensions",
         "size": "Size",
@@ -124,6 +127,7 @@
       },
       "orphans": {
         "title": "Unreferenced images",
+        "emptyTitle": "Nothing to clean up",
         "description": "No content references these images. Deleting one cannot be undone.",
         "empty": "No unreferenced images.",
         "delete": "Delete",
@@ -473,14 +477,18 @@
     "home": {
       "title": "Recent articles",
       "lead": "Newest first, the things most recently written.",
+      "emptyTitle": "Nothing here yet",
       "empty": "No article has been published yet."
     },
     "list": {
+      "emptyTitle": "Nothing here yet",
       "empty": "There is no article here yet.",
       "count": "{count} article(s)"
     },
     "category": {
       "heading": "Categories",
+      "emptyTitle": "No Categories yet",
+      "emptyIndex": "No Category has been created yet.",
       "empty": "No article in this category yet.",
       "children": "Subcategories"
     },
@@ -490,6 +498,7 @@
     },
     "archive": {
       "title": "Archive",
+      "emptyTitle": "The archive is empty",
       "empty": "No article has been published yet."
     },
     "search": {
@@ -499,6 +508,7 @@
       "submit": "Search",
       "hint": "Matches titles, bodies, tags and categories.",
       "summary": "Found {count} article(s) matching “{query}”.",
+      "emptyTitle": "No results",
       "empty": "No article matched."
     },
     "article": {
@@ -532,6 +542,7 @@
     },
     "feed": {
       "title": "Feed",
+      "emptyTitle": "The stream is empty",
       "empty": "No posts yet.",
       "loadOlder": "Load older",
       "loading": "Loading…",

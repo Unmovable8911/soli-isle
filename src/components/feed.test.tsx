@@ -5,6 +5,7 @@ import { FeedHeading } from "./feed";
 
 const LABELS = {
   title: "Feed",
+  emptyTitle: "The stream is empty",
   empty: "No posts yet.",
   loadOlder: "Load older",
   loading: "Loading…",

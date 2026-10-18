@@ -7,6 +7,7 @@ import { PostBody, PostCard, PostGallery, galleryNextIndex } from "./post-card";
 
 const LABELS = {
   title: "Feed",
+  emptyTitle: "The stream is empty",
   empty: "No posts yet.",
   loadOlder: "Load older",
   loading: "Loading…",
