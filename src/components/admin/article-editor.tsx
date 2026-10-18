@@ -1,6 +1,7 @@
 "use client";
 
 import type { JSONContent } from "@tiptap/core";
+import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +16,7 @@ import { EMPTY_DOCUMENT } from "@/domain/rich-text";
 import { instantToSiteLocal } from "@/domain/site-time";
 import { articleExtensions } from "@/editor/extensions";
 import { looksLikeMarkdown, parseMarkdown } from "@/editor/markdown";
+import { CALLOUT_TONES } from "@/editor/nodes/callout";
 import type { Messages } from "@/messages";
 import type { ArticleDetail, ArticleTranslationView } from "@/services/articles";
 import type { CategoryNode } from "@/services/categories";
@@ -370,7 +372,9 @@ export default function ArticleEditor({
     }
   }
 
-  const slashItems = useRef(createSlashItems(labels.slash, { onInsertImage: () => setPickerOpen(true) }));
+  const slashItems = useRef(
+    createSlashItems(labels.slash, labels.editor, { onInsertImage: () => setPickerOpen(true) }),
+  );
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -796,6 +800,27 @@ export default function ArticleEditor({
                 active={false}
                 onClick={applyCodeLanguage}
               />
+              {editor.isActive("callout") ? (
+                <label className="article-callout-tone">
+                  <span>{labels.editor.calloutTone}</span>
+                  <select
+                    value={String(editor.getAttributes("callout").tone ?? "note")}
+                    onChange={(event) =>
+                      editor
+                        .chain()
+                        .focus()
+                        .updateAttributes("callout", { tone: event.target.value })
+                        .run()
+                    }
+                  >
+                    {CALLOUT_TONES.map((tone) => (
+                      <option key={tone} value={tone}>
+                        {labels.editor.calloutTones[tone]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
             </div>
           )}
 
@@ -813,6 +838,11 @@ export default function ArticleEditor({
 
           <div className="article-editor-content">
             <EditorContent editor={editor} />
+            {editor === null ? null : (
+              <DragHandle editor={editor} className="article-drag-handle">
+                <span aria-hidden="true">⠿</span>
+              </DragHandle>
+            )}
           </div>
         </div>
 

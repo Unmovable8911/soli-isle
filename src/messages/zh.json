@@ -140,6 +140,14 @@
           "horizontalRule": "分隔线",
           "undo": "撤销",
           "redo": "重做"
+        },
+        "mathPrompt": "LaTeX 公式",
+        "calloutTone": "提示块风格",
+        "calloutTones": {
+          "note": "说明",
+          "tip": "提示",
+          "warn": "注意",
+          "danger": "危险"
         }
       },
       "slash": {
@@ -153,7 +161,18 @@
         "blockquote": "引用",
         "codeBlock": "代码块",
         "image": "图片",
-        "horizontalRule": "分隔线"
+        "horizontalRule": "分隔线",
+        "table": "表格",
+        "addRow": "新增行",
+        "addColumn": "新增列",
+        "deleteRow": "删除行",
+        "deleteColumn": "删除列",
+        "deleteTable": "删除表格",
+        "callout": "提示块",
+        "details": "折叠块",
+        "mathBlock": "公式块",
+        "mathInline": "行内公式",
+        "footnote": "脚注"
       },
       "meta": {
         "title": "标题",
@@ -329,7 +348,8 @@
       "publishedOn": "发布于",
       "tags": "标签",
       "previous": "上一篇",
-      "next": "下一篇"
+      "next": "下一篇",
+      "footnoteBack": "回到正文"
     },
     "fallback": {
       "notice": "这篇长文还没有{requested}版本，以下是它的{shown}版本。"

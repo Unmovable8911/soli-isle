@@ -612,9 +612,29 @@ main {
 }
 
 .article-editor-content {
+  position: relative;
   min-height: 24rem;
   border: 1px solid var(--muted);
   border-radius: 0.5rem;
+}
+
+/* The block drag handle floats next to the hovered top-level block. */
+.article-drag-handle {
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 40%, var(--bg));
+  border-radius: 0.25rem;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: grab;
+}
+
+.article-drag-handle[data-dragging="true"] {
+  cursor: grabbing;
 }
 
 .article-editor-surface {
@@ -803,6 +823,163 @@ main {
 
 .article-body a {
   color: var(--accent);
+}
+
+/* Power blocks (issue 09). The same markup is produced for the admin preview
+   and for the public page, so one rule set covers both surfaces; the editor's
+   own surface reuses it through .article-editor-surface. */
+
+.article-body table,
+.article-editor-surface table {
+  width: 100%;
+  margin: 0 0 1rem;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.article-body th,
+.article-body td,
+.article-editor-surface th,
+.article-editor-surface td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 32%, var(--bg));
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-body th,
+.article-editor-surface th {
+  background: color-mix(in srgb, var(--muted) 14%, var(--bg));
+  font-weight: 600;
+}
+
+.article-body th > p,
+.article-body td > p,
+.article-editor-surface th > p,
+.article-editor-surface td > p {
+  margin: 0;
+}
+
+/* A wide formula scrolls inside the column instead of breaking the layout. */
+.article-body .katex-display,
+.article-editor-surface .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.15rem;
+}
+
+.article-body .callout,
+.article-editor-surface .callout {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--accent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--muted) 12%, var(--bg));
+}
+
+.article-body .callout[data-tone="note"],
+.article-editor-surface .callout[data-tone="note"] {
+  border-left-color: var(--muted);
+}
+
+.article-body .callout[data-tone="warn"],
+.article-editor-surface .callout[data-tone="warn"] {
+  border-left-color: color-mix(in srgb, var(--accent) 60%, var(--fg));
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+
+.article-body .callout[data-tone="danger"],
+.article-editor-surface .callout[data-tone="danger"] {
+  border-left-color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 12%, var(--bg));
+}
+
+.article-body .callout > .callout-body > :last-child,
+.article-editor-surface .callout > .callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Fold blocks expand through native <details>, so the public page needs no
+   JavaScript. The editor renders its own wrapper with a toggle button. */
+.article-body details {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 32%, var(--bg));
+  border-radius: 0.5rem;
+}
+
+.article-body summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.article-body details[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.article-editor-surface [data-type="details"] {
+  margin: 0 0 1rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 32%, var(--bg));
+  border-radius: 0.5rem;
+}
+
+.article-editor-surface .details-toggle {
+  padding: 0 0.35rem;
+  border: 1px solid var(--muted);
+  border-radius: 0.25rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.article-editor-surface summary {
+  font-weight: 600;
+}
+
+.article-body .footnotes {
+  margin: 2rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--muted) 32%, var(--bg));
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.article-body .footnote-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.article-body .footnote-list > li {
+  margin-bottom: 0.35rem;
+}
+
+.article-body .footnote-ref,
+.article-body .footnote-back {
+  text-decoration: none;
+}
+
+.article-body .footnote-back {
+  margin-left: 0.35rem;
+}
+
+.article-callout-tone {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.article-callout-tone select {
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--muted);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
 }
 
 .slash-menu {
