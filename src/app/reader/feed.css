@@ -46,10 +46,6 @@
   max-width: 42rem;
 }
 
-.post-empty {
-  color: var(--muted);
-}
-
 .post-card {
   display: grid;
   gap: 0.75rem;

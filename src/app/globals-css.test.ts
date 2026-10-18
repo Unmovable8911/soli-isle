@@ -1312,3 +1312,69 @@ describe("the Article page's measure", () => {
     }
   });
 });
+/**
+ * Dead CSS is invisible to every other assertion here: a rule for a class no
+ * component renders still parses, still measures, and never reaches a Reader.
+ * A class built by a template literal is not dead, and neither is a class KaTeX
+ * puts on its own markup, so both are named rather than guessed at.
+ */
+const COMPOSED_CLASS_PREFIXES = [
+  // dashboard-table.tsx: `publication-state-${article.visibility}`
+  "publication-state-",
+  // article-list.tsx and post-list.tsx: `article-state-${work.visibility}`
+  "article-state-",
+  // article-editor.tsx: `article-save-${status}`
+  "article-save-",
+  // asset-library.tsx: `asset-upload-${record.status}`
+  "asset-upload-",
+] as const;
+
+const THIRD_PARTY_CLASSES = new Set([
+  // KaTeX marks its display blocks itself; the rule lets a wide formula scroll
+  // inside the prose instead of widening the page.
+  "katex-display",
+]);
+
+function componentSource(): string {
+  const files: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) {
+        files.push(full);
+      }
+    }
+  };
+  walk(path.resolve(process.cwd(), "src"));
+  return files.map((file) => readFileSync(file, "utf8")).join("\n");
+}
+
+/** Whole-word, hyphens included: `post-empty` must not match `post-empty-x`. */
+function rendersClass(source: string, name: string): boolean {
+  return new RegExp("(^|[^\\w-])" + name + "(?![\\w-])").test(source);
+}
+
+describe("no dead rules", () => {
+  const RENDERED = componentSource();
+
+  it("styles no class a component never renders", () => {
+    const classes = [...new Set([...SOURCE.matchAll(/\.([a-zA-Z][a-zA-Z0-9_-]*)/g)].map((match) => match[1] ?? ""))];
+    const dead = classes.filter(
+      (name) =>
+        !rendersClass(RENDERED, name) &&
+        !COMPOSED_CLASS_PREFIXES.some((prefix) => name.startsWith(prefix)) &&
+        !THIRD_PARTY_CLASSES.has(name),
+    );
+
+    expect(dead).toEqual([]);
+  });
+
+  it("declares no token nothing reads", () => {
+    const read = new Set([...SOURCE.matchAll(/var\((--[a-z-]+)\)/g)].map((match) => match[1] ?? ""));
+    const unused = [...themeTokens("light").keys()].filter((name) => !read.has(name));
+
+    expect(unused).toEqual([]);
+  });
+});

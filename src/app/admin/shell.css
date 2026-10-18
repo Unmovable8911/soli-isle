@@ -171,10 +171,6 @@
   cursor: pointer;
 }
 
-.admin-home-entry a {
-  color: var(--accent);
-}
-
 /* Six entries will not sit on one line of a tablet's worth of bar, and a fixed
    height would clip them rather than show them, so below 64rem the bar keeps its
    minimum and wraps. */

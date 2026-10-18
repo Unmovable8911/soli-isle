@@ -25,26 +25,8 @@
   text-decoration: none;
 }
 
-.reader-lead,
 .reader-hint {
   color: var(--muted);
-}
-
-.reader-entries ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin: 0 0 2rem;
-  padding: 0;
-  list-style: none;
-}
-
-.reader-entries a {
-  display: inline-block;
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-size: 0.9rem;
 }
 
 .reader-empty,
