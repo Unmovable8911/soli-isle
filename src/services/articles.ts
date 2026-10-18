@@ -30,8 +30,15 @@ import { isSafeSlug, normaliseSlug, uniqueSlug } from "@/domain/slug";
 import { selectTranslation } from "@/domain/translation-coverage";
 import { generateUlid } from "@/domain/ulid";
 import { deriveMarkdown } from "@/editor/markdown";
-import { syncAssetReferences, type AssetContext } from "./assets";
+import type { AssetContext } from "./assets";
 import { loadCategoryViews, type CategoryContext, type CategoryView } from "./categories";
+import {
+  finishMutation,
+  groupBy,
+  InvalidArticleBodyError,
+  localeOrder,
+  syncTranslationAssets,
+} from "./content";
 import { loadTagViews, type TagContext, type TagView } from "./tags";
 
 export const ARTICLE_CONTENT_KIND = "article";
@@ -48,12 +55,7 @@ export function createArticleContext(
   return { database, clock, assets };
 }
 
-export class InvalidArticleBodyError extends Error {
-  constructor() {
-    super("The article body must be a ProseMirror document");
-    this.name = "InvalidArticleBodyError";
-  }
-}
+export { InvalidArticleBodyError } from "./content";
 
 export interface ArticleTranslationSummary {
   locale: Locale;
@@ -151,25 +153,6 @@ export type ReadableArticle =
 type ArticleRow = typeof article.$inferSelect;
 type ArticleTranslationRow = typeof articleTranslation.$inferSelect;
 type ArticleRevisionRow = typeof articleRevision.$inferSelect;
-
-function groupBy<T>(rows: readonly T[], key: (row: T) => string): Map<string, T[]> {
-  const grouped = new Map<string, T[]>();
-  for (const row of rows) {
-    const groupKey = key(row);
-    const group = grouped.get(groupKey);
-    if (group === undefined) {
-      grouped.set(groupKey, [row]);
-    } else {
-      group.push(row);
-    }
-  }
-  return grouped;
-}
-
-function localeOrder(locale: Locale): number {
-  const index = siteConfig.locales.indexOf(locale);
-  return index === -1 ? siteConfig.locales.length : index;
-}
 
 function toTranslationSummary(row: ArticleTranslationRow): ArticleTranslationSummary {
   return { locale: row.locale, title: row.title, updatedAt: row.updatedAt, version: row.version };
@@ -284,16 +267,19 @@ function loadArticle(ctx: ArticleContext, articleId: string): ArticleDetail | nu
 }
 
 async function syncArticleAssets(ctx: ArticleContext, articleId: string): Promise<void> {
-  const rows = ctx.database.db
-    .select({ bodyJson: articleTranslation.bodyJson, bodyMarkdown: articleTranslation.bodyMarkdown })
+  const translations = ctx.database.db
+    .select({
+      bodyJson: articleTranslation.bodyJson,
+      bodyMarkdown: articleTranslation.bodyMarkdown,
+    })
     .from(articleTranslation)
     .where(eq(articleTranslation.articleId, articleId))
     .all();
 
-  await syncAssetReferences(ctx.assets, {
+  await syncTranslationAssets(ctx, {
     contentKind: ARTICLE_CONTENT_KIND,
     contentId: articleId,
-    body: rows.map((row) => `${row.bodyJson}\n${row.bodyMarkdown}`).join("\n"),
+    translations,
   });
 }
 
@@ -467,7 +453,7 @@ export async function addArticleTranslation(
   });
 
   await syncArticleAssets(ctx, input.articleId);
-  return finish(ctx, input.articleId);
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 export async function saveArticleTranslation(
@@ -527,7 +513,7 @@ export async function saveArticleTranslation(
   });
 
   await syncArticleAssets(ctx, input.articleId);
-  return finish(ctx, input.articleId);
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 export async function removeArticleTranslation(
@@ -569,7 +555,7 @@ export async function removeArticleTranslation(
     .run();
 
   await syncArticleAssets(ctx, input.articleId);
-  return finish(ctx, input.articleId);
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 function renameArticleSlug(ctx: ArticleContext, articleId: string, requested: string): ArticleMutationFailure | null {
@@ -678,15 +664,7 @@ export async function updateArticleMeta(
     .where(eq(article.id, input.articleId))
     .run();
 
-  return finish(ctx, input.articleId);
-}
-
-function finish(ctx: ArticleContext, articleId: string): ArticleMutation {
-  const detail = loadArticle(ctx, articleId);
-  if (detail === null) {
-    return { ok: false, reason: "not-found" };
-  }
-  return { ok: true, article: detail };
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 function writeRevisions(ctx: ArticleContext, articleId: string, kind: RevisionKind): ArticleRevisionView[] {
@@ -779,7 +757,7 @@ export async function publishArticle(
     .run();
 
   writeRevisions(ctx, input.articleId, "publish");
-  return finish(ctx, input.articleId);
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 export async function archiveArticle(
@@ -800,7 +778,7 @@ export async function archiveArticle(
     .where(eq(article.id, input.articleId))
     .run();
 
-  return finish(ctx, input.articleId);
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 export async function unarchiveArticle(
@@ -821,7 +799,7 @@ export async function unarchiveArticle(
     .where(eq(article.id, input.articleId))
     .run();
 
-  return finish(ctx, input.articleId);
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 export async function deleteArticlePermanently(
@@ -967,7 +945,7 @@ export async function restoreRevision(
 
   db.update(article).set({ updatedAt: now }).where(eq(article.id, input.articleId)).run();
   await syncArticleAssets(ctx, input.articleId);
-  return finish(ctx, input.articleId);
+  return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }
 
 export async function resolveArticleSlug(

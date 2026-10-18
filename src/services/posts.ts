@@ -24,7 +24,14 @@ import {
 import { EMPTY_DOCUMENT, isRichTextDocument } from "@/domain/rich-text";
 import { generateUlid } from "@/domain/ulid";
 import { deriveMarkdown } from "@/editor/markdown";
-import { syncAssetReferences, type AssetContext } from "./assets";
+import type { AssetContext } from "./assets";
+import {
+  finishMutation,
+  groupBy,
+  InvalidPostBodyError,
+  localeOrder,
+  syncTranslationAssets,
+} from "./content";
 import { loadTagViews, type TagContext, type TagView } from "./tags";
 import { visibleToReader } from "./visibility";
 
@@ -53,12 +60,7 @@ export function createPostContext(
   return { database, clock, assets };
 }
 
-export class InvalidPostBodyError extends Error {
-  constructor() {
-    super("The post body must be a ProseMirror document");
-    this.name = "InvalidPostBodyError";
-  }
-}
+export { InvalidPostBodyError } from "./content";
 
 export interface PostTranslationSummary {
   locale: Locale;
@@ -169,25 +171,6 @@ function toTranslationView(row: PostTranslationRow): PostTranslationView {
   };
 }
 
-function groupBy<T>(rows: readonly T[], key: (row: T) => string): Map<string, T[]> {
-  const grouped = new Map<string, T[]>();
-  for (const row of rows) {
-    const groupKey = key(row);
-    const group = grouped.get(groupKey);
-    if (group === undefined) {
-      grouped.set(groupKey, [row]);
-    } else {
-      group.push(row);
-    }
-  }
-  return grouped;
-}
-
-function localeOrder(locale: Locale): number {
-  const index = siteConfig.locales.indexOf(locale);
-  return index === -1 ? siteConfig.locales.length : index;
-}
-
 function loadRecords<TTranslation extends PostTranslationSummary>(
   ctx: PostContext,
   rows: readonly PostRow[],
@@ -290,15 +273,13 @@ async function syncPostAssets(ctx: PostContext, postId: string): Promise<void> {
     .where(eq(postImage.postId, postId))
     .all();
 
-  const body = [
-    ...translations.map((row) => `${row.bodyJson}\n${row.bodyMarkdown}`),
-    ...images.map((row) => buildAssetAddress({ assetId: row.assetId, variant: "display", format: "webp" })),
-  ].join("\n");
-
-  await syncAssetReferences(ctx.assets, {
+  await syncTranslationAssets(ctx, {
     contentKind: POST_CONTENT_KIND,
     contentId: postId,
-    body,
+    translations,
+    extra: images.map((row) =>
+      buildAssetAddress({ assetId: row.assetId, variant: "display", format: "webp" }),
+    ),
   });
 }
 
@@ -397,7 +378,7 @@ export async function addPostTranslation(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 export async function savePostTranslation(
@@ -448,7 +429,7 @@ export async function savePostTranslation(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -490,7 +471,7 @@ export async function removePostTranslation(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /** The version Content Fallback shows; it must be one the Post really has. */
@@ -518,7 +499,7 @@ export async function setPostDefaultLocale(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -560,7 +541,7 @@ export async function setPostImages(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -620,7 +601,7 @@ export async function setPostTags(
     tx.update(post).set({ updatedAt: now }).where(eq(post.id, input.postId)).run();
   });
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -660,7 +641,7 @@ export async function publishPost(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 export async function archivePost(
@@ -681,7 +662,7 @@ export async function archivePost(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 export async function unarchivePost(
@@ -702,7 +683,7 @@ export async function unarchivePost(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -888,14 +869,6 @@ export async function readFeedPage(
         ? { publishTime: last.publishTime, id: last.id }
         : null,
   };
-}
-
-function finish(ctx: PostContext, postId: string): PostMutation {
-  const detail = loadPost(ctx, postId);
-  if (detail === null) {
-    return { ok: false, reason: "not-found" };
-  }
-  return { ok: true, post: detail };
 }
 
 /** The Author console list: every Post, whatever its state, newest edit first. */
