@@ -778,23 +778,14 @@ describe("the feed read", () => {
     ).toEqual([withTag]);
   });
 
-  it("treats a Slug no Tag answers to as no filter at all, instead of inventing a Tag", async () => {
+  it("reports a Slug no Tag answers to as unknown, and filters nothing by it", async () => {
     const fixture = await createFixture();
-    const travel = await createNamedTag(fixture, "旅行", "travel");
-    const tagged = await seedFeedPost(fixture, {
-      publishTime: "2025-06-01T00:00:00.000Z",
-      tagIds: [travel.id],
-    });
-    const untagged = await seedFeedPost(fixture, { publishTime: "2025-06-02T00:00:00.000Z" });
+    await createNamedTag(fixture, "旅行", "travel");
 
     expect(resolveFeedTag(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" })).toEqual({
-      kind: "all",
+      kind: "unknown",
+      slug: "no-such-tag",
     });
-    expect(
-      (await readFeedPage(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" })).posts.map(
-        (post) => post.id,
-      ),
-    ).toEqual([untagged, tagged]);
   });
 
   it("names the Tag a filtered Feed is showing, in the Reader's Locale", async () => {

@@ -690,12 +690,17 @@ export async function unarchivePost(
  * What a Tag-filtered Feed does with the Slug it was asked for — the service's
  * judgement, not the adapter's.
  *
- * A Slug no Tag answers to cannot filter anything: passing it through would
- * label the Feed with a Tag that does not exist, so the Feed stays unfiltered
- * and the page renders no filter heading. Reporting the answer instead of
- * inventing a name keeps the cards and the heading derived from one decision.
+ * Three outcomes, and the third is the point: a Slug that no Tag answers to is
+ * **unknown**, not "no filter". Answering with the unfiltered Feed would show
+ * the Reader unrelated Posts under a URL that claims a filter, and a typo'd or
+ * deleted Tag URL would be indistinguishable from the ordinary Feed. Every
+ * other unknown resource on this site answers 404, so this one does too; the
+ * adapters map `unknown` to a 404 and the Feed itself never guesses.
  */
-export type FeedTagFilter = { kind: "all" } | { kind: "tag"; tag: FeedTagRef };
+export type FeedTagFilter =
+  | { kind: "all" }
+  | { kind: "tag"; tag: FeedTagRef }
+  | { kind: "unknown"; slug: string };
 
 export function resolveFeedTag(
   ctx: PostContext,
@@ -707,7 +712,7 @@ export function resolveFeedTag(
   }
   const found = findTagViewBySlug(ctx, slug);
   if (found === null) {
-    return { kind: "all" };
+    return { kind: "unknown", slug };
   }
   return {
     kind: "tag",
@@ -742,6 +747,8 @@ export async function readFeedPage(
     visibleToReader(post.publicationState, post.publishTime, nowIso),
     isNotNull(post.publishTime),
   ];
+  // `unknown` never narrows this query: both public callers refuse it with a
+  // 404 before asking for a page.
   const tagFilter = resolveFeedTag(ctx, { locale: input.locale, tagSlug: input.tagSlug ?? null });
   if (tagFilter.kind === "tag") {
     const tagSlug = tagFilter.tag.slug;

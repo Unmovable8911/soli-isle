@@ -19,6 +19,10 @@ dependency.
 
 `git merge dev` after the last commit: no-op (the cut point *is* the tip); all gates re-run after it.
 
+Finding 10 was revised after review: the unknown Tag Slug became a **404** instead of the "filter
+nothing" rule this branch first shipped. That revision is the last `fix(posts)` commit on the branch and
+§10 explains both choices.
+
 ## 1. The derived Markdown column is derived at the service seam
 
 **Was.** `src/http/articles.ts:137` forwarded a client-supplied `bodyMarkdown` on create (its own
@@ -125,20 +129,27 @@ real one being `articleLanguageLinks` in `src/domain/article-language.ts` via `l
 
 ## 10. The unknown Tag is the service's decision
 
-`resolveFeedTag(ctx, {locale, tagSlug})` in `src/services/posts.ts` answers `{kind:"all"}` or
-`{kind:"tag", tag}` from the Tag table (new `findTagViewBySlug` in `src/services/tags.ts`).
-`readFeedPage` applies it, so the rule holds for every caller, and `feedView` uses the same answer for
-the heading instead of inventing `{slug, name: slug}`.
+`resolveFeedTag(ctx, {locale, tagSlug})` in `src/services/posts.ts` answers from the Tag table (new
+`findTagViewBySlug` in `src/services/tags.ts`) with `{kind:"all"}` (no Slug given), `{kind:"tag", tag}`
+(a real Tag, named in the Reader's Locale) or `{kind:"unknown", slug}`. No adapter invents a name any
+more: `feedView` returns `{ok:true, view}` or `{ok:false, reason:"unknown-tag"}`, the Feed page maps the
+refusal to `notFound()`, and `GET /api/public/feed` answers `404 {"error":"unknown-tag"}`.
 
-Decision: **a Slug no Tag answers to filters nothing.** The Feed shows everything and the page renders
-no filter heading; the reader sees a complete Feed instead of an empty one labelled with a Tag the site
-does not have. The old assertion in `services/posts.test.ts` ("shows only Posts carrying the tapped
-Tag…") pinned the opposite side effect — `readFeedPage({tagSlug: "no-such-tag"})` → `{posts: [],
-nextCursor: null}` — and it genuinely had to change: that empty page *was* the fabricated filter. It is
-now its own test, "treats a Slug no Tag answers to as no filter at all, instead of inventing a Tag",
-asserting both the whole Feed and `resolveFeedTag`'s answer; the known-Tag assertions in the original
-test are untouched. Also covered at the adapter: `http/posts.test.ts` "renders no Tag filter for a Slug
-that names no Tag, and does not filter either".
+Decision: **a Slug no Tag answers to is a 404.** This reverses the first choice of this pass, which was
+"filters nothing": showing the unfiltered Feed under a URL that claims a filter tells the Reader a
+filter is applied when it is not (the heading has to be dropped, so it silently looks like the plain
+Feed), and it makes a typo'd or deleted Tag URL indistinguishable from the real thing. Every other
+unknown resource in this product 404s — an unknown Article Slug, and an unknown Category path — so this
+one does too. No tag Slug at all still means the plain Feed, and a known Tag still filters.
+
+The old assertion in `services/posts.test.ts` ("shows only Posts carrying the tapped Tag…") pinned the
+fabrication's side effect — `readFeedPage({tagSlug: "no-such-tag"})` → `{posts: [], nextCursor: null}` —
+so it genuinely had to move: that empty page existed only because HTTP had invented the Tag. It now
+lives as "reports a Slug no Tag answers to as unknown…" (after briefly asserting the rejected
+"filters nothing" rule). The known-Tag assertions in the original test are untouched, and the 404 is
+covered at both adapters: `http/posts.test.ts` "answers 404 for a Tag Slug that names no Tag…" (the
+endpoint) and "refuses the Feed view… which is what the page 404s on" (the value the page turns into
+`notFound()`).
 
 ## Test changes that were not additions
 
@@ -151,7 +162,8 @@ that names no Tag, and does not filter either".
 - `services/reading.test.ts`: `seedPublished` carried its searchable text in the `markdown` argument;
   it now puts that text in the ProseMirror JSON, because the Markdown column is no longer an input.
   Same tests, same assertions.
-- `services/posts.test.ts`: item 10 above, one assertion replaced by two.
+- `services/posts.test.ts`: item 10 above — the "unknown slug ⇒ empty page" assertion is now the
+  `{kind:"unknown"}` outcome, and the adapter's 404s are new tests.
 
 ## Deliberately not changed
 
@@ -170,7 +182,7 @@ exist — not machine translation.
 - `npx tsc --noEmit` — clean.
 - `npm run lint` — 0 errors, 1 warning (the pre-existing `eslint.config.mjs` anonymous default export);
   no new warnings.
-- `npm test` — **67 files / 690 tests** green (dev tip: 64 files / 665 tests; +25 net, +3 files).
+- `npm test` — **67 files / 691 tests** green (dev tip: 64 files / 665 tests; +26 net, +3 files).
 - `npm run build` — `✓ Compiled successfully`; every public route still dynamic, Middleware 44.3 kB
   (unchanged by this pass).
 
@@ -178,16 +190,18 @@ Live smoke on a temp database, `next start` on port 3131 (server and scripts rem
 `/zh` carries `aria-label="站点导航"` and no `aria-label="分类"`; `/zh/search?q=highlighting` marks the
 body match once and renders `.reader-list-snippet`; `?q=last` marks `<mark>Last</mark>` in the title and
 renders no snippet; an archived Article answers 200 and ends with `上一篇 Last article`; `/zh/feed?tag=travel`
-renders `标签：旅行` while `/zh/feed?tag=nope` renders no filter heading and
-`/api/public/feed?locale=zh&tag=nope` answers `{"tag":null}`.
+renders `标签：旅行`, `/zh/feed` renders the plain Feed, while `/zh/feed?tag=nope` answers **404** and
+`/api/public/feed?locale=zh&tag=nope` answers **404 `{"error":"unknown-tag"}`**.
 
 ## What a second review should look at
 
 - **`reader.nav.label` sits last in the `nav` object** of both message files, so no existing key moved.
   Cosmetic only; swap the order if the file's convention is label-first.
-- **`resolveFeedTag` runs once per Feed page** (once in `feedView` for the heading, once inside
-  `readFeedPage`). Two reads of the same unique Slug, deliberately: it keeps the rule inside the service
-  and keeps `readFeedPage`'s return shape, which an existing `toEqual` pins.
+- **`resolveFeedTag` runs twice per accepted Feed page** (once in `feedView`, which decides on the 404,
+  and once inside `readFeedPage`). Two reads of the same unique Slug, deliberately: it keeps the rule
+  inside the service, keeps `readFeedPage`'s return shape that an existing `toEqual` pins, and leaves
+  `readFeedPage` unable to filter by a Tag that does not exist even if a future caller forgets the
+  resolution.
 - **`SNIPPET_RADIUS = 60`** in `src/domain/search.ts` is a judgement call, not a derived value; it is a
   default parameter, so a caller can pass another.
 - **Fix 2 replaces the summary with the snippet** on search results rather than showing both. If the

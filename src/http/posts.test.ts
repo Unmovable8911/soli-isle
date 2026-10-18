@@ -22,6 +22,7 @@ import {
   createPostResponse,
   deletePostResponse,
   feedResponse,
+  feedView,
   getPostResponse,
   listPostsResponse,
   publicationResponse,
@@ -369,20 +370,29 @@ describe("the feed endpoint", () => {
     expect(page.posts.map((post) => post.id)).toEqual([tagged]);
   });
 
-  it("renders no Tag filter for a Slug that names no Tag, and does not filter either", async () => {
+  it("answers 404 for a Tag Slug that names no Tag, like any unknown resource", async () => {
     const fixture = await createFixture();
-    const first = await seedPublished(fixture, { publishTime: "2025-06-01T00:00:00.000Z" });
-    const second = await seedPublished(fixture, { publishTime: "2025-06-02T00:00:00.000Z" });
+    await seedPublished(fixture, { publishTime: "2025-06-01T00:00:00.000Z" });
 
-    const page = (await (
-      await feedResponse(
-        fixture.posts,
-        new Request("http://localhost/api/public/feed?locale=zh&tag=no-such-tag"),
-      )
-    ).json()) as { posts: { id: string }[]; tag: unknown };
+    const response = await feedResponse(
+      fixture.posts,
+      new Request("http://localhost/api/public/feed?locale=zh&tag=no-such-tag"),
+    );
 
-    expect(page.tag).toBeNull();
-    expect(page.posts.map((post) => post.id)).toEqual([second, first]);
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "unknown-tag" });
+  });
+
+  it("refuses the Feed view for a Tag Slug that names no Tag, which is what the page 404s on", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, { publishTime: "2025-06-01T00:00:00.000Z" });
+
+    await expect(
+      feedView(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" }),
+    ).resolves.toEqual({ ok: false, reason: "unknown-tag" });
+    await expect(feedView(fixture.posts, { locale: "zh", tagSlug: null })).resolves.toMatchObject({
+      ok: true,
+    });
   });
 
   it("refuses a cursor it did not issue and a Locale it does not serve", async () => {

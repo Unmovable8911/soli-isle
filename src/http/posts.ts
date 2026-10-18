@@ -361,6 +361,8 @@ export async function publicationResponse(
  * (the Feed crops cells to a viewport-relative aspect box, Articles keep the
  * original ratio).
  */
+export type FeedViewOutcome = { ok: true; view: FeedView } | { ok: false; reason: "unknown-tag" };
+
 export async function feedView(
   posts: PostContext,
   input: {
@@ -369,9 +371,12 @@ export async function feedView(
     cursor?: FeedCursor | null;
     pageSize?: number;
   },
-): Promise<FeedView> {
+): Promise<FeedViewOutcome> {
   const now = posts.clock.now();
   const tagFilter = resolveFeedTag(posts, { locale: input.locale, tagSlug: input.tagSlug ?? null });
+  if (tagFilter.kind === "unknown") {
+    return { ok: false, reason: "unknown-tag" };
+  }
   const page = await readFeedPage(posts, input);
 
   const cards = await Promise.all(
@@ -394,9 +399,12 @@ export async function feedView(
   );
 
   return {
-    posts: cards,
-    nextCursor: page.nextCursor === null ? null : encodeFeedCursor(page.nextCursor),
-    tag: tagFilter.kind === "tag" ? tagFilter.tag : null,
+    ok: true,
+    view: {
+      posts: cards,
+      nextCursor: page.nextCursor === null ? null : encodeFeedCursor(page.nextCursor),
+      tag: tagFilter.kind === "tag" ? tagFilter.tag : null,
+    },
   };
 }
 
@@ -421,12 +429,15 @@ export async function feedResponse(posts: PostContext, request: Request): Promis
   }
 
   const tagSlug = url.searchParams.get("tag");
-  const view = await feedView(posts, {
+  const outcome = await feedView(posts, {
     locale,
     tagSlug: tagSlug === null || tagSlug.length === 0 ? null : tagSlug,
     cursor,
     pageSize: normaliseFeedPageSize(url.searchParams.get("limit") ?? FEED_PAGE_SIZE),
   });
+  if (!outcome.ok) {
+    return jsonError(outcome.reason, 404);
+  }
 
-  return Response.json(view, { headers: NO_STORE });
+  return Response.json(outcome.view, { headers: NO_STORE });
 }
