@@ -4,6 +4,7 @@ import { openDatabase, type DatabaseConnection } from "@/db/database";
 import { createDatabaseAvailabilityProbe } from "@/db/database-health";
 import { runMigrations } from "@/db/migrate";
 import { systemClock, type Clock } from "@/domain/clock";
+import { createArticleContext, type ArticleContext } from "@/services/articles";
 import { createAssetContext, type AssetContext } from "@/services/assets";
 import { createAuthorAuthContext, type AuthorAuthContext } from "@/services/auth";
 import type { HealthContext } from "@/services/health";
@@ -16,6 +17,7 @@ export interface AppContext {
   health: HealthContext;
   auth: AuthorAuthContext;
   assets: AssetContext;
+  articles: ArticleContext;
 }
 
 let cachedContext: AppContext | undefined;
@@ -47,6 +49,7 @@ export function createAppContext(
       storage,
     },
     assets,
+    articles: createArticleContext(database, systemClock, assets),
     auth: createAuthorAuthContext(
       database,
       systemClock,

@@ -81,6 +81,122 @@
         "uploading": "上传中…",
         "uploadFailed": "上传失败，请重试。"
       }
+    },
+    "articles": {
+      "title": "长文",
+      "description": "长文是站点的主体：有标题、URL 标识、分类与标签，面向被搜索引擎收录。",
+      "newArticle": "新建长文",
+      "empty": "还没有长文。",
+      "open": "打开",
+      "loadFailed": "无法载入长文。",
+      "saveFailed": "保存失败，改动已保留在本地。",
+      "saving": "保存中…",
+      "saved": "已保存",
+      "localSave": "已保存到本地，等待同步",
+      "backToList": "返回长文列表",
+      "untitled": "（无标题）",
+      "list": {
+        "title": "标题",
+        "slug": "URL 标识",
+        "state": "状态",
+        "updatedAt": "最后更新",
+        "languages": "语言版本",
+        "publishTime": "发布时刻"
+      },
+      "state": {
+        "draft": "草稿",
+        "published": "已发布",
+        "archived": "已归档"
+      },
+      "visibility": {
+        "visible": "读者可见",
+        "scheduled": "等待发布时刻",
+        "draft": "仅草稿",
+        "archived": "已归档"
+      },
+      "editor": {
+        "titlePlaceholder": "标题",
+        "bodyPlaceholder": "开始写作，输入 / 插入块……",
+        "linkPrompt": "链接地址",
+        "imageAltPrompt": "图片说明（可选）",
+        "codeLanguagePrompt": "代码语言（可选）",
+        "toolbar": {
+          "bold": "加粗",
+          "italic": "斜体",
+          "underline": "下划线",
+          "strike": "删除线",
+          "highlight": "高亮",
+          "heading2": "二级标题",
+          "heading3": "三级标题",
+          "bulletList": "无序列表",
+          "orderedList": "有序列表",
+          "taskList": "任务列表",
+          "blockquote": "引用",
+          "codeBlock": "代码块",
+        "codeLanguage": "代码语言",
+          "link": "链接",
+          "image": "插入图片",
+          "horizontalRule": "分隔线",
+          "undo": "撤销",
+          "redo": "重做"
+        }
+      },
+      "slash": {
+        "empty": "没有匹配的块",
+        "paragraph": "正文",
+        "heading2": "二级标题",
+        "heading3": "三级标题",
+        "bulletList": "无序列表",
+        "orderedList": "有序列表",
+        "taskList": "任务列表",
+        "blockquote": "引用",
+        "codeBlock": "代码块",
+        "image": "图片",
+        "horizontalRule": "分隔线"
+      },
+      "meta": {
+        "title": "标题",
+        "slug": "URL 标识",
+        "summary": "摘要",
+        "category": "分类",
+        "noCategory": "未分类",
+        "tags": "标签",
+        "noTags": "还没有标签",
+        "defaultLocale": "默认语言",
+        "newCategoryPlaceholder": "新分类名称",
+        "newTagPlaceholder": "新标签名称",
+        "create": "创建",
+        "creating": "创建中…",
+        "createFailed": "创建失败。"
+      },
+      "languages": {
+        "label": "语言版本",
+        "add": "添加此语言版本",
+        "missing": "此语言还没有正文"
+      },
+      "preview": {
+        "open": "预览",
+        "close": "关闭预览",
+        "title": "预览",
+        "loading": "生成中…",
+        "loadFailed": "预览生成失败。"
+      },
+      "publish": {
+        "panel": "发布",
+        "publishNow": "立即发布",
+        "publishTime": "发布时刻（站点时区）",
+        "schedule": "定时发布",
+        "archive": "归档",
+        "unarchive": "取消归档",
+        "delete": "永久删除",
+        "confirmDelete": "确认永久删除",
+        "cancel": "取消",
+        "publishFailed": "发布失败。",
+        "deleteFailed": "删除失败。",
+        "notPublished": "尚未发布",
+        "currentPublishTime": "发布时刻",
+        "hintScheduled": "到达发布时刻后读者才能看到它。"
+      }
     }
   }
 }
