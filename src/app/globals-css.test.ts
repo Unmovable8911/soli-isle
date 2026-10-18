@@ -326,6 +326,9 @@ const CONTROL_BORDERS = [
   ".post-composer-inline input",
   ".admin-login-form input",
   ".article-callout-tone select",
+  ".site-search input",
+  ".site-menu summary",
+  ".site-rail button",
 ] as const;
 
 /**
@@ -512,6 +515,9 @@ describe("the type floor", () => {
 const READER_CONTROLS = [
   "header a",
   "header button",
+  ".site-rail a",
+  ".site-rail button",
+  ".site-menu summary",
   ".post-expand",
   ".feed-more-button",
   ".post-tag",
@@ -548,6 +554,41 @@ describe("phone width", () => {
   it.each(READER_TEXT)("%s stays at or above the 14px reading floor", (selector) => {
     const size = declarations(blockBody(selector)).get("font-size") ?? "0rem";
     expect(Number.parseFloat(size), `${selector} is ${size}`).toBeGreaterThanOrEqual(0.875);
+  });
+});
+
+/**
+ * The shell is where a Reader lands before any page exists, so its two promises
+ * are mechanical: the rail stays put and scrolls on its own, and the Category
+ * tree indents by structure. A flat list with a guessed margin would satisfy a
+ * screenshot and break the moment a Category is named at another depth.
+ */
+describe("the public shell", () => {
+  it("pins the top bar at 64px", () => {
+    const bar = declarations(blockBody(".site-topbar"));
+    expect(bar.get("position")).toBe("sticky");
+    expect(bar.get("height")).toBe("4rem");
+  });
+
+  it("pins the rail under the bar and scrolls it independently", () => {
+    const rail = declarations(blockBody(".site-rail"));
+    expect(rail.get("position")).toBe("sticky");
+    expect(rail.get("top")).toBe("4rem");
+    expect(rail.get("overflow-y")).toBe("auto");
+    expect(declarations(blockBody(".site-shell")).get("grid-template-columns")).toContain("16rem");
+  });
+
+  it("indents each Category level by 12px", () => {
+    expect(declarations(blockBody(".site-tree .site-tree")).get("padding-inline-start")).toBe(
+      "0.75rem",
+    );
+  });
+
+  it("wraps a long Category name instead of truncating it", () => {
+    const link = declarations(blockBody(".site-tree a"));
+    expect(link.get("overflow-wrap")).toBe("anywhere");
+    expect(link.get("text-overflow")).toBeUndefined();
+    expect(link.get("white-space")).toBeUndefined();
   });
 });
 
