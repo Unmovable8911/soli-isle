@@ -55,6 +55,8 @@ export default function PostComposer({ post, locale, labels, assetLabels }: Post
   const [newTagName, setNewTagName] = useState("");
   const [tagBusy, setTagBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pendingLocaleRemove, setPendingLocaleRemove] = useState(false);
+  const [localeRemoveBusy, setLocaleRemoveBusy] = useState(false);
   const [publishInput, setPublishInput] = useState("");
 
   const translation = detail.translations.find((candidate) => candidate.locale === activeLocale);
@@ -131,10 +133,10 @@ export default function PostComposer({ post, locale, labels, assetLabels }: Post
     return payload.post;
   }
 
-  function switchLocale(next: Locale) {
+  function switchLocale(next: Locale, from: PostDetail = detail) {
     setActiveLocale(next);
     setStatus("idle");
-    const target = detail.translations.find((candidate) => candidate.locale === next);
+    const target = from.translations.find((candidate) => candidate.locale === next);
     bodyRef.current = target?.bodyJson ?? EMPTY_BODY;
     editor?.commands.setContent(JSON.parse(bodyRef.current) as JSONContent, { emitUpdate: false });
   }
@@ -187,6 +189,55 @@ export default function PostComposer({ post, locale, labels, assetLabels }: Post
     });
     if ((await readPost(response)) === null) {
       setError(labels.saveFailed);
+    }
+  }
+
+  /** Why this Locale version cannot be deleted, or null when it can. */
+  function localeRemoveLock(locale: Locale): string | null {
+    if (locale === detail.defaultLocale) {
+      return labels.languages.lockedDefault;
+    }
+    if (detail.translations.length <= 1) {
+      return labels.languages.lockedLast;
+    }
+    return null;
+  }
+
+  async function changeDefaultLocale(next: string) {
+    setError(null);
+    const response = await fetch(`/api/admin/posts/${detail.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ defaultLocale: next }),
+    });
+    if ((await readPost(response)) === null) {
+      setError(labels.saveFailed);
+    }
+  }
+
+  async function removeLocaleVersion() {
+    const locale = activeLocale;
+    setPendingLocaleRemove(false);
+    setLocaleRemoveBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/posts/${detail.id}/translations/${locale}`, {
+        method: "DELETE",
+      });
+      const remaining = await readPost(response);
+      if (remaining === null) {
+        setError(labels.languages.removeFailed);
+        return;
+      }
+      const target =
+        remaining.translations.find(
+          (candidate) => candidate.locale === remaining.defaultLocale,
+        ) ?? remaining.translations[0];
+      if (target !== undefined) {
+        switchLocale(target.locale, remaining);
+      }
+    } finally {
+      setLocaleRemoveBusy(false);
     }
   }
 
@@ -309,6 +360,47 @@ export default function PostComposer({ post, locale, labels, assetLabels }: Post
         {translation === undefined && (
           <span className="post-composer-hint">{labels.languages.missing}</span>
         )}
+        {translation === undefined ? null : pendingLocaleRemove ? (
+          <span className="post-composer-remove-locale">
+            <button
+              type="button"
+              disabled={localeRemoveBusy}
+              onClick={() => void removeLocaleVersion()}
+            >
+              {labels.languages.confirmRemove}
+            </button>
+            <button type="button" onClick={() => setPendingLocaleRemove(false)}>
+              {labels.languages.cancel}
+            </button>
+          </span>
+        ) : (
+          <span className="post-composer-remove-locale">
+            <button
+              type="button"
+              disabled={localeRemoveLock(activeLocale) !== null || localeRemoveBusy}
+              onClick={() => setPendingLocaleRemove(true)}
+            >
+              {labels.languages.remove}
+            </button>
+            {localeRemoveLock(activeLocale) === null ? null : (
+              <span className="post-composer-hint">{localeRemoveLock(activeLocale)}</span>
+            )}
+          </span>
+        )}
+        <label className="post-composer-default-locale">
+          <span>{labels.meta.defaultLocale}</span>
+          <select
+            value={detail.defaultLocale}
+            onChange={(event) => void changeDefaultLocale(event.target.value)}
+          >
+            {detail.translations.map((candidate) => (
+              <option key={candidate.locale} value={candidate.locale}>
+                {candidate.locale}
+              </option>
+            ))}
+          </select>
+          <span className="post-composer-hint">{labels.meta.defaultLocaleHint}</span>
+        </label>
       </div>
 
       {/* Deliberately no character count and no length limit: nothing here

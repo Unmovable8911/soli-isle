@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { Clock } from "@/domain/clock";
+import { extractAssetIds } from "@/domain/asset-address";
 import { createAssetContext, listAssets } from "@/services/assets";
 import { createCategory } from "@/services/categories";
 import { createTag } from "@/services/tags";
@@ -230,6 +231,80 @@ describe("article translations", () => {
     await expect(
       removeArticleTranslation(articles, { articleId: article.id, locale: "zh" }),
     ).resolves.toEqual({ ok: false, reason: "default-locale" });
+  });
+
+  it("removes a version without touching the work's Slug, revisions, images or Tags", async () => {
+    const { articles, harness } = await createFixture();
+    const assetId = randomUUID();
+    insertAsset(harness, assetId);
+    const tag = await createTag(
+      { database: harness.database, clock: articles.clock },
+      { locale: "zh", name: "保留", slug: "kept" },
+    );
+    if (!tag.ok) throw new Error(`could not create tag: ${tag.reason}`);
+
+    const article = await createArticleDraft(articles, {
+      title: "Both Locales",
+      locale: "zh",
+      bodyJson: bodyWithImage(assetId),
+    });
+    await addArticleTranslation(articles, { articleId: article.id, locale: "en", title: "Both" });
+    await updateArticleMeta(articles, {
+      articleId: article.id,
+      tagIds: [tag.tag.id],
+    });
+    await publishArticle(articles, { articleId: article.id });
+    const revisionsBefore = (await listRevisions(articles, article.id)).length;
+
+    const removed = await removeArticleTranslation(articles, {
+      articleId: article.id,
+      locale: "en",
+    });
+    if (!removed.ok) throw new Error(`could not remove: ${removed.reason}`);
+
+    expect(removed.article.id).toBe(article.id);
+    expect(removed.article.slug).toBe(article.slug);
+    expect(removed.article.translations.map((translation) => translation.locale)).toEqual(["zh"]);
+    expect(removed.article.tags.map((tagged) => tagged.id)).toEqual([tag.tag.id]);
+    expect(extractAssetIds(removed.article.translations[0]?.bodyJson ?? "")).toEqual([assetId]);
+    // The publish snapshot of the removed Locale stays: history is not a version.
+    expect((await listRevisions(articles, article.id)).length).toBe(revisionsBefore);
+    const assets = await listAssets(articles.assets);
+    expect(assets.map((asset) => asset.id)).toEqual([assetId]);
+  });
+
+  it("shows the version the changed defaultLocale names on a fallback page", async () => {
+    const { articles } = await createFixture();
+    const article = await createArticleDraft(articles, { title: "Both", locale: "zh" });
+    await addArticleTranslation(articles, { articleId: article.id, locale: "en", title: "Both" });
+    await publishArticle(articles, { articleId: article.id });
+
+    // The work's default becomes English, which frees the Chinese version.
+    const changed = await updateArticleMeta(articles, {
+      articleId: article.id,
+      defaultLocale: "en",
+    });
+    expect(changed.ok && changed.article.defaultLocale).toBe("en");
+    await expect(
+      removeArticleTranslation(articles, { articleId: article.id, locale: "zh" }),
+    ).resolves.toMatchObject({ ok: true });
+
+    const readable = await findReadableArticle(articles, { slug: article.slug, locale: "zh" });
+    expect(readable.kind).toBe("found");
+    if (readable.kind !== "found") return;
+    expect(readable.translation.locale).toBe("en");
+    expect(readable.fellBack).toBe(true);
+    expect(readable.indexable).toBe(false);
+  });
+
+  it("refuses a version for the default Locale that no longer exists, and keeps the two", async () => {
+    const { articles } = await createFixture();
+    const article = await createArticleDraft(articles, { title: "Both", locale: "zh" });
+
+    await expect(
+      updateArticleMeta(articles, { articleId: article.id, defaultLocale: "en" }),
+    ).resolves.toEqual({ ok: false, reason: "invalid-locale" });
+    expect((await getArticle(articles, article.id))?.defaultLocale).toBe("zh");
   });
 
   it("saves content without creating a revision snapshot", async () => {

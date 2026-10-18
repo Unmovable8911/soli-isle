@@ -5,12 +5,15 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 
 import { ArticleBody } from "@/components/article-body";
+import { ArticleLanguageVersions, FallbackNotice } from "@/components/article-language";
 import { ImageZoom } from "@/components/lightbox";
 import { isLocale, type Locale } from "@/config/site";
 import { extractAssetIds, parseAssetAddress } from "@/domain/asset-address";
+import { alternateLanguageMap, articleLanguageLinks } from "@/domain/article-language";
 import { formatPublishDate } from "@/domain/article-time";
 import { buildArticlePath } from "@/domain/article-url";
 import { buildCategoryPath, buildTagPath } from "@/domain/public-paths";
+import { pickLocalised } from "@/domain/localised";
 import { absoluteUrl } from "@/domain/urls";
 import { renderArticleBody } from "@/editor/render/render-article";
 import { messages } from "@/messages";
@@ -62,24 +65,16 @@ export async function generateMetadata({
 
   const t = messages[locale];
   const { translation, article } = found;
-  const canonicalLocale = found.fellBack ? article.defaultLocale : locale;
-  const canonicalPath = buildArticlePath({ locale: canonicalLocale, slug: article.slug });
+  // The page's own language declarations: canonical at the version it shows,
+  // alternates only for the Locales that really have one.
   const headerSource = await headers();
-  const url = absoluteUrl(canonicalPath, headerSource);
-
-  // Only the Locale versions that really exist are declared: a Content Fallback
-  // page must not look like a translation of its own.
-  const languages: Record<string, string> = {};
-  for (const candidate of article.translations) {
-    const path = buildArticlePath({ locale: candidate.locale, slug: article.slug });
-    const absolute = absoluteUrl(path, headerSource);
-    if (absolute !== null) {
-      languages[candidate.locale] = absolute;
-    }
-  }
-  if (url !== null) {
-    languages[canonicalLocale] = url;
-  }
+  const links = articleLanguageLinks({
+    slug: article.slug,
+    shownLocale: translation.locale,
+    translations: article.translations,
+    headers: headerSource,
+  });
+  const languages = alternateLanguageMap(links);
 
   const imagePath = sharedImagePath(translation);
   const image = imagePath === null ? null : absoluteUrl(imagePath, headerSource);
@@ -87,13 +82,13 @@ export async function generateMetadata({
   return {
     title: `${translation.title} · ${t.meta.title}`,
     description: translation.summary,
-    alternates: { canonical: url ?? canonicalPath, languages },
+    alternates: { canonical: links.canonical, languages },
     robots: found.indexable ? undefined : { index: false, follow: true },
     openGraph: {
       type: "article",
       title: translation.title,
       description: translation.summary,
-      url: url ?? undefined,
+      url: links.canonical,
       publishedTime: article.publishTime ?? undefined,
       images: image === null ? undefined : [{ url: image, alt: translation.title }],
     },
@@ -134,10 +129,12 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
     footnoteBackLabel: t.reader.article.footnoteBack,
   });
   const neighbours = await findArticleNeighbours(reading, { locale, articleId: article.id });
-
-  const notice = t.reader.fallback.notice
-    .replaceAll("{requested}", t.chrome.localeNames[locale])
-    .replaceAll("{shown}", t.chrome.localeNames[translation.locale]);
+  const links = articleLanguageLinks({
+    slug: article.slug,
+    shownLocale: translation.locale,
+    translations: article.translations,
+    headers: await headers(),
+  });
 
   return (
     <main>
@@ -157,7 +154,7 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
               <>
                 {" · "}
                 <Link href={buildCategoryPath({ locale, categoryPath: article.category.path })}>
-                  {article.category.names[locale] ?? article.category.slug}
+                  {pickLocalised(article.category.names, locale, article.category.slug)}
                 </Link>
               </>
             )}
@@ -167,7 +164,7 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
               {article.tags.map((tag) => (
                 <li key={tag.id}>
                   <Link href={buildTagPath({ locale, slug: tag.slug })}>
-                    {tag.names[locale] ?? tag.slug}
+                    {pickLocalised(tag.names, locale, tag.slug)}
                   </Link>
                 </li>
               ))}
@@ -175,10 +172,18 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
           )}
         </header>
         {fellBack && (
-          <p className="reader-notice" role="note">
-            {notice}
-          </p>
+          <FallbackNotice
+            labels={t.reader.fallback}
+            requested={t.chrome.localeNames[locale]}
+            shown={t.chrome.localeNames[translation.locale]}
+          />
         )}
+        <ArticleLanguageVersions
+          current={locale}
+          versions={links.versions}
+          names={t.chrome.localeNames}
+          labels={t.reader.languages}
+        />
         <ImageZoom labels={t.reader.lightbox}>
           <ArticleBody html={html} />
         </ImageZoom>

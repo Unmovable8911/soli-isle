@@ -107,6 +107,8 @@ export type PostMutationFailure =
         | "invalid-publish-time"
         | "unknown-tag"
         | "unknown-asset"
+        | "default-locale"
+        | "last-translation"
         | "not-published"
         | "not-archived";
     }
@@ -443,6 +445,76 @@ export async function savePostTranslation(
   });
 
   await syncPostAssets(ctx, input.postId);
+  return finish(ctx, input.postId);
+}
+
+/**
+ * Removing one Locale version touches that row only: the Post, its images and
+ * its Tags are the work's, not the version's. The two refusals are the rules
+ * Content Fallback depends on — it needs a default version to show.
+ */
+export async function removePostTranslation(
+  ctx: PostContext,
+  input: { postId: string; locale: Locale },
+): Promise<PostMutation> {
+  const db = ctx.database.db;
+  const existing = db.select().from(post).where(eq(post.id, input.postId)).get();
+  if (existing === undefined) {
+    return { ok: false, reason: "not-found" };
+  }
+
+  const translations = db
+    .select({ locale: postTranslation.locale })
+    .from(postTranslation)
+    .where(eq(postTranslation.postId, input.postId))
+    .all();
+  if (!translations.some((row) => row.locale === input.locale)) {
+    return { ok: false, reason: "not-found" };
+  }
+  if (input.locale === existing.defaultLocale) {
+    return { ok: false, reason: "default-locale" };
+  }
+  if (translations.length <= 1) {
+    return { ok: false, reason: "last-translation" };
+  }
+
+  const now = ctx.clock.now().toISOString();
+  db.transaction((tx) => {
+    tx.delete(postTranslation)
+      .where(and(eq(postTranslation.postId, input.postId), eq(postTranslation.locale, input.locale)))
+      .run();
+    tx.update(post).set({ updatedAt: now }).where(eq(post.id, input.postId)).run();
+  });
+
+  await syncPostAssets(ctx, input.postId);
+  return finish(ctx, input.postId);
+}
+
+/** The version Content Fallback shows; it must be one the Post really has. */
+export async function setPostDefaultLocale(
+  ctx: PostContext,
+  input: { postId: string; defaultLocale: Locale },
+): Promise<PostMutation> {
+  const db = ctx.database.db;
+  const existing = db.select().from(post).where(eq(post.id, input.postId)).get();
+  if (existing === undefined) {
+    return { ok: false, reason: "not-found" };
+  }
+
+  const translations = db
+    .select({ locale: postTranslation.locale })
+    .from(postTranslation)
+    .where(eq(postTranslation.postId, input.postId))
+    .all();
+  if (!translations.some((row) => row.locale === input.defaultLocale)) {
+    return { ok: false, reason: "invalid-locale" };
+  }
+
+  db.update(post)
+    .set({ defaultLocale: input.defaultLocale, updatedAt: ctx.clock.now().toISOString() })
+    .where(eq(post.id, input.postId))
+    .run();
+
   return finish(ctx, input.postId);
 }
 

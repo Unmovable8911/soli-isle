@@ -27,6 +27,7 @@ import {
   type RevisionKind,
 } from "@/domain/revision";
 import { isSafeSlug, normaliseSlug, uniqueSlug } from "@/domain/slug";
+import { selectTranslation } from "@/domain/translation-coverage";
 import { generateUlid } from "@/domain/ulid";
 import { syncAssetReferences, type AssetContext } from "./assets";
 import { loadCategoryViews, type CategoryContext, type CategoryView } from "./categories";
@@ -1024,20 +1025,16 @@ export async function findReadableArticle(
     return { kind: "not-found" };
   }
 
-  const translation =
-    detail.translations.find((candidate) => candidate.locale === input.locale) ??
-    detail.translations.find((candidate) => candidate.locale === detail.defaultLocale) ??
-    detail.translations[0];
-  if (translation === undefined) {
+  const selection = selectTranslation(detail.translations, input.locale, detail.defaultLocale);
+  if (selection === null) {
     return { kind: "not-found" };
   }
 
-  const fellBack = translation.locale !== input.locale;
   return {
     kind: "found",
     article: detail,
-    translation,
-    fellBack,
-    indexable: isIndexable(publication, now) && !fellBack,
+    translation: selection.translation,
+    fellBack: selection.fellBack,
+    indexable: isIndexable(publication, now) && !selection.fellBack,
   };
 }
