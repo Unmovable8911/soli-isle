@@ -32,6 +32,19 @@ npm run dev
 
 Both `npm run dev` and `npm start` apply pending database migrations before the server starts. The same command is available directly as `npm run db:migrate`.
 
+### Demo content
+
+```sh
+npm run seed:demo                      # placeholder images, drawn by sharp
+npm run seed:demo -- --images ~/pics   # the Author's own pictures instead
+```
+
+The seed is local only: it replaces every Article, Post, Category, Tag and
+uploaded image in the database it points at, so it refuses to run with
+`NODE_ENV=production`. Re-running it produces the same site rather than a
+doubled one. Images go through the real upload pipeline, so the display and
+thumb variants are generated the way a real upload generates them.
+
 ## Checks
 
 ```sh
