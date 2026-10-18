@@ -9,7 +9,12 @@ import { ArticleLanguageVersions, FallbackNotice } from "@/components/article-la
 import { ImageZoom } from "@/components/lightbox";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale, type Locale } from "@/config/site";
-import { extractAssetIds, parseAssetAddress } from "@/domain/asset-address";
+import {
+  buildAssetAddress,
+  extractAssetIds,
+  isSafeAssetId,
+  parseAssetAddress,
+} from "@/domain/asset-address";
 import { alternateLanguageMap, articleLanguageLinks } from "@/domain/article-language";
 import { formatPublishDate } from "@/domain/article-time";
 import { buildArticlePath } from "@/domain/article-url";
@@ -36,9 +41,13 @@ const readArticle = cache(
     findReadableArticle(getAppContext().articles, { slug, locale }),
 );
 
+/** The first body image, as the address the media route actually serves. */
 function sharedImagePath(translation: { bodyJson: string }): string | null {
   const [assetId] = extractAssetIds(translation.bodyJson);
-  return assetId === undefined ? null : `/media/${assetId}/display.webp`;
+  if (assetId === undefined || !isSafeAssetId(assetId)) {
+    return null;
+  }
+  return buildAssetAddress({ assetId, variant: "display", format: "webp" });
 }
 
 export async function generateMetadata({
