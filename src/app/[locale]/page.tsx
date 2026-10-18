@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ArticleList } from "@/components/article-list";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import {
   buildArchivePath,
@@ -50,7 +51,7 @@ export default async function HomePage({ params }: { params: Promise<LocaleParam
   });
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <h1>{t.reader.home.title}</h1>
       <p className="reader-lead">{t.reader.home.lead}</p>
       <nav className="reader-entries" aria-label={t.reader.home.title}>

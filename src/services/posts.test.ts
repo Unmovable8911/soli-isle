@@ -684,11 +684,12 @@ describe("the feed read", () => {
       `/media/${second}/display.webp`,
       `/media/${first}/display.webp`,
     ]);
+    // The uploaded file name is metadata, not a description of the picture.
     expect(post.images[0]).toMatchObject({
       original: `/media/${second}/original.png`,
       width: 1200,
       height: 800,
-      alt: "second.png",
+      alt: "",
     });
     expect(post.tags).toEqual([{ slug: "travel", name: "旅行" }]);
   });

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { FeedCardView } from "@/domain/feed-view";
 
-import { PostBody, PostCard, PostGallery } from "./post-card";
+import { PostBody, PostCard, PostGallery, galleryNextIndex } from "./post-card";
 
 const LABELS = {
   title: "Feed",
@@ -94,15 +94,38 @@ describe("a feed card", () => {
 });
 
 describe("the gallery", () => {
-  it("is a labelled, key-navigable scroller holding one cell per picture", () => {
+  it("is a labelled list of cells, one per picture", () => {
     const html = render(
       <PostGallery images={IMAGES} labels={LABELS} lightboxLabels={LIGHTBOX_LABELS} />,
     );
 
-    expect(html).toContain('role="group"');
+    expect(html).toContain('role="list"');
     expect(html).toContain('aria-label="Image gallery"');
-    expect(html).toContain('tabindex="0"');
-    expect(html.match(/class="post-gallery-cell"/g)).toHaveLength(2);
+    expect(html.match(/<li class="post-gallery-cell"/g)).toHaveLength(2);
+  });
+
+  it("keeps the whole gallery one Tab stop, on the picture on view", () => {
+    const html = render(
+      <PostGallery images={IMAGES} labels={LABELS} lightboxLabels={LIGHTBOX_LABELS} />,
+    );
+
+    const buttons = [...html.matchAll(/<button[^>]*class="post-gallery-open"[^>]*>/g)].map(
+      (match) => match[0],
+    );
+    expect(buttons).toHaveLength(2);
+    // The cell on view is reachable; the others are only reachable with the arrow keys.
+    expect(buttons[0]).toContain('tabindex="0"');
+    expect(buttons[1]).toContain('tabindex="-1"');
+  });
+
+  it("says which picture each open control shows without describing the file", () => {
+    const html = render(
+      <PostGallery images={IMAGES} labels={LABELS} lightboxLabels={LIGHTBOX_LABELS} />,
+    );
+
+    expect(html).toContain('aria-label="Image 1 of 2"');
+    expect(html).toContain('aria-label="Image 2 of 2"');
+    expect(html).toContain('aria-haspopup="dialog"');
   });
 
   it("shows the current position and the total", () => {
@@ -110,8 +133,10 @@ describe("the gallery", () => {
       <PostGallery images={IMAGES} labels={LABELS} lightboxLabels={LIGHTBOX_LABELS} />,
     );
 
-    expect(html).toContain("1/2");
+    // The visible fraction is decoration; the sentence is what an AT user hears.
+    expect(html).toContain('<span aria-hidden="true">1/2</span>');
     expect(html).toContain("Image 1 of 2");
+    expect(html).toContain('aria-live="polite"');
   });
 
   it("crops cells from the display variant while keeping the original for the lightbox", () => {
@@ -125,6 +150,23 @@ describe("the gallery", () => {
     expect(html).toContain('data-original="/media/aaa/original.png"');
     expect(html).toContain('width="1200"');
     expect(html).toContain('height="800"');
+  });
+});
+
+describe("gallery keys", () => {
+  it("moves one picture at a time and stops at the ends", () => {
+    expect(galleryNextIndex("ArrowRight", 0, 3)).toBe(1);
+    expect(galleryNextIndex("ArrowLeft", 2, 3)).toBe(1);
+    expect(galleryNextIndex("ArrowRight", 2, 3)).toBe(2);
+    expect(galleryNextIndex("ArrowLeft", 0, 3)).toBe(0);
+  });
+
+  it("leaves activation and every other key to the browser", () => {
+    // The cells are real buttons, so Enter and Space already open the picture.
+    expect(galleryNextIndex("Enter", 1, 3)).toBeNull();
+    expect(galleryNextIndex(" ", 1, 3)).toBeNull();
+    expect(galleryNextIndex("Tab", 1, 3)).toBeNull();
+    expect(galleryNextIndex("ArrowRight", 0, 0)).toBeNull();
   });
 });
 

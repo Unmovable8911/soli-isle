@@ -31,6 +31,36 @@ const FOCUSABLE = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
+/** The picture after `delta`, wrapping at both ends of the set. */
+export function wrapIndex(current: number, delta: number, length: number): number {
+  if (length <= 0) {
+    return 0;
+  }
+  return (((current + delta) % length) + length) % length;
+}
+
+export type TrapTarget = "first" | "last" | null;
+
+/**
+ * Where Tab has to go so the ring cannot leave the dialog. The dialog
+ * container itself is focusable (`tabIndex={-1}`) so that counted as sitting
+ * before the first control.
+ */
+export function focusTrapTarget(state: {
+  shiftKey: boolean;
+  activeIsFirst: boolean;
+  activeIsLast: boolean;
+  activeIsDialog: boolean;
+}): TrapTarget {
+  if (state.shiftKey && (state.activeIsFirst || state.activeIsDialog)) {
+    return "last";
+  }
+  if (!state.shiftKey && state.activeIsLast) {
+    return "first";
+  }
+  return null;
+}
+
 function clamp(index: number, length: number): number {
   if (!Number.isFinite(index) || index < 0) {
     return 0;
@@ -48,18 +78,25 @@ export function Lightbox({
   startIndex = 0,
   labels,
   onClose,
+  returnFocusTo = null,
 }: {
   images: readonly LightboxImage[];
   startIndex?: number;
   labels: LightboxLabels;
   onClose: () => void;
+  /**
+   * The control to hand focus back to on close. Defaults to whatever held focus
+   * when the dialog mounted — but a pointer click does not always focus a
+   * button (Safari), so a caller that knows its trigger can say so.
+   */
+  returnFocusTo?: HTMLElement | null;
 }) {
   const [index, setIndex] = useState(() => clamp(startIndex, images.length));
   const dialogRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<Element | null>(null);
 
   useEffect(() => {
-    restoreRef.current = document.activeElement;
+    restoreRef.current = returnFocusTo ?? document.activeElement;
     dialogRef.current?.focus();
 
     const previousOverflow = document.body.style.overflow;
@@ -72,10 +109,14 @@ export function Lightbox({
         previous.focus();
       }
     };
-  }, []);
+  }, [returnFocusTo]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      // A modified arrow is a browser shortcut, not a request for the next picture.
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
@@ -86,11 +127,11 @@ export function Lightbox({
       }
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        setIndex((current) => (current - 1 + images.length) % images.length);
+        setIndex((current) => wrapIndex(current, -1, images.length));
       }
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        setIndex((current) => (current + 1) % images.length);
+        setIndex((current) => wrapIndex(current, 1, images.length));
       }
     }
 
@@ -125,15 +166,17 @@ export function Lightbox({
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     const active = document.activeElement;
-    if (event.shiftKey && (active === first || active === dialog)) {
-      event.preventDefault();
-      last?.focus();
+    const target = focusTrapTarget({
+      shiftKey: event.shiftKey,
+      activeIsFirst: active === first,
+      activeIsLast: active === last,
+      activeIsDialog: active === dialog,
+    });
+    if (target === null) {
       return;
     }
-    if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first?.focus();
-    }
+    event.preventDefault();
+    (target === "first" ? first : last)?.focus();
   }
 
   const position = `${index + 1} / ${images.length}`;
@@ -155,7 +198,7 @@ export function Lightbox({
         type="button"
         className="lightbox-previous"
         aria-label={labels.previous}
-        onClick={() => setIndex((currentIndex) => (currentIndex - 1 + images.length) % images.length)}
+        onClick={() => setIndex((currentIndex) => wrapIndex(currentIndex, -1, images.length))}
         disabled={images.length < 2}
       >
         ‹
@@ -166,7 +209,7 @@ export function Lightbox({
         type="button"
         className="lightbox-next"
         aria-label={labels.next}
-        onClick={() => setIndex((currentIndex) => (currentIndex + 1) % images.length)}
+        onClick={() => setIndex((currentIndex) => wrapIndex(currentIndex, 1, images.length))}
         disabled={images.length < 2}
       >
         ›
@@ -221,8 +264,15 @@ export function ImageZoom({
     for (const image of container.querySelectorAll("img")) {
       image.tabIndex = 0;
       image.setAttribute("role", "button");
+      image.setAttribute("aria-haspopup", "dialog");
+      // A picture with no authored description still needs a name for the
+      // control it became; it is named after the viewer it opens, not after the
+      // uploaded file, which is metadata and not a description of the picture.
+      if ((image.getAttribute("alt") ?? "").trim() === "") {
+        image.setAttribute("aria-label", labels.dialog);
+      }
     }
-  }, [children]);
+  }, [children, labels.dialog]);
 
   function handleClick(event: ReactMouseEvent<HTMLDivElement>) {
     if (event.target instanceof HTMLImageElement) {

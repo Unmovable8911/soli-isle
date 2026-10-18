@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArticleList } from "@/components/article-list";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { buildTagPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
@@ -54,9 +55,11 @@ export default async function TagPage({ params }: { params: Promise<TagParams> }
   }
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <h1>
-        <span className="reader-tag-mark">#</span>
+        <span className="reader-tag-mark" aria-hidden="true">
+          #
+        </span>
         {found.tag.name}
       </h1>
       <ArticleList articles={found.articles} locale={locale} labels={t.reader.list} />

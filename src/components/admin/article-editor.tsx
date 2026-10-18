@@ -125,6 +125,8 @@ export default function ArticleEditor({
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [recovered, setRecovered] = useState(false);
   const [conflictOpen, setConflictOpen] = useState(false);
+  const conflictRef = useRef<HTMLElement | null>(null);
+  const conflictReturnFocus = useRef<HTMLElement | null>(null);
   const [newDraftBusy, setNewDraftBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -152,6 +154,34 @@ export default function ArticleEditor({
   /** A recovered body the editor could not take yet because it mounted later. */
   const recoveredBody = useRef<string | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
+
+  // The conflict panel is a dialog the author has to answer, so it takes focus
+  // when it opens, closes with Esc, and hands focus back to the control that
+  // opened it — the same contract the Asset picker keeps.
+  useEffect(() => {
+    if (!conflictOpen) {
+      return;
+    }
+    conflictReturnFocus.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    conflictRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setConflictOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      const previous = conflictReturnFocus.current;
+      if (previous !== null && previous.isConnected) {
+        previous.focus();
+      }
+    };
+  }, [conflictOpen]);
 
   useEffect(() => {
     detailRef.current = detail;
@@ -554,7 +584,10 @@ export default function ArticleEditor({
       .focus()
       .setImage({
         src: display.address,
-        alt: asset.fileName,
+        // No authored description exists yet, so the picture goes in without an
+        // alt: the upload's file name is metadata about the Asset, not a
+        // sentence a screen reader should read out.
+        alt: "",
         width: asset.width,
         height: asset.height,
       })
@@ -632,6 +665,8 @@ export default function ArticleEditor({
           aria-modal="false"
           aria-labelledby="article-conflict-title"
           aria-describedby="article-conflict-body"
+          tabIndex={-1}
+          ref={conflictRef}
         >
           <h2 id="article-conflict-title">{labels.sync.conflictTitle}</h2>
           <p id="article-conflict-body">{labels.sync.conflictBody}</p>

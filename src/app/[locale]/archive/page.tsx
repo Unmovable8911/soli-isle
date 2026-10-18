@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArticleList } from "@/components/article-list";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { archiveMonths, formatArchiveMonth } from "@/domain/article-time";
 import { messages } from "@/messages";
@@ -38,7 +39,7 @@ export default async function ArchivePage({ params }: { params: Promise<{ locale
   const months = archiveMonths(articles, (article) => article.publishTime);
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <h1>{t.reader.archive.title}</h1>
       {months.length === 0 ? (
         <p className="reader-empty">{t.reader.archive.empty}</p>

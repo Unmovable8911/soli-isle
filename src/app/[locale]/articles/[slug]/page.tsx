@@ -6,6 +6,7 @@ import { cache } from "react";
 
 import { ArticleBody } from "@/components/article-body";
 import { ImageZoom } from "@/components/lightbox";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale, type Locale } from "@/config/site";
 import { extractAssetIds, parseAssetAddress } from "@/domain/asset-address";
 import { formatPublishDate } from "@/domain/article-time";
@@ -139,7 +140,7 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
     .replaceAll("{shown}", t.chrome.localeNames[translation.locale]);
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <article className="reader-article">
         <header className="reader-article-header">
           <h1>{translation.title}</h1>
