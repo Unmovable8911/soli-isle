@@ -153,6 +153,18 @@ function declarations(body: string): Map<string, string> {
   return found;
 }
 
+/**
+ * The rule as written at the top level, before a media query narrows it. Used
+ * where the base rule is the contract and a breakpoint is the exception.
+ */
+function firstRuleBody(selector: string): string {
+  const rule = rules().find((candidate) => candidate.prelude === selector);
+  if (rule === undefined) {
+    throw new Error(`globals.css has no rule for ${selector}`);
+  }
+  return rule.body;
+}
+
 function themeTokens(theme: Theme): Map<string, string> {
   const body = TOKEN_RULES.find((rule) => rule.prelude === THEMES[theme])?.body;
   if (body === undefined) {
@@ -326,6 +338,17 @@ const CONTROL_BORDERS = [
   ".post-composer-inline input",
   ".admin-login-form input",
   ".article-callout-tone select",
+  ".article-field input",
+  ".article-field select",
+  ".article-field textarea",
+  ".article-cover-actions button",
+  ".article-table button",
+  ".article-toolbar button",
+  ".article-editor-locales button",
+  ".article-inline-create button",
+  ".article-publish button",
+  ".article-preview-header button",
+  ".admin-page-action",
   ".site-search input",
   ".site-menu summary",
   ".site-rail button",
@@ -589,6 +612,119 @@ describe("the public shell", () => {
     expect(link.get("overflow-wrap")).toBe("anywhere");
     expect(link.get("text-overflow")).toBeUndefined();
     expect(link.get("white-space")).toBeUndefined();
+  });
+});
+
+/**
+ * The console adds no side rail (ADR-0001: the editor's writing width outranks
+ * shell symmetry), and its own layout is not to be re-arranged, so the writing
+ * column is arithmetic: the viewport, minus the page padding, minus the meta
+ * panel, minus the grid gap. A padding bump is a narrower page for the one
+ * person who writes in it, so it is measured instead of eyeballed.
+ */
+describe("the editor's writing width", () => {
+  const VIEWPORT = 1280;
+  /** What the writing column measured at 1280px before this refresh. */
+  const BASELINE = 896;
+
+  function px(value: string | undefined, what: string): number {
+    const match = /^([\d.]+)(rem|px)$/.exec(value ?? "");
+    if (match === null) {
+      throw new Error(`${what} is not a single length: ${String(value)}`);
+    }
+    const size = Number.parseFloat(match[1] ?? "0");
+    return match[2] === "rem" ? size * 16 : size;
+  }
+
+  it("keeps the writing column as wide at 1280px as it was before the refresh", () => {
+    const pagePadding = px(declarations(blockBody("main")).get("padding"), "main padding");
+
+    // The base rule, before the narrow-screen query collapses the grid.
+    const grid = declarations(firstRuleBody(".article-editor-main"));
+    const columns = grid.get("grid-template-columns") ?? "";
+    expect(columns.startsWith("minmax(0, 1fr)"), columns).toBe(true);
+
+    const panel = px(columns.split(/\s+/).at(-1), "the meta panel track");
+    // The panel keeps its 20rem: making room by widening it is the same loss.
+    expect(panel).toBe(320);
+
+    const writing = VIEWPORT - pagePadding * 2 - panel - px(grid.get("gap"), "the editor gap");
+    expect(writing).toBeGreaterThanOrEqual(BASELINE);
+  });
+
+  it("gives the writing column the space and the panel a fixed one", () => {
+    const columns = declarations(firstRuleBody(".article-editor-main")).get("grid-template-columns");
+    expect(columns).toBe("minmax(0, 1fr) 20rem");
+  });
+});
+
+/**
+ * The console bar: a horizontal workbench bar, not a second public shell. It is
+ * sticky so the six entries stay reachable from the bottom of a long Article
+ * list, and 56px so it carries navigation and nothing else.
+ */
+describe("the console top bar", () => {
+  it("pins the bar at 56px", () => {
+    // The base rule: narrow screens are the one exception, below 64rem.
+    const bar = declarations(firstRuleBody(".admin-topbar"));
+    expect(bar.get("position")).toBe("sticky");
+    expect(bar.get("top")).toBe("0");
+    expect(bar.get("height")).toBe("3.5rem");
+  });
+
+  it("keeps the six entries on one horizontal line", () => {
+    const list = declarations(blockBody(".admin-nav ul"));
+    expect(list.get("display")).toBe("flex");
+    expect(list.get("flex-direction")).toBe("row");
+  });
+
+  it("marks the current entry, and leaves the wordmark and the badge marking nothing", () => {
+    expect(declarations(blockBody(".admin-nav a[aria-current=\"page\"]")).get("font-weight")).toBe(
+      "600",
+    );
+  });
+});
+
+describe("the console page head", () => {
+  it("puts the action at the far end of the head and keeps it off the H1's line on a phone", () => {
+    const head = declarations(blockBody(".admin-page-head"));
+    expect(head.get("display")).toBe("flex");
+    expect(head.get("justify-content")).toBe("space-between");
+    expect(head.get("flex-wrap")).toBe("wrap");
+  });
+});
+
+describe("the console tables", () => {
+  it("sets the header row as a 12px uppercase micro-label", () => {
+    const header = declarations(blockBody(".article-table th"));
+    expect(header.get("font-size")).toBe("0.75rem");
+    expect(header.get("text-transform")).toBe("uppercase");
+    expect(header.get("letter-spacing")).toBe("0.1em");
+  });
+
+  it("separates rows with the decorative hairline", () => {
+    const cell = declarations(blockBody(".article-table td")).get("border-bottom") ?? "";
+    expect(cell).toContain("var(--border)");
+    expect(cell).not.toContain("border-strong");
+  });
+
+  it("marks a Publication State with its own ink and a dot, in no new colour", () => {
+    const dot = declarations(blockBody(".publication-state::before"));
+    expect(dot.get("content")).toBe('""');
+    expect(dot.get("background")).toBe("currentColor");
+    expect(dot.get("border-radius")).toBe("50%");
+  });
+});
+
+describe("the sign-in page", () => {
+  it("centres one 24rem card on the page", () => {
+    const page = declarations(blockBody(".admin-login"));
+    expect(page.get("display")).toBe("grid");
+    expect(page.get("place-items")).toBe("center");
+
+    const card = declarations(blockBody(".admin-login-card"));
+    expect(card.get("width")).toBe("100%");
+    expect(card.get("max-width")).toBe("24rem");
   });
 });
 
