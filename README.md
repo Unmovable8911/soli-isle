@@ -760,7 +760,7 @@ curl -i http://127.0.0.1:3000/api/health
 
 ### `SQLITE_READONLY` / `EACCES`
 
-宿主机脚本打不开数据库或图片目录。Docker 以 root 运行，生成的 `data/` 可能属于 root；宿主机用户无法写。停应用后：
+宿主机脚本打不开数据库或图片目录。Docker 以 root 运行，生成的 `data/` 可能属于 root；宿主机用户无法写。登录页提交后返回 500，日志里出现 `SqliteError: attempt to write a readonly database`，也是这个原因：登录需要写 `session` 和 `auth_audit_log`。停应用后：
 
 ```sh
 sudo chown -R "$(id -u):$(id -g)" data
