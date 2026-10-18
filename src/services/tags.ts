@@ -2,7 +2,7 @@ import { asc, eq, inArray } from "drizzle-orm";
 
 import type { Locale } from "@/config/site";
 import type { DatabaseConnection } from "@/db/database";
-import { tag, tagTranslation } from "@/db/schema";
+import { articleTag, postTag, tag, tagTranslation } from "@/db/schema";
 import type { Clock } from "@/domain/clock";
 import { normaliseSlug } from "@/domain/slug";
 import { generateUlid } from "@/domain/ulid";
@@ -21,6 +21,21 @@ export interface TagView {
 export type CreateTagOutcome =
   | { ok: true; tag: TagView }
   | { ok: false; reason: "invalid-name" };
+
+export type RenameTagOutcome =
+  | { ok: true; tag: TagView }
+  | { ok: false; reason: "invalid-name" | "not-found" };
+
+/**
+ * A Tag is a topic the Author filed work under, so it is deleted only when
+ * nothing is filed under it: the join rows would otherwise be cascaded away
+ * and every Article and Post would quietly lose the Tag. The refusal reports
+ * both counts so the Author knows what to untag first.
+ */
+export type DeleteTagOutcome =
+  | { ok: true }
+  | { ok: false; reason: "not-found" }
+  | { ok: false; reason: "in-use"; articleCount: number; postCount: number };
 
 export function createTagContext(database: DatabaseConnection, clock: Clock): TagContext {
   return { database, clock };
@@ -134,4 +149,71 @@ export async function listTags(ctx: TagContext): Promise<TagView[]> {
   const grouped = translationsByTag(translations);
 
   return rows.map((row) => toView(row, namesOf(grouped.get(row.id) ?? [])));
+}
+
+/** A display name is per Locale; the Slug is the Tag's identity and never changes. */
+export async function setTagName(
+  ctx: TagContext,
+  input: { tagId: string; locale: Locale; name: string },
+): Promise<RenameTagOutcome> {
+  const name = input.name.trim();
+  if (name.length === 0) {
+    return { ok: false, reason: "invalid-name" };
+  }
+
+  const db = ctx.database.db;
+  const existing = db.select().from(tag).where(eq(tag.id, input.tagId)).get();
+  if (existing === undefined) {
+    return { ok: false, reason: "not-found" };
+  }
+
+  db.insert(tagTranslation)
+    .values({ tagId: input.tagId, locale: input.locale, name })
+    .onConflictDoUpdate({
+      target: [tagTranslation.tagId, tagTranslation.locale],
+      set: { name },
+    })
+    .run();
+
+  const translations = db
+    .select()
+    .from(tagTranslation)
+    .where(eq(tagTranslation.tagId, input.tagId))
+    .orderBy(asc(tagTranslation.locale))
+    .all();
+
+  return { ok: true, tag: toView(existing, namesOf(translations)) };
+}
+
+export async function deleteTag(
+  ctx: TagContext,
+  input: { tagId: string },
+): Promise<DeleteTagOutcome> {
+  const db = ctx.database.db;
+  const existing = db
+    .select({ id: tag.id })
+    .from(tag)
+    .where(eq(tag.id, input.tagId))
+    .get();
+  if (existing === undefined) {
+    return { ok: false, reason: "not-found" };
+  }
+
+  const articleCount = db
+    .select({ tagId: articleTag.tagId })
+    .from(articleTag)
+    .where(eq(articleTag.tagId, input.tagId))
+    .all().length;
+  const postCount = db
+    .select({ tagId: postTag.tagId })
+    .from(postTag)
+    .where(eq(postTag.tagId, input.tagId))
+    .all().length;
+
+  if (articleCount > 0 || postCount > 0) {
+    return { ok: false, reason: "in-use", articleCount, postCount };
+  }
+
+  db.delete(tag).where(eq(tag.id, input.tagId)).run();
+  return { ok: true };
 }

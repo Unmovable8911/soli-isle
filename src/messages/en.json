@@ -30,12 +30,69 @@
     },
     "shell": {
       "logout": "Sign out",
-      "badge": "Admin"
+      "badge": "Admin",
+      "navLabel": "Admin navigation",
+      "nav": {
+        "dashboard": "Overview",
+        "articles": "Articles",
+        "posts": "Posts",
+        "categories": "Categories",
+        "tags": "Tags",
+        "assets": "Assets"
+      }
     },
-    "home": {
+    "dashboard": {
       "title": "Admin console",
-      "tagline": "The Author's workbench.",
-      "hint": "Content management will arrive in a later task."
+      "tagline": "Every Article and Post, with its Publication State.",
+      "state": {
+        "visible": "Visible to Readers",
+        "scheduled": "Waiting for its Publish Time",
+        "draft": "Draft",
+        "archived": "Archived"
+      },
+      "neverPublished": "Never published",
+      "untitled": "(untitled)",
+      "articles": {
+        "title": "Articles",
+        "empty": "No Articles yet.",
+        "newArticle": "New Article",
+        "columns": {
+          "title": "Title",
+          "slug": "Slug",
+          "state": "State",
+          "publishTime": "Publish Time",
+          "actions": "Actions"
+        }
+      },
+      "posts": {
+        "title": "Posts",
+        "empty": "No Posts yet.",
+        "newPost": "New Post",
+        "columns": {
+          "open": "Post",
+          "state": "State",
+          "publishTime": "Publish Time",
+          "actions": "Actions"
+        }
+      },
+      "actions": {
+        "open": "Edit",
+        "publishNow": "Publish now",
+        "scheduleLabel": "Publish Time (site timezone)",
+        "schedule": "Schedule",
+        "archive": "Archive",
+        "unarchive": "Unarchive",
+        "delete": "Delete permanently",
+        "confirmDeleteTitle": "Delete permanently?",
+        "confirmDeleteBody": "It disappears from the site for good; this cannot be undone.",
+        "confirmDelete": "Confirm permanent delete",
+        "cancel": "Cancel",
+        "publishFailed": "Publishing failed. Please try again.",
+        "scheduleFailed": "Scheduling failed. Check the Publish Time.",
+        "archiveFailed": "The action failed. Please try again.",
+        "unarchiveFailed": "The action failed. Please try again.",
+        "deleteFailed": "Deleting failed. Please try again."
+      }
     },
     "assets": {
       "title": "Asset library",
@@ -322,6 +379,79 @@
         "deleteFailed": "Deleting failed.",
         "hintScheduled": "Readers see it in the Feed once its publish time arrives."
       }
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Categories form a tree: each has a unique URL path, an optional parent, and a display name per Locale.",
+      "empty": "No Categories yet.",
+      "path": "Path",
+      "create": {
+        "title": "New Category",
+        "name": "Name",
+        "nameHint": "The URL path comes from the name and never changes afterwards.",
+        "slug": "Slug (optional)",
+        "parent": "Parent Category",
+        "root": "None (top level)",
+        "submit": "Create",
+        "creating": "Creating…",
+        "failed": "Creating failed: a sibling already has that URL path."
+      },
+      "node": {
+        "edit": "Edit",
+        "parent": "Parent Category",
+        "root": "None (top level)",
+        "move": "Move",
+        "moveFailed": "Moving failed: a sibling already has that URL path, or a Category cannot move under its own child.",
+        "names": "Display name",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "renameFailed": "Saving failed. Please try again.",
+        "up": "Move up",
+        "down": "Move down",
+        "reorderFailed": "Cannot move: it is already the first or the last at this level.",
+        "delete": "Delete Category"
+      },
+      "delete": {
+        "title": "Delete Category?",
+        "body": "This cannot be undone.",
+        "confirm": "Confirm delete",
+        "cancel": "Cancel",
+        "failed": "Deleting failed. Please try again.",
+        "hasChildren": "{count} child Categories are still under it. Move or delete them first.",
+        "inUse": "{count} Articles are filed under it. Choose where those Articles should go first.",
+        "articlesTo": "Move those Articles to",
+        "choose": "Choose one"
+      }
+    },
+    "tags": {
+      "title": "Tags",
+      "description": "Tags are topics shared by Articles and Posts: the Slug is its identity, the display name is per Locale.",
+      "empty": "No Tags yet.",
+      "columns": {
+        "slug": "Slug",
+        "names": "Display name",
+        "actions": "Actions"
+      },
+      "create": {
+        "title": "New Tag",
+        "name": "Name",
+        "slug": "Slug (optional)",
+        "submit": "Create",
+        "creating": "Creating…",
+        "failed": "Creating failed. Please try again."
+      },
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "renameFailed": "Saving failed. Please try again.",
+      "delete": "Delete",
+      "deleteTitle": "Delete Tag?",
+      "deleteBody": "This cannot be undone.",
+      "confirmDelete": "Confirm delete",
+      "cancel": "Cancel",
+      "deleteFailed": "Deleting failed. Please try again.",
+      "inUse": "{articleCount} Articles and {postCount} Posts use this Tag. Remove it from them first."
     }
   },
   "reader": {
