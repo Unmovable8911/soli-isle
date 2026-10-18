@@ -938,3 +938,119 @@ describe("category and tags on an article", () => {
     expect(outcome.article.tags).toEqual([]);
   });
 });
+describe("the cover", () => {
+  /** An uploaded image carries a display variant; the card reads that one. */
+  function insertCover(harness: TestHarness, assetId: string, width: number, height: number): void {
+    insertAsset(harness, assetId);
+    harness.database.sqlite
+      .prepare(
+        "INSERT INTO asset_variant (asset_id, variant, byte_size, width, height, format) VALUES (?, ?, ?, ?, ?, ?)",
+      )
+      .run(assetId, "display", 512, width, height, "webp");
+  }
+
+  async function references(harness: TestHarness, clock: Clock, assetId: string) {
+    const assets = createAssetContext(harness.database, clock, harness.resources.rootDir);
+    return (await listAssets(assets)).find((asset) => asset.id === assetId);
+  }
+
+  it("starts with no cover, which is a legal state", async () => {
+    const { articles } = await createFixture();
+    const article = await createArticleDraft(articles, { title: "Uncovered", locale: "zh" });
+
+    expect(article.coverAssetId).toBeNull();
+  });
+
+  it("records a chosen cover as a reference of its own", async () => {
+    const { articles, clock, harness } = await createFixture();
+    const coverId = randomUUID();
+    insertCover(harness, coverId, 1600, 1000);
+    const article = await createArticleDraft(articles, { title: "Covered", locale: "zh" });
+
+    const outcome = await updateArticleMeta(articles, {
+      articleId: article.id,
+      coverAssetId: coverId,
+    });
+
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.article.coverAssetId).toBe(coverId);
+    // Without this the image shows up in the console's unreferenced list, which
+    // is the list the author is told to trust.
+    expect((await references(harness, clock, coverId))?.references).toEqual([
+      { contentKind: "article", contentId: article.id },
+    ]);
+    expect((await references(harness, clock, coverId))?.isOrphan).toBe(false);
+  });
+
+  it("keeps the reference when the body is saved again", async () => {
+    const { articles, clock, harness } = await createFixture();
+    const coverId = randomUUID();
+    insertCover(harness, coverId, 1600, 1000);
+    const article = await createArticleDraft(articles, { title: "Covered", locale: "zh" });
+    await updateArticleMeta(articles, { articleId: article.id, coverAssetId: coverId });
+
+    const current = await getArticle(articles, article.id);
+    await saveArticleTranslation(articles, {
+      articleId: article.id,
+      locale: "zh",
+      baseVersion: current?.translations[0]?.version ?? 1,
+      title: "Covered",
+      bodyJson: DOC,
+    });
+
+    expect((await references(harness, clock, coverId))?.references).toEqual([
+      { contentKind: "article", contentId: article.id },
+    ]);
+  });
+
+  it("frees the old image when a new cover replaces it", async () => {
+    const { articles, clock, harness } = await createFixture();
+    const first = randomUUID();
+    const second = randomUUID();
+    insertCover(harness, first, 1600, 1000);
+    insertCover(harness, second, 1200, 800);
+    const article = await createArticleDraft(articles, { title: "Covered", locale: "zh" });
+
+    await updateArticleMeta(articles, { articleId: article.id, coverAssetId: first });
+    const outcome = await updateArticleMeta(articles, {
+      articleId: article.id,
+      coverAssetId: second,
+    });
+
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.article.coverAssetId).toBe(second);
+    expect((await references(harness, clock, first))?.references).toEqual([]);
+    expect((await references(harness, clock, second))?.references).toEqual([
+      { contentKind: "article", contentId: article.id },
+    ]);
+  });
+
+  it("lets the cover go back to none", async () => {
+    const { articles, clock, harness } = await createFixture();
+    const coverId = randomUUID();
+    insertCover(harness, coverId, 1600, 1000);
+    const article = await createArticleDraft(articles, { title: "Covered", locale: "zh" });
+    await updateArticleMeta(articles, { articleId: article.id, coverAssetId: coverId });
+
+    const outcome = await updateArticleMeta(articles, {
+      articleId: article.id,
+      coverAssetId: null,
+    });
+
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.article.coverAssetId).toBeNull();
+    expect((await references(harness, clock, coverId))?.references).toEqual([]);
+  });
+
+  it("refuses an asset that does not exist", async () => {
+    const { articles } = await createFixture();
+    const article = await createArticleDraft(articles, { title: "Covered", locale: "zh" });
+
+    await expect(
+      updateArticleMeta(articles, { articleId: article.id, coverAssetId: randomUUID() }),
+    ).resolves.toEqual({ ok: false, reason: "unknown-asset" });
+  });
+});

@@ -19,6 +19,7 @@ const DRAFT: ArticleSummary = {
   visibility: "draft",
   categoryId: null,
   category: null,
+  coverAssetId: null,
   tags: [],
   translations: [
     { locale: "zh", title: "草稿一篇", updatedAt: "2025-06-15T08:30:00.000Z", version: 1 },

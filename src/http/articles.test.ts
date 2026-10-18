@@ -435,6 +435,49 @@ describe("article write API", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({ article: { slug: "new-name" } });
   });
+
+  it("sets, refuses and clears the cover through the meta endpoint", async () => {
+    const { articles, auth, cookie, harness } = await createHttpFixture();
+    const created = await createArticleResponse(
+      articles,
+      auth,
+      adminRequest("/api/admin/articles", {
+        method: "POST",
+        cookie,
+        body: JSON.stringify({ title: "Covered", locale: "zh" }),
+      }),
+    );
+    const { article } = (await created.json()) as { article: { id: string } };
+    const coverId = randomUUID();
+    harness.database.sqlite
+      .prepare(
+        "INSERT INTO asset (id, file_name, mime_type, byte_size, width, height, content_hash, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(coverId, "cover.png", "image/png", 2048, 1600, 1000, "hash", "2025-06-01T00:00:00.000Z");
+
+    const patch = (body: unknown) =>
+      updateArticleResponse(
+        articles,
+        auth,
+        adminRequest(`/api/admin/articles/${article.id}`, {
+          method: "PATCH",
+          cookie,
+          body: JSON.stringify(body),
+        }),
+        article.id,
+      );
+
+    const set = await patch({ coverAssetId: coverId });
+    expect(set.status).toBe(200);
+    await expect(set.json()).resolves.toMatchObject({ article: { coverAssetId: coverId } });
+
+    const unknown = await patch({ coverAssetId: randomUUID() });
+    expect(unknown.status).toBe(400);
+    await expect(unknown.json()).resolves.toEqual({ error: "unknown-asset" });
+
+    const cleared = await patch({ coverAssetId: null });
+    await expect(cleared.json()).resolves.toMatchObject({ article: { coverAssetId: null } });
+  });
 });
 
 describe("category and tag write API", () => {

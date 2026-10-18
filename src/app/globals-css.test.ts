@@ -461,9 +461,8 @@ describe("token registration", () => {
   });
 
   it("declares exactly the eight roles", () => {
-    expect([...themeTokens("light").keys()].sort()).toEqual(
-      TOKEN_ROLES.filter((role) => role !== "--on-accent").concat("--on-accent").sort(),
-    );
+    expect([...themeTokens("light").keys()].sort()).toEqual([...TOKEN_ROLES].sort());
+    expect([...themeTokens("dark").keys()].sort()).toEqual([...TOKEN_ROLES].sort());
   });
 
   it("resolves every var() the layers name", () => {

@@ -44,6 +44,7 @@ const MUTATION_STATUS: Record<ArticleMutationFailure["reason"], number> = {
   "invalid-publish-time": 400,
   "unknown-category": 400,
   "unknown-tag": 400,
+  "unknown-asset": 400,
   "default-locale": 409,
   "last-translation": 409,
   "not-published": 409,
@@ -191,7 +192,8 @@ export async function updateArticleResponse(
       articleId,
       slug: readOptionalString(body, "slug"),
       defaultLocale,
-      categoryId: body.categoryId === undefined ? undefined : readCategoryId(body.categoryId),
+      categoryId: body.categoryId === undefined ? undefined : readNullableId(body.categoryId),
+      coverAssetId: body.coverAssetId === undefined ? undefined : readNullableId(body.coverAssetId),
       tagIds,
     }),
   );
@@ -199,7 +201,8 @@ export async function updateArticleResponse(
   return mutationResponse(outcome);
 }
 
-function readCategoryId(value: unknown): string | null {
+/** An absent key means "leave it alone"; an explicit null means "clear it". */
+function readNullableId(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
