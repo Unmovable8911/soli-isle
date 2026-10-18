@@ -567,8 +567,10 @@ describe("the type floor", () => {
 
 /** Controls a thumb has to hit on a 360–430px phone. */
 const READER_CONTROLS = [
-  "header a",
-  "header button",
+  ".site-topbar a",
+  ".site-topbar button",
+  ".admin-topbar a",
+  ".admin-topbar button",
   ".site-rail a",
   ".site-rail button",
   ".site-menu summary",
@@ -594,6 +596,14 @@ const LIST_ANCHORS = [
   ".reader-pill a",
   ".archive-row-title",
   ".archive-row-category",
+  // Outside the reading column too: the console's and the reader's top bars,
+  // the Article's kicker, its Locale pills, its contents and its pager.
+  "header nav a",
+  ".article-kicker",
+  ".article-locales a",
+  ".article-toc a",
+  ".reader-tags a",
+  ".reader-article-nav a",
 ] as const;
 
 /** Reader surfaces that render at phone width; 0.875rem is the 14px floor. */
@@ -1214,3 +1224,86 @@ describe("the Archive index", () => {
   });
 });
 
+/**
+ * The masthead is a wordmark, not a link: the site's own name rendered in the
+ * browser's blue and underlined is the one place a stylesheet forgets to
+ * finish, and it is the first thing a Reader sees.
+ */
+describe("the wordmark", () => {
+  it("sets the rail's wordmark in the site's ink rather than the browser's blue", () => {
+    const wordmark = declarations(blockBody(".site-rail-wordmark"));
+    expect(wordmark.get("color")).toBe("var(--fg)");
+    expect(wordmark.get("text-decoration")).toBe("none");
+    expect(wordmark.get("font-family")).toContain('"Lora"');
+    expect(wordmark.get("font-weight")).toBe("700");
+  });
+
+  it("keeps the top bar's name and the rail's name in the same ink", () => {
+    const name = declarations(blockBody(".site-name"));
+    expect(name.get("color")).toBe("inherit");
+    expect(name.get("text-decoration")).toBe("none");
+  });
+});
+
+/**
+ * base.css styles a bare <header> as a shell's top bar — a flex row — and the
+ * Article header reuses the element, so it has to opt back out. The spec's order
+ * is kicker, title, dek: stacked, the way the DOM already reads.
+ */
+describe("the Article header", () => {
+  it("stacks the kicker over the title instead of laying them out as a bar", () => {
+    expect(declarations(blockBody(".reader-article-header")).get("display")).toBe("block");
+  });
+
+  it("keeps the underline where a link sits inside a sentence", () => {
+    // Prose and the Feed's Tag filter are text with a link in it, so the
+    // underline is the affordance a Reader without colour vision needs.
+    expect(declarations(blockBody(".article-body a")).get("text-decoration")).toBe("underline");
+    expect(declarations(blockBody(".feed-filter a")).get("text-decoration")).toBe("underline");
+  });
+
+  it("gives a stripped link a second affordance", () => {
+    // The kicker, the Locale pills and the contents are lists of links, not
+    // sentences containing one link, so they drop the UA underline; the pill
+    // keeps its border as a shape and the other two underline on interaction.
+    expect(declarations(blockBody(".article-toc a:hover")).get("text-decoration")).toBe("underline");
+    expect(declarations(blockBody(".article-kicker:hover")).get("text-decoration")).toBe("underline");
+    expect(declarations(blockBody(".article-locales a")).get("border")).toContain("var(--border)");
+  });
+});
+/**
+ * The page is set on one measure. 65ch is measured in the element's own type,
+ * so a header, a contents box or a pager that names 65ch while inheriting 14px
+ * lands on a narrower column than the prose and the page reads ragged.
+ */
+describe("the Article page's measure", () => {
+  const MEASURE_BLOCKS = [
+    [".reader-article-header", ".reader-article-header"],
+    [".article-toc", ".article-toc"],
+    [".reader-article > .reader-tags", ".reader-tags"],
+    [".reader-article-nav", ".reader-article-nav"],
+  ] as const;
+
+  it.each(MEASURE_BLOCKS)("%s sits on the prose measure", (selector, fontSizeOwner) => {
+    expect(declarations(blockBody(selector)).get("max-width")).toBe("65ch");
+    // The prose declares 1.125rem; a block that measures its ch in smaller type
+    // is a narrower column, which is what "aligned" must not mean.
+    expect(declarations(blockBody(fontSizeOwner)).get("font-size")).toBe("1.125rem");
+  });
+
+  it("turns the shell's bar header back into a page header", () => {
+    const header = declarations(blockBody(".reader-article-header"));
+    expect(header.get("display")).toBe("block");
+    expect(header.get("padding")).toBe("0");
+    expect(header.get("border")).toBe("0");
+  });
+
+  it("keeps the bars' 44px thumb boxes out of every other <header>", () => {
+    // The Article kicker and its Locale pills live in a <header> too. A bare
+    // `header a` rule would render them 44px tall with the text at the top.
+    expect(() => blockBody("header a")).toThrow(/has no rule/);
+    for (const bar of [".site-topbar a", ".admin-topbar a"]) {
+      expect(blockBody(bar), bar).toContain("min-height: 2.75rem");
+    }
+  });
+});

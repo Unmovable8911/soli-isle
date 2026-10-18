@@ -116,6 +116,7 @@ header nav ul {
 
 header nav a {
   color: var(--accent);
+  text-decoration: none;
 }
 
 main {
@@ -138,8 +139,14 @@ main {
   }
 }
 
-header a,
-header button {
+/* Thumb targets for the two shell bars. A bare `header a` would also reach the
+   Article's kicker and Locale pills, which are type rather than bar controls:
+   they would render 44px tall with their text stuck to the top. The bars each
+   name their own links instead. */
+.site-topbar a,
+.site-topbar button,
+.admin-topbar a,
+.admin-topbar button {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;

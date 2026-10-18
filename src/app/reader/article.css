@@ -52,6 +52,7 @@
   color: var(--muted);
 }
 
+/* The measure is the prose's; the tags themselves stay at the 14px floor. */
 .reader-tags {
   display: flex;
   flex-wrap: wrap;
@@ -59,6 +60,10 @@
   margin: 0.5rem 0 0;
   padding: 0;
   list-style: none;
+  font-size: 1.125rem;
+}
+
+.reader-tags a {
   font-size: 0.875rem;
 }
 
@@ -68,6 +73,11 @@
   border-radius: 999px;
   background: var(--surface);
   color: var(--muted);
+  text-decoration: none;
+}
+
+.reader-tags a:hover {
+  color: var(--accent);
 }
 
 .reader-search-form {
@@ -121,11 +131,25 @@
 
 /* The header and the contents sit on the measure; the cover takes the whole
    column. That difference is the point of an editorial header. */
+/* A page header, not the shell's top bar: base.css lays a bare <header> out as
+   a flex row, and the kicker would sit beside the title instead of over it. */
+/* A page header, not the shell's top bar: base.css lays a bare <header> out as
+   a flex row with the bar's padding and rule, and the kicker would sit beside
+   the title instead of over it. The measure is named in the prose's own type,
+   because 65ch is measured in the element's font and the header has to start
+   where the body starts. */
 .reader-article-header {
+  display: block;
   max-width: 65ch;
   margin: 0 auto 2rem;
+  padding: 0;
+  border: 0;
+  font-size: 1.125rem;
 }
 
+/* A standalone micro-label, not a link inside a sentence: the underline is the
+   browser's default rather than a decision, so it is dropped here and offered
+   back on hover and focus. */
 .article-kicker {
   display: inline-block;
   margin-bottom: 0.5rem;
@@ -134,6 +158,12 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
+  text-decoration: none;
+}
+
+.article-kicker:hover,
+.article-kicker:focus-visible {
+  text-decoration: underline;
 }
 
 .reader-article-header h1 {
@@ -189,12 +219,15 @@
   font-size: 0.85rem;
 }
 
+/* The pill's own border is the shape, so the label does not need a second
+   underline to prove it is a link. */
 .article-locales a {
   display: inline-block;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   border: 1px solid var(--border);
   color: var(--muted);
+  text-decoration: none;
 }
 
 /* The Locale with no version of this work: offered, but not as a version. */
@@ -230,6 +263,8 @@
 }
 
 /* The contents are furniture: a hairline box on the measure, two levels deep. */
+/* Furniture on the prose's measure: 65ch is the element's own type, so the box
+   names the prose size and the entries keep their reading size inside it. */
 .article-toc {
   max-width: 65ch;
   margin: 0 auto 2.5rem;
@@ -237,6 +272,10 @@
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   background: var(--surface);
+  font-size: 1.125rem;
+}
+
+.article-toc-list {
   font-size: 0.9rem;
 }
 
@@ -260,10 +299,19 @@
   padding-left: 1rem;
 }
 
+/* Every entry is a link in a list of links, so the underline is noise; the
+   colour change and the underline on hover carry it instead. */
 .article-toc a {
   display: block;
   padding: 0.4rem 0;
   color: var(--fg);
+  text-decoration: none;
+}
+
+.article-toc a:hover,
+.article-toc a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .article-toc-item[data-level="3"] a {
@@ -285,15 +333,26 @@
   margin: 2.5rem auto 0;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
+  font-size: 1.125rem;
+}
+
+.reader-article-nav a {
   font-size: 0.9rem;
 }
 
+/* The pager is a pair of bordered cards: the shape is the affordance. */
 .reader-article-nav a {
   display: grid;
   gap: 0.15rem;
   padding: 0.6rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.reader-article-nav a:hover {
+  border-color: var(--accent);
 }
 
 .reader-article-nav a > span {
@@ -416,6 +475,11 @@
   .reader-tags a,
   .reader-article-nav a {
     transition: color 120ms ease, border-color 120ms ease;
+  }
+
+  .article-kicker,
+  .article-toc a {
+    transition: color 200ms ease;
   }
 }
 
