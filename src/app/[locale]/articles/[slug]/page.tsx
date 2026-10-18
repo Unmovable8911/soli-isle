@@ -126,6 +126,7 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
       const parsed = parseAssetAddress(src);
       return parsed === null ? null : (images.get(parsed.assetId) ?? null);
     },
+    footnoteBackLabel: t.reader.article.footnoteBack,
   });
   const neighbours = await findArticleNeighbours(reading, { locale, articleId: article.id });
   const links = articleLanguageLinks({

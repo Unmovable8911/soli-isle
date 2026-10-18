@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { themeInitScript } from "../theme-init";
 
+import "katex/dist/katex.min.css";
 import "../globals.css";
 
 export default function AdminDocument({

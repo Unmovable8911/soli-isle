@@ -39,6 +39,8 @@ const MARKDOWN_SIGNALS = [
   /^```/m,
   /^\s*\|.*\|\s*$/m,
   /^---\s*$/m,
+  /^\s*\[\^[^\]\s]+\]:/m,
+  /^> \[![a-z]+\]/m,
 ];
 
 export function looksLikeMarkdown(text: string): boolean {
