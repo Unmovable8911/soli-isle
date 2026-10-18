@@ -1,6 +1,5 @@
-import { isLocale, siteConfig, type Locale } from "@/config/site";
+import { isLocale, siteConfig } from "@/config/site";
 import { isRichTextDocument } from "@/domain/rich-text";
-import { siteLocalToInstant } from "@/domain/site-time";
 import { deriveMarkdown } from "@/editor/markdown";
 import { renderArticleBody } from "@/editor/render/render-article";
 import type { AuthorAuthContext } from "@/services/auth";
@@ -24,7 +23,17 @@ import {
   type ArticleMutationFailure,
   type ArticleContext,
 } from "@/services/articles";
-import { isAuthorizedAuthor, jsonError, jsonOk, readJsonObject } from "./admin-json";
+import {
+  compact,
+  isAuthorizedAuthor,
+  jsonError,
+  jsonOk,
+  publishTimeFromBody,
+  readBaseVersion,
+  readJsonObject,
+  readLocale,
+  readOptionalString,
+} from "./admin-json";
 
 const MUTATION_STATUS: Record<ArticleMutationFailure["reason"], number> = {
   "not-found": 404,
@@ -58,48 +67,6 @@ function mutationResponse(outcome: ArticleMutation): Response {
 
 function unauthorized(auth: AuthorAuthContext, request: Request): Response | null {
   return isAuthorizedAuthor(auth, request) ? null : jsonError("unauthorized", 401);
-}
-
-function readLocale(value: unknown): Locale | null {
-  return typeof value === "string" && isLocale(value) ? value : null;
-}
-
-function readOptionalString(body: Record<string, unknown>, key: string): string | undefined {
-  const value = body[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-/** The version a save was derived from; the only accepted shape is a positive integer. */
-function readBaseVersion(body: Record<string, unknown>): number | null {
-  const value = body.baseVersion;
-  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
-}
-
-/** Drops absent fields so a service only sees the properties the caller supplied. */
-function compact<T extends Record<string, unknown>>(input: T): T {
-  return Object.fromEntries(
-    Object.entries(input).filter(([, value]) => value !== undefined),
-  ) as T;
-}
-
-/**
- * A publish time may arrive as a wall-clock value (what a `datetime-local`
- * input produces) — it is then read in the site timezone, never the browser's —
- * or as an absolute instant. Anything else is passed through for the service
- * to reject.
- */
-function publishTimeFromBody(value: unknown): string | null | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
-  }
-  if (typeof value !== "string") {
-    return "not-an-instant";
-  }
-  const local = siteLocalToInstant(value);
-  return local === null ? value : local.toISOString();
 }
 
 /**

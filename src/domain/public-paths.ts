@@ -28,6 +28,20 @@ export function buildTagPath(input: { locale: Locale; slug: string }): string {
   return `/${input.locale}/tags/${encodeURIComponent(input.slug)}`;
 }
 
+/**
+ * The Feed. A tapped Tag filters the same page rather than opening a second
+ * surface — the Feed is deliberately the only Post-facing URL that exists, and
+ * paging itself never changes this URL either.
+ */
+export function buildFeedPath(input: { locale: Locale; tagSlug?: string | null }): string {
+  const base = `/${input.locale}/feed`;
+  const tagSlug = input.tagSlug ?? "";
+  if (tagSlug.length === 0) {
+    return base;
+  }
+  return `${base}?${new URLSearchParams({ tag: tagSlug }).toString()}`;
+}
+
 export function buildArchivePath(locale: Locale): string {
   return `/${locale}/archive`;
 }

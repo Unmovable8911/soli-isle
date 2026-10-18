@@ -6,7 +6,12 @@ import { Suspense, type ReactNode } from "react";
 import LocaleSwitcher from "@/components/locale-switcher";
 import ThemeToggle from "@/components/theme-toggle";
 import { isLocale } from "@/config/site";
-import { buildArchivePath, buildCategoryIndexPath, buildSearchPath } from "@/domain/public-paths";
+import {
+  buildArchivePath,
+  buildCategoryIndexPath,
+  buildFeedPath,
+  buildSearchPath,
+} from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { themeInitScript } from "../theme-init";
 
@@ -69,6 +74,9 @@ export default async function LocaleLayout({
               </li>
               <li>
                 <Link href={buildArchivePath(locale)}>{t.reader.nav.archive}</Link>
+              </li>
+              <li>
+                <Link href={buildFeedPath({ locale })}>{t.reader.nav.feed}</Link>
               </li>
               <li>
                 <Link href={buildSearchPath({ locale })}>{t.reader.nav.search}</Link>

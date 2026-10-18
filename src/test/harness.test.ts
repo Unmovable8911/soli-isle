@@ -37,6 +37,10 @@ describe("shared test harness", () => {
       "category",
       "category_translation",
       "health_check",
+      "post",
+      "post_image",
+      "post_tag",
+      "post_translation",
       "session",
       "tag",
       "tag_translation",
@@ -123,6 +127,25 @@ describe("shared test harness", () => {
     expect(columnsOf(harness, "category_translation")).toEqual(["category_id", "locale", "name"]);
     expect(columnsOf(harness, "tag")).toEqual(["id", "slug", "created_at"]);
     expect(columnsOf(harness, "tag_translation")).toEqual(["tag_id", "locale", "name"]);
+    expect(columnsOf(harness, "post")).toEqual([
+      "id",
+      "default_locale",
+      "publication_state",
+      "publish_time",
+      "created_at",
+      "updated_at",
+    ]);
+    expect(columnsOf(harness, "post_translation")).toEqual([
+      "post_id",
+      "locale",
+      "body_json",
+      "body_markdown",
+      "version",
+      "created_at",
+      "updated_at",
+    ]);
+    expect(columnsOf(harness, "post_image")).toEqual(["post_id", "asset_id", "position"]);
+    expect(columnsOf(harness, "post_tag")).toEqual(["post_id", "tag_id"]);
   });
 
   it("can re-run migrations without changing the established schema", async () => {
