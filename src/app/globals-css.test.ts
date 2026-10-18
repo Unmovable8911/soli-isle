@@ -184,6 +184,7 @@ const CONTROL_BORDERS = [
   ".reader-search-form input",
   ".post-composer-inline input",
   ".admin-login-form input",
+  ".article-callout-tone select",
 ] as const;
 
 describe("control boundaries", () => {
@@ -219,6 +220,35 @@ describe("visible focus", () => {
         );
       }
     }
+  });
+});
+
+/**
+ * The other half of the contrast proof: text colour may only come from the five
+ * audited tokens, so no rule can quietly paint text in a raw or diluted colour
+ * that the ratio table above never sees.
+ */
+describe("text colour", () => {
+  const ALLOWED = new Set([
+    "var(--bg)",
+    "var(--fg)",
+    "var(--muted)",
+    "var(--accent)",
+    "var(--line)",
+    "inherit",
+    "currentColor",
+    "transparent",
+  ]);
+
+  it("only ever names a theme token", () => {
+    const offenders: string[] = [];
+    for (const rule of rules()) {
+      const colour = declarations(rule.body).get("color");
+      if (colour !== undefined && !ALLOWED.has(colour.trim())) {
+        offenders.push(`${rule.prelude} { color: ${colour} }`);
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });
 
