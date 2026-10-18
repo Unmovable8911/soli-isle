@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import type { Locale } from "@/config/site";
+import { siteConfig, type Locale } from "@/config/site";
 import { instantToSiteLocal } from "@/domain/site-time";
-import { siteConfig } from "@/config/site";
 import type { Messages } from "@/messages";
 import type { ArticleSummary } from "@/services/articles";
 
