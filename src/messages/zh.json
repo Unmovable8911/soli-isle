@@ -14,7 +14,10 @@
       "zh": "中文",
       "en": "English"
     },
-    "skipToContent": "跳到正文"
+    "skipToContent": "跳到正文",
+    "menuLabel": "菜单",
+    "searchLabel": "站内搜索",
+    "railLabel": "站点栏"
   },
   "home": {
     "title": "Soli Isle",

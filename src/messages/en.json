@@ -14,7 +14,10 @@
       "zh": "中文",
       "en": "English"
     },
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "menuLabel": "Menu",
+    "searchLabel": "Search the site",
+    "railLabel": "Site rail"
   },
   "home": {
     "title": "Soli Isle",

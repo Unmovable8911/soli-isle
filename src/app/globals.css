@@ -4,6 +4,7 @@
 
 @import "./tokens.css";
 @import "./base.css";
+@import "./reader/shell.css";
 @import "./reader/article-body.css";
 @import "./reader/article.css";
 @import "./reader/feed.css";
