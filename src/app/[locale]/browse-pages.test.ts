@@ -37,6 +37,13 @@ describe("the browse surfaces", () => {
     expect(text).not.toContain("reader-list");
   });
 
+  it("counts the search results in the page head, even when the count is zero", () => {
+    const text = source(BROWSE.search);
+    // The head counts what is below it on every browse surface, Search
+    // included: a zero is a result, not a reason to say nothing.
+    expect(text).toMatch(/<ReaderPageHead[\s\S]*?count=\{/);
+  });
+
   it("gives the Category page its child-Category pills", () => {
     expect(source(BROWSE.category)).toContain("<CategoryPills");
   });

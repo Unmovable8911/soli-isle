@@ -18,6 +18,12 @@ describe("a browse surface's page head", () => {
     expect(html).toContain("1 article(s)");
   });
 
+  it("counts zero rather than falling silent", () => {
+    const html = renderToStaticMarkup(<ReaderPageHead locale="zh" title="搜索" count={0} />);
+
+    expect(html).toContain("0 篇长文");
+  });
+
   it("leaves the count out when the surface has nothing to count", () => {
     const html = renderToStaticMarkup(<ReaderPageHead locale="en" title="Archive" />);
 

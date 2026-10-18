@@ -16,6 +16,9 @@ export interface CategoryTreeProps {
   currentPath: string | null;
 }
 
+/** The tree recurses on itself, and its levels carry the same three inputs. */
+type CategoryLevelProps = Pick<CategoryTreeProps, "locale" | "nodes" | "currentPath">;
+
 export function CategoryTree({ locale, heading, nodes, currentPath }: CategoryTreeProps) {
   return (
     <div className="site-categories">
@@ -25,15 +28,7 @@ export function CategoryTree({ locale, heading, nodes, currentPath }: CategoryTr
   );
 }
 
-function CategoryLevel({
-  locale,
-  nodes,
-  currentPath,
-}: {
-  locale: Locale;
-  nodes: ReaderCategoryNode[];
-  currentPath: string | null;
-}) {
+function CategoryLevel({ locale, nodes, currentPath }: CategoryLevelProps) {
   return (
     <ul className="site-tree">
       {nodes.map((node) => (

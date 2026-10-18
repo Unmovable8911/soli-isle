@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import type { ReaderCover } from "@/services/reading";
+import { hasCover, type ReaderCover } from "@/services/reading";
 /**
  * One Article as a card: the cover, the Category above the title, the title,
  * a three-line excerpt and the meta line. The home page, a Category, a Tag and
@@ -25,8 +25,8 @@ export interface ArticleCardProps {
   snippet?: ReactNode | null;
   /** Publish Time and whatever else the surface adds to the meta line. */
   meta?: ReactNode;
-  /** The card's crop. Null or absent is a designed state, not a missing image. */
-  cover?: ReaderCover | null;
+  /** The card's crop. Null is the designed state of an Article without a cover. */
+  cover: ReaderCover | null;
   /** The surface's own modifier, e.g. the front page's lead (suffix of "article-card"). */
   className?: string;
 }
@@ -44,7 +44,7 @@ export function ArticleCard({
 }: ArticleCardProps) {
   return (
     <article className={className === undefined ? "article-card" : `article-card ${className}`}>
-      {cover !== undefined && cover !== null && (
+      {hasCover(cover) && (
         <div className="article-card-cover">
           {/* eslint-disable-next-line @next/next/no-img-element -- the address comes from the Asset store, not the image optimizer */}
           <img

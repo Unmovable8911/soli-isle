@@ -17,6 +17,7 @@ function article(index: number, extra: Partial<ReaderArticleCard> = {}): ReaderA
     summary: `Summary ${index}`,
     publishTime: "2025-06-15T08:30:00.000Z",
     category: { slug: "notes", path: "notes", name: "Notes" },
+    cover: null,
     tags: [],
     ...extra,
   };

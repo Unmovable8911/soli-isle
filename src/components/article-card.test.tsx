@@ -15,6 +15,7 @@ describe("the Article card", () => {
         title="Hello, World"
         summary="syntax highlighting for a static site"
         meta={<time dateTime="2025-06-15T08:30:00.000Z">June 15, 2025</time>}
+        cover={null}
       />,
     );
 
@@ -49,6 +50,7 @@ describe("the Article card", () => {
         title="Hello, World"
         summary="syntax highlighting for a static site"
         snippet={<span>…the <mark>needle</mark> sits here…</span>}
+        cover={null}
       />,
     );
 
@@ -58,7 +60,12 @@ describe("the Article card", () => {
 
   it("leaves no image area at all when the Article has no cover", () => {
     const html = renderToStaticMarkup(
-      <ArticleCard href="/en/articles/hello-world" title="Hello, World" summary="A piece" />,
+      <ArticleCard
+        href="/en/articles/hello-world"
+        title="Hello, World"
+        summary="A piece"
+        cover={null}
+      />,
     );
 
     expect(html).not.toContain("<img");

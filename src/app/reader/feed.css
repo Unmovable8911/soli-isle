@@ -1,5 +1,5 @@
-/* The Feed reads as a timeline, not as a stack of controls: one 42rem column,
-   a hairline *between* two Posts, and no frame, no shadow and no hover
+/* The Feed reads as a stream of Posts, not as a stack of controls: one 42rem
+   column, a hairline *between* two Posts, and no frame, no shadow and no hover
    displacement anywhere in it. A Post has no page of its own, so nothing in this
    file may suggest that a Post is something you open. */
 
@@ -60,12 +60,14 @@
 }
 
 /* The kicker: the time is the only label a Post carries, so it is set as one —
-   tracked and upper case, at the 14px floor the contract test holds it to. */
+   tracked and upper case. The size stays at the 14px reading floor rather than
+   the kicker's 10px: a Post's timestamp is content to read, not a label over a
+   title. The tracking is still the kicker's, so the form survives the floor. */
 .post-time {
   color: var(--muted);
   font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
@@ -264,13 +266,17 @@
 }
 
 @media (min-width: 48rem) {
-  .feed-title {
-    font-size: 3rem;
-  }
-
   /* Desktop cells turn landscape; the crop is the same rule, the box moves. */
   .post-gallery-cell {
     aspect-ratio: 16 / 9;
+  }
+}
+
+/* The page H1 takes the same 64rem step as every other browse surface. 48rem is
+   the Feed's own gallery breakpoint, not the site's type scale. */
+@media (min-width: 64rem) {
+  .feed-title {
+    font-size: 3rem;
   }
 }
 

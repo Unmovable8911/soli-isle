@@ -1,6 +1,6 @@
 import type { Locale } from "@/config/site";
 import { messages } from "@/messages";
-import type { ReaderArticleCard } from "@/services/reading";
+import { hasCover, type ReaderArticleCard } from "@/services/reading";
 
 import { ArticleCard } from "./article-card";
 import { ArticleGrid, articleCardProps } from "./article-grid";
@@ -46,15 +46,11 @@ export function ReaderHome({
         <>
           <ArticleCard
             {...articleCardProps(lead, locale)}
-            className={hasCover(lead) ? "article-lead article-lead--split" : "article-lead"}
+            className={hasCover(lead.cover) ? "article-lead article-lead--split" : "article-lead"}
           />
           <ArticleGrid articles={rest} locale={locale} />
         </>
       )}
     </>
   );
-}
-
-function hasCover(article: ReaderArticleCard): boolean {
-  return article.cover !== undefined && article.cover !== null;
 }
