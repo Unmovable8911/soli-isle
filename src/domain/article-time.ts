@@ -36,6 +36,25 @@ export function formatArchiveMonth(year: number, month: number, locale: Locale):
   return monthFormatter(locale).format(new Date(Date.UTC(year, month - 1, 1)));
 }
 
+const dayClock = new Intl.DateTimeFormat("en-US", {
+  timeZone: siteConfig.timeZone,
+  day: "2-digit",
+});
+
+/**
+ * The day an Archive row stands on: two digits, in the same site time zone the
+ * month grouping read, so a row and its group can never disagree about which day
+ * an instant fell on. Two digits rather than one is what lets the column align.
+ */
+export function formatArchiveDay(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const day = dayClock.formatToParts(date).find((part) => part.type === "day")?.value ?? "";
+  return day.padStart(2, "0");
+}
+
 export interface ArchiveMonth<T> {
   year: number;
   /** 1–12, as a reader counts months. */

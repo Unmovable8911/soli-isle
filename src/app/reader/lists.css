@@ -1,0 +1,189 @@
+/* The browse surfaces and the Archive.
+
+   A browse surface — a Category, a Tag, the search results — is the front page's
+   arrangement with a different head: the card grid, its 16:10 crops and its
+   3/2/1 density all come from home.css, because a listing that drew its own
+   second grid would be a second listing to maintain. What this layer adds is the
+   head above the grid, the row of child-Category pills, and the Archive.
+
+   The Archive is deliberately not a grid. A Reader opens it to find "what did I
+   write in that month", so it is an index: a month label with the count of what
+   is in it, then one row per Article — the day, the title, the Category. No
+   covers and no excerpts: on an index they are noise, and the hairline between
+   rows is the whole of the decoration. */
+
+/* base.css sets a bare <header> as the top bar (flex, padded, ruled). A page
+   head is a different thing: one column, and the hairline closes it. */
+.reader-page-head {
+  display: block;
+  margin: 0 0 2rem;
+  padding: 0 0 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.reader-page-head h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.reader-page-count {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The child Categories of the one being read: a row of pills, each linking
+   where it names and carrying its own count. */
+.reader-subcategories {
+  margin: 0 0 2rem;
+}
+
+.reader-subcategories-heading {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.reader-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reader-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.875rem;
+}
+
+/* The link fills the pill, so the whole pill is the target a thumb hits. */
+.reader-pill a {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.reader-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The Archive: one block per month. */
+.archive-month {
+  margin: 0 0 2.5rem;
+}
+
+.archive-month-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.archive-month-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.archive-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Two columns on a phone — the day, then the title with its Category under it —
+   and three where there is room for the Category beside the title. The title
+   track is minmax(0, 1fr) so a long title wraps instead of widening the page. */
+.archive-row {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.2rem 0.75rem;
+  align-items: baseline;
+  padding: 0.65rem 0;
+}
+
+.archive-row + .archive-row {
+  border-top: 1px solid var(--border);
+}
+
+.archive-row-date {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.archive-row-title {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.archive-row-category {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+@media (min-width: 64rem) {
+  .reader-page-head h1 {
+    font-size: 3rem;
+  }
+
+  .archive-row {
+    grid-template-columns: 2.5rem minmax(0, 1fr) minmax(0, 12rem);
+  }
+
+  .archive-row-category {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reader-pill a,
+  .archive-row-title,
+  .archive-row-category {
+    transition: color 200ms ease;
+  }
+
+  .reader-pill a:hover,
+  .archive-row-title:hover,
+  .archive-row-category:hover {
+    color: var(--accent);
+  }
+}

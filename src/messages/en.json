@@ -476,7 +476,8 @@
       "empty": "No article has been published yet."
     },
     "list": {
-      "empty": "There is no article here yet."
+      "empty": "There is no article here yet.",
+      "count": "{count} article(s)"
     },
     "category": {
       "heading": "Categories",

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { archiveMonths, formatArchiveMonth, formatPublishDate } from "./article-time";
+import {
+  archiveMonths,
+  formatArchiveDay,
+  formatArchiveMonth,
+  formatPublishDate,
+} from "./article-time";
 
 describe("publish time display", () => {
   it("reads the instant in the site time zone, not UTC", () => {
@@ -21,6 +26,15 @@ describe("publish time display", () => {
   it("labels an archive month", () => {
     expect(formatArchiveMonth(2025, 6, "zh")).toBe("2025年6月");
     expect(formatArchiveMonth(2025, 6, "en")).toBe("June 2025");
+  });
+
+  it("dates an archive row by its day in the site month", () => {
+    expect(formatArchiveDay("2025-06-15T08:30:00.000Z")).toBe("15");
+    expect(formatArchiveDay("2025-06-02T02:00:00.000Z")).toBe("02");
+    // 20:00 UTC on 30 June is already 1 July in Asia/Shanghai, so the row
+    // belongs to July and says 01: the group and the row read the same clock.
+    expect(formatArchiveDay("2025-06-30T20:00:00.000Z")).toBe("01");
+    expect(formatArchiveDay("not-a-date")).toBe("");
   });
 });
 
