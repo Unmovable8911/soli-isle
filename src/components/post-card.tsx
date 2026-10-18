@@ -242,9 +242,11 @@ export function PostGallery({
     pointerScrollLeft.current = event.currentTarget.scrollLeft;
   }
 
-  function open(index: number, track: Element) {
-    // A swipe also produces a click; only a tap that did not scroll opens the lightbox.
-    if (Math.abs(track.scrollLeft - pointerScrollLeft.current) > 4) {
+  function open(index: number, track: Element, fromPointer: boolean) {
+    // A swipe also produces a click; only a tap that did not scroll opens the
+    // lightbox. Keyboard activation (`event.detail === 0`) has no pointerdown
+    // behind it, so the swipe guard must not be applied to it.
+    if (fromPointer && Math.abs(track.scrollLeft - pointerScrollLeft.current) > 4) {
       return;
     }
     setOpened(index);
@@ -278,10 +280,11 @@ export function PostGallery({
               tabIndex={index === current ? 0 : -1}
               aria-haspopup="dialog"
               aria-label={counterText(labels, index + 1, images.length)}
-              onClick={() => {
+              onClick={(event) => {
                 const track = trackRef.current;
                 if (track !== null) {
-                  open(index, track);
+                  // A pointer click carries a click count; keyboard activation is 0.
+                  open(index, track, event.detail > 0);
                 }
               }}
             >
