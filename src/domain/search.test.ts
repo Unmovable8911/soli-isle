@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { escapeLikeTerm, highlightSegments, parseSearchTerms } from "./search";
+import { escapeLikeTerm, highlightSegments, matchSnippet, parseSearchTerms } from "./search";
 
 describe("search terms", () => {
   it("splits on whitespace and keeps the reader's own casing", () => {
@@ -53,6 +53,31 @@ describe("highlighting", () => {
   it("ignores blank terms and blank text", () => {
     expect(highlightSegments("text", ["", " "])).toEqual([{ text: "text", match: false }]);
     expect(highlightSegments("", ["text"])).toEqual([]);
+  });
+});
+
+describe("snippets", () => {
+  const LONG = `first paragraph without the word. ${"filler ".repeat(30)}the needle sits here in the middle of the body. ${"tail ".repeat(30)}last words`;
+
+  it("cuts a window around the first match and marks the ellipses", () => {
+    const snippet = matchSnippet(LONG, ["needle"]);
+    expect(snippet).not.toBeNull();
+    expect(snippet).toContain("the needle sits here");
+    expect(snippet?.startsWith("…")).toBe(true);
+    expect(snippet?.endsWith("…")).toBe(true);
+    expect(snippet?.length).toBeLessThan(LONG.length);
+  });
+
+  it("flattens line breaks so the snippet is one line of prose", () => {
+    expect(matchSnippet("first line\n\nsecond line with needle", ["needle"])).toBe(
+      "first line second line with needle",
+    );
+  });
+
+  it("picks the earliest of several terms, and is null when none matches", () => {
+    expect(matchSnippet("aaa needle one, needle two", ["two", "one"])).toContain("needle one");
+    expect(matchSnippet("nothing here", ["absent"])).toBeNull();
+    expect(matchSnippet("", ["absent"])).toBeNull();
   });
 });
 

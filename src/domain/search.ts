@@ -109,3 +109,63 @@ export function highlightSegments(
 export function escapeLikeTerm(term: string): string {
   return term.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
 }
+
+/** How much prose a snippet keeps on each side of the match. */
+const SNIPPET_RADIUS = 60;
+
+/**
+ * The one line of body prose a search result shows, cut around the first
+ * match, so a body hit is visible instead of merely counted. Line breaks are
+ * flattened (a card shows one line), the cut lands on a space where it can,
+ * and an ellipsis marks each end that was truncated.
+ *
+ * Null when the body holds none of the terms: a title-only hit has nothing to
+ * point at here, and the card falls back to the summary.
+ */
+export function matchSnippet(
+  text: string,
+  terms: readonly string[],
+  radius: number = SNIPPET_RADIUS,
+): string | null {
+  const flat = text.replace(/\s+/g, " ").trim();
+  if (flat.length === 0) {
+    return null;
+  }
+
+  const haystack = flat.toLowerCase();
+  let matchStart = -1;
+  let matchEnd = -1;
+  for (const term of terms) {
+    const needle = term.toLowerCase();
+    if (needle.length === 0) {
+      continue;
+    }
+    const index = haystack.indexOf(needle);
+    if (index === -1 || (matchStart !== -1 && index >= matchStart)) {
+      continue;
+    }
+    matchStart = index;
+    matchEnd = index + needle.length;
+  }
+
+  if (matchStart === -1) {
+    return null;
+  }
+
+  let start = Math.max(0, matchStart - radius);
+  let end = Math.min(flat.length, matchEnd + radius);
+  if (start > 0) {
+    const space = flat.indexOf(" ", start);
+    if (space !== -1 && space < matchStart) {
+      start = space + 1;
+    }
+  }
+  if (end < flat.length) {
+    const space = flat.lastIndexOf(" ", end);
+    if (space > matchEnd) {
+      end = space;
+    }
+  }
+
+  return `${start > 0 ? "…" : ""}${flat.slice(start, end)}${end < flat.length ? "…" : ""}`;
+}

@@ -92,6 +92,28 @@ describe("article list", () => {
     expect(html).toContain("<mark>highlighting</mark>");
   });
 
+  it("highlights search keywords in the title too", () => {
+    const html = renderToStaticMarkup(
+      <ArticleList articles={[CARD]} locale="en" labels={labels} highlight={["Hello"]} />,
+    );
+
+    expect(html).toContain("<mark>Hello</mark>, World");
+  });
+
+  it("shows the body snippet in place of the summary when the card carries one", () => {
+    const html = renderToStaticMarkup(
+      <ArticleList
+        articles={[{ ...CARD, snippet: "…the needle sits here…" }]}
+        locale="en"
+        labels={labels}
+        highlight={["needle"]}
+      />,
+    );
+
+    expect(html).toContain("<mark>needle</mark>");
+    expect(html).not.toContain("syntax highlighting for a static site");
+  });
+
   it("says so when there is nothing to list", () => {
     const html = renderToStaticMarkup(<ArticleList articles={[]} locale="en" labels={labels} />);
 

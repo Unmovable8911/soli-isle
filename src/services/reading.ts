@@ -21,7 +21,7 @@ import {
 import { categoryAncestorPaths, isWithinCategoryPath } from "@/domain/category-path";
 import type { Clock } from "@/domain/clock";
 import { pickLocalised } from "@/domain/localised";
-import { escapeLikeTerm, parseSearchTerms } from "@/domain/search";
+import { escapeLikeTerm, matchSnippet, parseSearchTerms } from "@/domain/search";
 import { loadCategoryViews, listCategoryTree, type CategoryContext } from "./categories";
 import { loadTagViews, listTags, type TagContext } from "./tags";
 import { visibleToReader } from "./visibility";
@@ -65,6 +65,12 @@ export interface ReaderArticleCard {
   publishTime: string | null;
   category: ReaderCategoryRef | null;
   tags: ReaderTagRef[];
+  /**
+   * Only a search result carries one: the body prose around the keyword it
+   * matched, so a body hit is readable on the card. Null (or absent) when the
+   * body holds none of the terms.
+   */
+  snippet?: string | null;
 }
 
 export interface ReaderCategoryNode {
@@ -89,9 +95,14 @@ export interface ReaderTagPage {
   articles: ReaderArticleCard[];
 }
 
+export interface ReaderSearchResult extends ReaderArticleCard {
+  snippet: string | null;
+}
+
 export interface ReaderSearch {
   terms: string[];
-  results: ReaderArticleCard[];
+  /** Ordered best-first; every result carries the snippet that justifies it. */
+  results: ReaderSearchResult[];
 }
 
 export interface ArticleNeighbours {
@@ -375,7 +386,12 @@ export async function searchArticles(
     rows.map((row) => row.article.id),
   );
   const lower = terms.map((term) => term.toLowerCase());
-  const cards = rows.map((row) => toCard(ctx, input.locale, row, tagLinks.get(row.article.id) ?? []));
+  const cards = rows.map(
+    (row): ReaderSearchResult => ({
+      ...toCard(ctx, input.locale, row, tagLinks.get(row.article.id) ?? []),
+      snippet: matchSnippet(row.translation.bodyMarkdown, terms),
+    }),
+  );
 
   // A title hit is what the Reader was probably looking for; the publish order
   // is the tie-break, and Array.prototype.sort is stable to preserve it.

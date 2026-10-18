@@ -431,6 +431,28 @@ describe("search", () => {
     expect(titles(byCategory.results)).toEqual(["Filed"]);
   });
 
+  it("gives a result the body prose around the match, and null when only the title matched", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, {
+      title: "Highlighting in the title only",
+      publishTime: "2025-06-01T00:00:00.000Z",
+    });
+    await seedPublished(fixture, {
+      title: "Plain",
+      publishTime: "2025-06-02T00:00:00.000Z",
+      markdown: "a body that mentions highlighting somewhere",
+    });
+
+    const found = await searchArticles(fixture.reading, { locale: "zh", query: "highlighting" });
+
+    expect(found.results[0]).toMatchObject({
+      title: "Highlighting in the title only",
+      snippet: null,
+    });
+    expect(found.results[1]?.title).toBe("Plain");
+    expect(found.results[1]?.snippet).toContain("mentions highlighting somewhere");
+  });
+
   it("finds a body word that was only ever saved as ProseMirror JSON", async () => {
     const fixture = await createFixture();
     await seedPublished(fixture, {
