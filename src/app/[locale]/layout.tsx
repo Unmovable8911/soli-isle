@@ -4,15 +4,10 @@ import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
 import LocaleSwitcher from "@/components/locale-switcher";
+import { SiteNav } from "@/components/site-nav";
 import { SkipLink } from "@/components/skip-link";
 import ThemeToggle from "@/components/theme-toggle";
 import { isLocale } from "@/config/site";
-import {
-  buildArchivePath,
-  buildCategoryIndexPath,
-  buildFeedPath,
-  buildSearchPath,
-} from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { themeInitScript } from "../theme-init";
 
@@ -70,22 +65,7 @@ export default async function LocaleLayout({
               label={t.chrome.switchLocaleLabel}
             />
           </Suspense>
-          <nav className="site-nav" aria-label={t.reader.nav.categories}>
-            <ul>
-              <li>
-                <Link href={buildCategoryIndexPath(locale)}>{t.reader.nav.categories}</Link>
-              </li>
-              <li>
-                <Link href={buildArchivePath(locale)}>{t.reader.nav.archive}</Link>
-              </li>
-              <li>
-                <Link href={buildFeedPath({ locale })}>{t.reader.nav.feed}</Link>
-              </li>
-              <li>
-                <Link href={buildSearchPath({ locale })}>{t.reader.nav.search}</Link>
-              </li>
-            </ul>
-          </nav>
+          <SiteNav locale={locale} labels={t.reader.nav} />
           <ThemeToggle
             labels={{
               system: t.chrome.themeSystem,
