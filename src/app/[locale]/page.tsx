@@ -1,28 +1,76 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { isLocale, siteConfig } from "@/config/site";
+import { ArticleList } from "@/components/article-list";
+import { isLocale } from "@/config/site";
+import {
+  buildArchivePath,
+  buildCategoryIndexPath,
+  buildSearchPath,
+} from "@/domain/public-paths";
 import { messages } from "@/messages";
+import { getAppContext } from "@/server/app-context";
+import { createReadingContext, listRecentArticles } from "@/services/reading";
 
-export function generateStaticParams() {
-  return siteConfig.locales.map((locale) => ({ locale }));
-}
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-export default async function HomePage({
+const RECENT_LIMIT = 20;
+
+type LocaleParams = { locale: string };
+
+export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string }>;
-}) {
+  params: Promise<LocaleParams>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+  const t = messages[locale];
+  return {
+    title: `${t.reader.home.title} · ${t.meta.title}`,
+    description: t.meta.description,
+  };
+}
+
+export default async function HomePage({ params }: { params: Promise<LocaleParams> }) {
   const { locale } = await params;
   if (!isLocale(locale)) {
     notFound();
   }
 
   const t = messages[locale];
+  const context = getAppContext();
+  const articles = await listRecentArticles(createReadingContext(context.database, context.clock), {
+    locale,
+    limit: RECENT_LIMIT,
+  });
 
   return (
     <main>
-      <h1>{t.home.title}</h1>
-      <p>{t.home.tagline}</p>
+      <h1>{t.reader.home.title}</h1>
+      <p className="reader-lead">{t.reader.home.lead}</p>
+      <nav className="reader-entries" aria-label={t.reader.home.title}>
+        <ul>
+          <li>
+            <Link href={buildCategoryIndexPath(locale)}>{t.reader.nav.categories}</Link>
+          </li>
+          <li>
+            <Link href={buildArchivePath(locale)}>{t.reader.nav.archive}</Link>
+          </li>
+          <li>
+            <Link href={buildSearchPath({ locale })}>{t.reader.nav.search}</Link>
+          </li>
+        </ul>
+      </nav>
+      {articles.length === 0 ? (
+        <p className="reader-empty">{t.reader.home.empty}</p>
+      ) : (
+        <ArticleList articles={articles} locale={locale} labels={t.reader.list} />
+      )}
     </main>
   );
 }

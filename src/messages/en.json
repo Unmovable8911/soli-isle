@@ -212,5 +212,65 @@
         "discardFailed": "The server copy could not be read; the local changes are still here."
       }
     }
+  },
+  "reader": {
+    "nav": {
+      "categories": "Categories",
+      "archive": "Archive",
+      "search": "Search"
+    },
+    "home": {
+      "title": "Recent articles",
+      "lead": "Newest first, the things most recently written.",
+      "empty": "No article has been published yet."
+    },
+    "list": {
+      "empty": "There is no article here yet."
+    },
+    "category": {
+      "heading": "Categories",
+      "empty": "No article in this category yet.",
+      "children": "Subcategories"
+    },
+    "tag": {
+      "heading": "Tag",
+      "empty": "No article carries this tag yet."
+    },
+    "archive": {
+      "title": "Archive",
+      "empty": "No article has been published yet."
+    },
+    "search": {
+      "title": "Search",
+      "label": "Search the articles",
+      "placeholder": "Keywords",
+      "submit": "Search",
+      "hint": "Matches titles, bodies, tags and categories.",
+      "summary": "Found {count} article(s) matching “{query}”.",
+      "empty": "No article matched."
+    },
+    "article": {
+      "publishedOn": "Published",
+      "tags": "Tags",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "fallback": {
+      "notice": "This article has no {requested} version yet; what follows is its {shown} version."
+    },
+    "gone": {
+      "title": "This article was permanently removed",
+      "body": "It is not coming back.",
+      "back": "Back to the home page"
+    },
+    "breadcrumb": {
+      "label": "Breadcrumb"
+    },
+    "lightbox": {
+      "dialog": "Image viewer",
+      "close": "Close",
+      "previous": "Previous image",
+      "next": "Next image"
+    }
   }
 }

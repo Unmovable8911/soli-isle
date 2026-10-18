@@ -114,3 +114,43 @@ describe("article body rendering", () => {
     await expect(renderArticleBody('{"type":"paragraph"}')).resolves.toBe("");
   });
 });
+
+describe("body images on the Reader page", () => {
+  const tall = { original: `/media/${ASSET_ID}/original.png`, width: 900, height: 4000 };
+
+  function imageBody(): string {
+    return doc([{ type: "image", attrs: { src: `/media/${ASSET_ID}/display.webp`, alt: "chart" } }]);
+  }
+
+  it("emits the untouched original and the stored dimensions", async () => {
+    const html = await renderArticleBody(imageBody(), { resolveImage: () => tall });
+
+    expect(html).toContain(`data-original="/media/${ASSET_ID}/original.png"`);
+    expect(html).toContain('width="900"');
+    expect(html).toContain('height="4000"');
+    expect(html).toContain(`srcset="/media/${ASSET_ID}/display.webp 1600w, /media/${ASSET_ID}/thumb.webp 800w"`);
+  });
+
+  it("marks an extremely tall image so CSS can contain it by viewport height", async () => {
+    const html = await renderArticleBody(imageBody(), { resolveImage: () => tall });
+
+    expect(html).toContain('class="article-image article-image--tall"');
+  });
+
+  it("leaves an ordinary aspect ratio at its original proportions", async () => {
+    const html = await renderArticleBody(imageBody(), {
+      resolveImage: () => ({ original: "/x.png", width: 1600, height: 900 }),
+    });
+
+    expect(html).toContain('class="article-image"');
+    expect(html).not.toContain("article-image--tall");
+  });
+
+  it("still renders an image whose Asset cannot be resolved", async () => {
+    const html = await renderArticleBody(imageBody(), { resolveImage: () => null });
+
+    expect(html).toContain(`src="/media/${ASSET_ID}/display.webp"`);
+    expect(html).toContain('class="article-image"');
+    expect(html).not.toContain("data-original");
+  });
+});
