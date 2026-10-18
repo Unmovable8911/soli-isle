@@ -10,7 +10,7 @@
 
 **Blocked by:** 无
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] `tokens.css` 是唯一出现颜色字面量的文件；深浅两套主题都通过对比度断言。
 - [ ] 字体自托管、无外部请求；中英混排的标题与正文在两种语言下都使用预期的字体栈。
@@ -21,3 +21,15 @@
 ## Comments
 
 不要顺手把 `--line` 改名成 `--border` 就算完：`--border` 是装饰发丝线（`#e4e4e7` 对 `#fafafa` 仅 1.22:1），`--border-strong` 才承担 1.4.11 的 3:1 控件边界，测试要按角色分别断言，否则「好看」会悄悄把输入框边框降到 1.2:1。
+
+## Resolution
+
+**resolved** — merge `a233a71` (分支 `ui/01-design-foundation`，6 个提交；合并时 69 文件 / 747 测试)。
+
+- `tokens.css` 是唯一出现颜色字面量的文件；八角色深浅两套，七个对比度配对（含 `on-accent/accent`、`fg/surface`、`muted/surface`、`border-strong/bg`）在两个主题下都由契约测试逐条断言。
+- 契约测试从「形同虚设」变成真门禁：控件边界原先接受 `var(--line) OR var(--muted)`，现在**只**接受 `--border-strong`；另加一条**正向**断言要求装饰线必须来自 `--border`。十个守卫逐条做过变异验证。
+- 字体自托管（Lora Variable / Inter Variable latin 子集 + OFL 文本），`font-display: swap`，无外部请求；`:lang(zh)` 单独调行高与字距。
+- `drizzle/0006_article_cover.sql`：`cover_asset_id` 可空外键 `on delete set null`；迁移可从空库一次跑通。**发现 drizzle-kit 会静默丢掉 ON DELETE set null**，SQL 手工修正并与 snapshot 对齐。
+- `cover` 在卡片 DTO 上是可选的，`article-list.test.tsx` 的夹具无封面仍可编译；`syncArticleAssets` 现在也登记封面，选中封面不会落进后台「未引用图片」。
+- `npm run seed:demo` 可重复执行、`NODE_ENV=production` 拒绝执行（实测退出码 1 且不碰数据库）、图片经真实 sharp 管线生成变体。
+- 顺带修掉一个真实缺陷：运行时镜像从未 `COPY public/`，自托管字体会在生产容器里 404。

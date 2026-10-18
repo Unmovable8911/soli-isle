@@ -12,7 +12,7 @@
 
 **Blocked by:** 01, 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] 编辑器写作区在 1280px 下宽度与改造前一致（不因外壳变化而变窄）。
 - [ ] 封面选图走现有资源库流程；移除封面后文章回到无封面版式。
@@ -22,3 +22,14 @@
 ## Comments
 
 后台不装「编辑式」的壳：它的第一需求是写作宽度与信息密度。统一感靠 token、字体、按钮、表格与空状态，不靠左栏。
+
+## Resolution
+
+**resolved** — merge `57382f1` (分支 `ui/07-admin-and-login`；合并时 86 文件 / 869 测试)。
+
+- 56px sticky 横向顶栏（wordmark + 后台徽标 + 六个入口 + 退出，当前项 `aria-current`），不做左栏（ADR-0001）。
+- 六个列表/管理页统一页头（H1 + 描述 + 右侧主操作）；表格 12px 大写表头、发丝线行、小型幽灵按钮；发布状态为文字 + `currentColor` 圆点，不引入新色；表单 12px 标签、`--border-strong` 输入框。
+- 编辑器**只换视觉不重排**：**实测 1280px 下写作列仍为 896px**（`grid-template-columns: 896px 320px`），与改造前一致。
+- 元信息面板新增「封面」控件，复用现有 asset picker，经 `updateArticleMeta → syncArticleAssets` 登记引用；移除后回到无封面版式（服务与 DTO 层已有测试）。
+- 登录页：页面底上居中 24rem 卡片，wordmark 在上。
+- 既有后台测试（catalogue、dashboard、confirm dialog、slash menu）未改弱、全部通过。
