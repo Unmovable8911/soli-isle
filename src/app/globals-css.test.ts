@@ -345,6 +345,7 @@ const DECORATIVE_BORDERS = [
   ".article-locales a",
   ".reader-article-nav a",
   ".article-body details",
+  ".article-toc",
 ] as const;
 
 describe("control boundaries", () => {
@@ -487,7 +488,7 @@ describe("token registration", () => {
  * tracking, never a sentence. Registering a selector here is the price of going
  * under the floor, and the other two properties are checked as well.
  */
-const SMALL_TEXT: readonly string[] = [];
+const SMALL_TEXT: readonly string[] = [".article-kicker"];
 
 describe("the type floor", () => {
   it("never sets type below 12px without a registered kicker", () => {
@@ -593,6 +594,57 @@ describe("the public shell", () => {
 });
 
 /** The stack of at-rule preludes enclosing a position in the stylesheet. */
+/**
+ * The Article page's two distances: the column the page is set in, and the
+ * measure the sentences are set to. A cover earns the whole column; prose does
+ * not, and the contents sit on the measure so a link and its paragraph align.
+ */
+describe("the Article page", () => {
+  it("sets the page in a 896px column and the prose to a 65ch measure", () => {
+    expect(declarations(blockBody(".reader-article")).get("max-width")).toBe("56rem");
+    expect(declarations(blockBody(".article-body")).get("max-width")).toBe("65ch");
+  });
+
+  it("sets body text at 18px on a 1.78 line", () => {
+    const prose = declarations(blockBody(".article-body"));
+    expect(prose.get("font-size")).toBe("1.125rem");
+    expect(prose.get("line-height")).toBe("1.78");
+  });
+
+  it("shows the cover whole, inside the viewport and never cropped", () => {
+    const cover = declarations(blockBody(".reader-article-cover img"));
+    expect(cover.get("max-height")).toBe("80vh");
+    // A crop would win the ratio back by throwing the picture away.
+    expect(cover.get("object-fit")).toBeUndefined();
+    expect(declarations(blockBody(".reader-article-cover")).get("margin")).toContain("auto");
+  });
+
+  it("still caps a very tall body image by viewport height, uncropped", () => {
+    const tall = declarations(blockBody(".article-body .article-image--tall"));
+    expect(tall.get("max-height")).toMatch(/vh$/);
+    expect(tall.get("object-fit")).toBeUndefined();
+  });
+
+  it("sets the kicker as a micro-label rather than a sentence", () => {
+    const kicker = declarations(blockBody(".article-kicker"));
+    expect(kicker.get("font-size")).toBe("0.625rem");
+    expect(kicker.get("text-transform")).toBe("uppercase");
+    expect(kicker.get("letter-spacing")).toBe("0.1em");
+  });
+
+  it("stops an anchor below the sticky bar instead of under it", () => {
+    // The bar is 4rem (asserted above); an anchor that ignores it lands the
+    // heading underneath, which reads as a broken link.
+    const heading = declarations(blockBody(".article-body h2"));
+    expect(Number.parseFloat(heading.get("scroll-margin-top") ?? "0")).toBeGreaterThanOrEqual(4);
+  });
+
+  it("indents the contents two levels, on the same measure as the prose", () => {
+    expect(declarations(blockBody(".article-toc")).get("max-width")).toBe("65ch");
+    expect(declarations(blockBody(".article-toc-sublist")).get("padding-left")).toBe("1rem");
+  });
+});
+
 function enclosingAtRules(index: number): string[] {
   const stack: string[] = [];
   let prelude = "";
