@@ -236,15 +236,18 @@ describe("article translations", () => {
     const { articles, clock } = await createFixture();
     const article = await createArticleDraft(articles, { title: "Draft", locale: "zh" });
 
+    let version = article.translations[0].version;
     for (const title of ["one", "two", "three"]) {
       clock.advance(500);
-      await saveArticleTranslation(articles, {
+      const outcome = await saveArticleTranslation(articles, {
         articleId: article.id,
         locale: "zh",
+        baseVersion: version,
         title,
         bodyJson: DOC,
         bodyMarkdown: "hello",
       });
+      if (outcome.ok) version = outcome.article.translations[0].version;
     }
 
     await expect(listRevisions(articles, article.id)).resolves.toEqual([]);
@@ -259,6 +262,7 @@ describe("article translations", () => {
     await saveArticleTranslation(articles, {
       articleId: article.id,
       locale: "zh",
+      baseVersion: article.translations[0].version,
       title: "Images",
       bodyJson: bodyWithImage(assetId),
       bodyMarkdown: `![](/media/${assetId}/display.webp)`,
@@ -284,6 +288,7 @@ describe("article translations", () => {
     await saveArticleTranslation(articles, {
       articleId: article.id,
       locale: "zh",
+      baseVersion: article.translations[0].version,
       title: "Images",
       bodyJson: DOC,
       bodyMarkdown: "hello",
@@ -292,6 +297,165 @@ describe("article translations", () => {
     const assets = createAssetContext(harness.database, clock, harness.resources.rootDir);
     const listed = await listAssets(assets);
     expect(listed.find((asset) => asset.id === assetId)?.references).toEqual([]);
+  });
+});
+
+describe("optimistic concurrency on a translation", () => {
+  async function draft(fixture: Fixture): Promise<{ articleId: string; version: number }> {
+    const article = await createArticleDraft(fixture.articles, {
+      title: "Base",
+      locale: "zh",
+      bodyJson: DOC,
+      bodyMarkdown: "hello",
+    });
+    const translation = article.translations[0];
+    if (translation === undefined) {
+      throw new Error("The draft has no translation");
+    }
+    return { articleId: article.id, version: translation.version };
+  }
+
+  it("starts a new translation version at 1 and bumps it on every save", async () => {
+    const fixture = await createFixture();
+    const { articleId, version } = await draft(fixture);
+
+    const first = await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: version,
+      title: "Second",
+    });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    expect(first.article.translations[0]?.version).toBe(2);
+
+    const second = await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: 2,
+      title: "Third",
+    });
+    expect(second.ok).toBe(true);
+    if (!second.ok) return;
+    expect(second.article.translations[0]?.version).toBe(3);
+  });
+
+  it("refuses a save derived from an older version and returns the server copy", async () => {
+    const fixture = await createFixture();
+    const { articleId, version } = await draft(fixture);
+    await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: version,
+      title: "Server wins",
+      bodyJson: '{"type":"doc","content":[{"type":"paragraph"}]}',
+      bodyMarkdown: "server",
+    });
+
+    const outcome = await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: version,
+      title: "Local loses",
+    });
+
+    expect(outcome).toEqual({
+      ok: false,
+      reason: "stale-content",
+      current: expect.objectContaining({
+        version: 2,
+        title: "Server wins",
+        bodyJson: '{"type":"doc","content":[{"type":"paragraph"}]}',
+      }),
+    });
+  });
+
+  it("leaves the stored translation untouched when a stale save is refused", async () => {
+    const fixture = await createFixture();
+    const { articleId, version } = await draft(fixture);
+    await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: version,
+      title: "Server wins",
+    });
+
+    await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: version,
+      title: "Local loses",
+      bodyJson: '{"type":"doc","content":[{"type":"heading"}]}',
+    });
+
+    const stored = await getArticle(fixture.articles, articleId);
+    expect(stored?.translations[0]).toMatchObject({
+      title: "Server wins",
+      bodyJson: DOC,
+      version: 2,
+    });
+  });
+
+  it("refuses a save whose base version is ahead of the server", async () => {
+    const fixture = await createFixture();
+    const { articleId } = await draft(fixture);
+
+    const outcome = await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: 99,
+      title: "From the future",
+    });
+
+    expect(outcome).toEqual({
+      ok: false,
+      reason: "stale-content",
+      current: expect.objectContaining({ version: 1, title: "Base" }),
+    });
+  });
+
+  it("bumps the version when a revision is restored so pending editors cannot overwrite it", async () => {
+    const fixture = await createFixture();
+    const { articleId, version } = await draft(fixture);
+    await publishArticle(fixture.articles, { articleId, publishTime: null });
+    const [revision] = await listRevisions(fixture.articles, articleId);
+    if (revision === undefined) {
+      throw new Error("Publishing should snapshot the Article");
+    }
+    await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: version,
+      title: "Before restore",
+    });
+
+    const restored = await restoreRevision(fixture.articles, { articleId, revisionId: revision.id });
+    expect(restored.ok).toBe(true);
+    if (!restored.ok) return;
+    expect(restored.article.translations[0]).toMatchObject({ title: "Base", version: 3 });
+
+    const stale = await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: 2,
+      title: "Before restore",
+    });
+    expect(stale).toMatchObject({ ok: false, reason: "stale-content" });
+  });
+
+  it("does not create a revision snapshot when a stale save is refused", async () => {
+    const fixture = await createFixture();
+    const { articleId, version } = await draft(fixture);
+    await saveArticleTranslation(fixture.articles, { articleId, locale: "zh", baseVersion: version });
+
+    await saveArticleTranslation(fixture.articles, {
+      articleId,
+      locale: "zh",
+      baseVersion: version,
+      title: "Local loses",
+    });
+
+    await expect(listRevisions(fixture.articles, articleId)).resolves.toEqual([]);
   });
 });
 
@@ -541,6 +705,7 @@ describe("revisions", () => {
     await saveArticleTranslation(articles, {
       articleId: article.id,
       locale: "zh",
+      baseVersion: article.translations[0].version,
       title: "After",
       bodyJson: DOC,
       bodyMarkdown: "hello",
@@ -598,6 +763,7 @@ describe("revisions", () => {
     await saveArticleTranslation(articles, {
       articleId: article.id,
       locale: "zh",
+      baseVersion: article.translations[0].version,
       title: "Second title",
       bodyJson: '{"type":"doc","content":[{"type":"paragraph","text":"changed"}]}',
       bodyMarkdown: "changed",

@@ -5,4 +5,7 @@ export const articleConfig = {
   automaticRevisionKeep: 20,
   /** Client autosave cadence: browser-local first, then this throttle to the server. */
   autosaveThrottleMs: 2_000,
+  /** A failed sync retries with this backoff, doubling up to the cap. */
+  syncRetryBaseMs: 2_000,
+  syncRetryMaxMs: 30_000,
 } as const;

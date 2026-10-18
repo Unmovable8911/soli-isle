@@ -120,6 +120,8 @@ export const articleTranslation = sqliteTable(
     summary: text("summary").notNull(),
     bodyJson: text("body_json").notNull(),
     bodyMarkdown: text("body_markdown").notNull(),
+    /** Bumped by every write; the editor saves against the version it read. */
+    version: integer("version").notNull().default(1),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },

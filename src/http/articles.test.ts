@@ -27,6 +27,8 @@ interface HttpFixture {
   cookie: string;
 }
 
+const DOC = '{"type":"doc","content":[{"type":"paragraph","text":"hello"}]}';
+
 const fixtures: HttpFixture[] = [];
 
 async function createHttpFixture(): Promise<HttpFixture> {
@@ -209,14 +211,14 @@ describe("article write API", () => {
       adminRequest(`/api/admin/articles/${article.id}/translations/zh`, {
         method: "PUT",
         cookie,
-        body: JSON.stringify({ title: "Saved twice", bodyMarkdown: "body" }),
+        body: JSON.stringify({ baseVersion: 1, title: "Saved twice", bodyMarkdown: "body" }),
       }),
       article.id,
       "zh",
     );
     expect(saved.status).toBe(200);
     await expect(saved.json()).resolves.toMatchObject({
-      article: { translations: [{ title: "Saved twice" }] },
+      article: { translations: [{ title: "Saved twice", version: 2 }] },
     });
 
     const duplicate = await addTranslationResponse(
@@ -231,6 +233,104 @@ describe("article write API", () => {
     );
     expect(duplicate.status).toBe(409);
     await expect(duplicate.json()).resolves.toEqual({ error: "duplicate-locale" });
+  });
+
+  it("answers 409 with the server copy when the save was derived from an older version", async () => {
+    const { articles, auth, cookie } = await createHttpFixture();
+    const created = await createArticleResponse(
+      articles,
+      auth,
+      adminRequest("/api/admin/articles", {
+        method: "POST",
+        cookie,
+        body: JSON.stringify({ title: "Base", locale: "zh", bodyJson: DOC }),
+      }),
+    );
+    const { article } = (await created.json()) as { article: { id: string } };
+
+    const serverSave = await saveTranslationResponse(
+      articles,
+      auth,
+      adminRequest(`/api/admin/articles/${article.id}/translations/zh`, {
+        method: "PUT",
+        cookie,
+        body: JSON.stringify({ baseVersion: 1, title: "Server wins", bodyJson: DOC }),
+      }),
+      article.id,
+      "zh",
+    );
+    expect(serverSave.status).toBe(200);
+
+    const stale = await saveTranslationResponse(
+      articles,
+      auth,
+      adminRequest(`/api/admin/articles/${article.id}/translations/zh`, {
+        method: "PUT",
+        cookie,
+        body: JSON.stringify({ baseVersion: 1, title: "Local loses" }),
+      }),
+      article.id,
+      "zh",
+    );
+
+    expect(stale.status).toBe(409);
+    await expect(stale.json()).resolves.toMatchObject({
+      error: "stale-content",
+      current: { locale: "zh", title: "Server wins", bodyJson: DOC, version: 2 },
+    });
+
+    const reloaded = await saveTranslationResponse(
+      articles,
+      auth,
+      adminRequest(`/api/admin/articles/${article.id}/translations/zh`, {
+        method: "PUT",
+        cookie,
+        body: JSON.stringify({ baseVersion: 2, title: "Caught up" }),
+      }),
+      article.id,
+      "zh",
+    );
+    expect(reloaded.status).toBe(200);
+  });
+
+  it("rejects a translation save that carries no base version with 400", async () => {
+    const { articles, auth, cookie } = await createHttpFixture();
+    const created = await createArticleResponse(
+      articles,
+      auth,
+      adminRequest("/api/admin/articles", {
+        method: "POST",
+        cookie,
+        body: JSON.stringify({ title: "Base", locale: "zh" }),
+      }),
+    );
+    const { article } = (await created.json()) as { article: { id: string } };
+
+    for (const body of [{ title: "No version" }, { baseVersion: "2", title: "Stringy" }]) {
+      const response = await saveTranslationResponse(
+        articles,
+        auth,
+        adminRequest(`/api/admin/articles/${article.id}/translations/zh`, {
+          method: "PUT",
+          cookie,
+          body: JSON.stringify(body),
+        }),
+        article.id,
+        "zh",
+      );
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({ error: "invalid-base-version" });
+    }
+
+    const detail = await getArticleResponse(
+      articles,
+      auth,
+      adminRequest(`/api/admin/articles/${article.id}`, { cookie }),
+      article.id,
+    );
+    await expect(detail.json()).resolves.toMatchObject({
+      article: { translations: [{ title: "Base", version: 1 }] },
+    });
   });
 
   it("rejects an unsupported locale in the path with 400", async () => {

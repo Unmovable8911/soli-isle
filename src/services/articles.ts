@@ -57,6 +57,8 @@ export interface ArticleTranslationSummary {
   locale: Locale;
   title: string;
   updatedAt: string;
+  /** The version an editor must save against. */
+  version: number;
 }
 
 export interface ArticleTranslationView extends ArticleTranslationSummary {
@@ -96,22 +98,28 @@ export interface ArticleRevisionView {
   createdAt: string;
 }
 
-export type ArticleMutationFailure = {
-  ok: false;
-  reason:
-    | "not-found"
-    | "duplicate-locale"
-    | "duplicate-slug"
-    | "invalid-slug"
-    | "invalid-locale"
-    | "invalid-publish-time"
-    | "unknown-category"
-    | "unknown-tag"
-    | "default-locale"
-    | "last-translation"
-    | "not-published"
-    | "not-archived";
-};
+export type ArticleMutationFailure =
+  | {
+      ok: false;
+      reason:
+        | "not-found"
+        | "duplicate-locale"
+        | "duplicate-slug"
+        | "invalid-slug"
+        | "invalid-locale"
+        | "invalid-publish-time"
+        | "unknown-category"
+        | "unknown-tag"
+        | "default-locale"
+        | "last-translation"
+        | "not-published"
+        | "not-archived";
+    }
+  /**
+   * The save was derived from a version the server has moved past. Nothing was
+   * written; `current` is the server copy the editor must show the Author.
+   */
+  | { ok: false; reason: "stale-content"; current: ArticleTranslationView };
 
 export type ArticleMutation = { ok: true; article: ArticleDetail } | ArticleMutationFailure;
 
@@ -161,7 +169,7 @@ function localeOrder(locale: Locale): number {
 }
 
 function toTranslationSummary(row: ArticleTranslationRow): ArticleTranslationSummary {
-  return { locale: row.locale, title: row.title, updatedAt: row.updatedAt };
+  return { locale: row.locale, title: row.title, updatedAt: row.updatedAt, version: row.version };
 }
 
 function toTranslationView(row: ArticleTranslationRow): ArticleTranslationView {
@@ -169,6 +177,7 @@ function toTranslationView(row: ArticleTranslationRow): ArticleTranslationView {
     locale: row.locale,
     title: row.title,
     updatedAt: row.updatedAt,
+    version: row.version,
     summary: row.summary,
     bodyJson: row.bodyJson,
     bodyMarkdown: row.bodyMarkdown,
@@ -350,6 +359,7 @@ export async function createArticleDraft(
         summary: input.summary ?? "",
         bodyJson,
         bodyMarkdown: input.bodyMarkdown ?? "",
+        version: 1,
         createdAt,
         updatedAt: createdAt,
       })
@@ -447,6 +457,7 @@ export async function addArticleTranslation(
         summary: input.summary ?? "",
         bodyJson,
         bodyMarkdown: input.bodyMarkdown ?? "",
+        version: 1,
         createdAt: now,
         updatedAt: now,
       })
@@ -463,6 +474,8 @@ export async function saveArticleTranslation(
   input: {
     articleId: string;
     locale: Locale;
+    /** The version this save was derived from; a different stored version refuses the write. */
+    baseVersion: number;
     title?: string;
     summary?: string;
     bodyJson?: string;
@@ -483,6 +496,9 @@ export async function saveArticleTranslation(
   if (existing === undefined) {
     return { ok: false, reason: "not-found" };
   }
+  if (existing.version !== input.baseVersion) {
+    return { ok: false, reason: "stale-content", current: toTranslationView(existing) };
+  }
   if (input.bodyJson !== undefined && !isRichTextDocument(input.bodyJson)) {
     throw new InvalidArticleBodyError();
   }
@@ -498,6 +514,7 @@ export async function saveArticleTranslation(
         bodyJson,
         bodyMarkdown:
           input.bodyMarkdown ?? (input.bodyJson === undefined ? existing.bodyMarkdown : ""),
+        version: existing.version + 1,
         updatedAt: now,
       })
       .where(
@@ -924,6 +941,7 @@ export async function restoreRevision(
         summary: revision.summary,
         bodyJson: revision.bodyJson,
         bodyMarkdown: revision.bodyMarkdown,
+        version: 1,
         createdAt: now,
         updatedAt: now,
       })
@@ -935,6 +953,8 @@ export async function restoreRevision(
         summary: revision.summary,
         bodyJson: revision.bodyJson,
         bodyMarkdown: revision.bodyMarkdown,
+        // A pending editor still holding the pre-restore version must not win.
+        version: existing.version + 1,
         updatedAt: now,
       })
       .where(

@@ -92,6 +92,7 @@ describe("shared test harness", () => {
       "body_markdown",
       "created_at",
       "updated_at",
+      "version",
     ]);
     expect(columnsOf(harness, "article_revision")).toEqual([
       "id",
