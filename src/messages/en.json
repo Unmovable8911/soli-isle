@@ -81,6 +81,122 @@
         "uploading": "Uploading…",
         "uploadFailed": "Upload failed. Please try again."
       }
+    },
+    "articles": {
+      "title": "Articles",
+      "description": "Articles are the site's long-form content: title, Slug, Category and Tags, built to be indexed.",
+      "newArticle": "New article",
+      "empty": "No articles yet.",
+      "open": "Open",
+      "loadFailed": "The article could not be loaded.",
+      "saveFailed": "Saving failed; your changes are kept locally.",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "localSave": "Saved locally, waiting to sync",
+      "backToList": "Back to articles",
+      "untitled": "(untitled)",
+      "list": {
+        "title": "Title",
+        "slug": "Slug",
+        "state": "State",
+        "updatedAt": "Last updated",
+        "languages": "Locales",
+        "publishTime": "Publish Time"
+      },
+      "state": {
+        "draft": "Draft",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "visibility": {
+        "visible": "Visible to Readers",
+        "scheduled": "Waiting for its Publish Time",
+        "draft": "Draft only",
+        "archived": "Archived"
+      },
+      "editor": {
+        "titlePlaceholder": "Title",
+        "bodyPlaceholder": "Start writing; type / to insert a block…",
+        "linkPrompt": "Link address",
+        "imageAltPrompt": "Image description (optional)",
+        "codeLanguagePrompt": "Code language (optional)",
+        "toolbar": {
+          "bold": "Bold",
+          "italic": "Italic",
+          "underline": "Underline",
+          "strike": "Strikethrough",
+          "highlight": "Highlight",
+          "heading2": "Heading 2",
+          "heading3": "Heading 3",
+          "bulletList": "Bullet list",
+          "orderedList": "Numbered list",
+          "taskList": "Task list",
+          "blockquote": "Quote",
+          "codeBlock": "Code block",
+        "codeLanguage": "Code language",
+          "link": "Link",
+          "image": "Insert image",
+          "horizontalRule": "Divider",
+          "undo": "Undo",
+          "redo": "Redo"
+        }
+      },
+      "slash": {
+        "empty": "No matching block",
+        "paragraph": "Text",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "bulletList": "Bullet list",
+        "orderedList": "Numbered list",
+        "taskList": "Task list",
+        "blockquote": "Quote",
+        "codeBlock": "Code block",
+        "image": "Image",
+        "horizontalRule": "Divider"
+      },
+      "meta": {
+        "title": "Title",
+        "slug": "Slug",
+        "summary": "Summary",
+        "category": "Category",
+        "noCategory": "No category",
+        "tags": "Tags",
+        "noTags": "No tags yet",
+        "defaultLocale": "Default Locale",
+        "newCategoryPlaceholder": "New category name",
+        "newTagPlaceholder": "New tag name",
+        "create": "Create",
+        "creating": "Creating…",
+        "createFailed": "Could not create it."
+      },
+      "languages": {
+        "label": "Locales",
+        "add": "Add this Locale version",
+        "missing": "No text in this Locale yet"
+      },
+      "preview": {
+        "open": "Preview",
+        "close": "Close preview",
+        "title": "Preview",
+        "loading": "Rendering…",
+        "loadFailed": "The preview could not be rendered."
+      },
+      "publish": {
+        "panel": "Publication",
+        "publishNow": "Publish now",
+        "publishTime": "Publish Time (site timezone)",
+        "schedule": "Schedule",
+        "archive": "Archive",
+        "unarchive": "Unarchive",
+        "delete": "Delete permanently",
+        "confirmDelete": "Confirm permanent deletion",
+        "cancel": "Cancel",
+        "publishFailed": "Publishing failed.",
+        "deleteFailed": "Deletion failed.",
+        "notPublished": "Not published yet",
+        "currentPublishTime": "Publish Time",
+        "hintScheduled": "Readers see it once its Publish Time arrives."
+      }
     }
   }
 }

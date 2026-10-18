@@ -20,13 +20,30 @@
     "auth:reset-password": "tsx scripts/reset-password.ts"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.8.0",
+    "@shikijs/langs": "^4.5.0",
+    "@shikijs/themes": "^4.5.0",
+    "@tiptap/core": "^3.32.0",
+    "@tiptap/extension-highlight": "^3.32.0",
+    "@tiptap/extension-image": "^3.32.0",
+    "@tiptap/extension-list": "^3.32.0",
+    "@tiptap/extension-text-style": "^3.32.0",
+    "@tiptap/extensions": "^3.32.0",
+    "@tiptap/markdown": "^3.32.0",
+    "@tiptap/pm": "^3.32.0",
+    "@tiptap/react": "^3.32.0",
+    "@tiptap/starter-kit": "^3.32.0",
+    "@tiptap/static-renderer": "^3.32.0",
+    "@tiptap/suggestion": "^3.32.0",
     "argon2": "^0.45.1",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.44.7",
     "next": "^15.5.7",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "sharp": "^0.35.5"
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.5",
+    "shiki": "^4.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

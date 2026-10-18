@@ -22,6 +22,13 @@
       "when": 1792283437466,
       "tag": "0002_right_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792288543497,
+      "tag": "0003_ambitious_orphan",
+      "breakpoints": true
     }
   ]
 }

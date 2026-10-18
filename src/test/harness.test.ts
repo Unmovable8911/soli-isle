@@ -24,12 +24,22 @@ describe("shared test harness", () => {
       .map((row) => row.name);
 
     expect(tables).toEqual([
+      "article",
+      "article_revision",
+      "article_slug",
+      "article_slug_history",
+      "article_tag",
+      "article_translation",
       "asset",
       "asset_reference",
       "asset_variant",
       "auth_audit_log",
+      "category",
+      "category_translation",
       "health_check",
       "session",
+      "tag",
+      "tag_translation",
     ]);
     expect(columnsOf(harness, "health_check")).toEqual(["id", "touched_at"]);
     expect(columnsOf(harness, "session")).toEqual(["id", "created_at", "last_seen_at", "expires_at"]);
@@ -64,6 +74,54 @@ describe("shared test harness", () => {
       "content_kind",
       "content_id",
     ]);
+    expect(columnsOf(harness, "article")).toEqual([
+      "id",
+      "default_locale",
+      "publication_state",
+      "publish_time",
+      "category_id",
+      "created_at",
+      "updated_at",
+    ]);
+    expect(columnsOf(harness, "article_translation")).toEqual([
+      "article_id",
+      "locale",
+      "title",
+      "summary",
+      "body_json",
+      "body_markdown",
+      "created_at",
+      "updated_at",
+    ]);
+    expect(columnsOf(harness, "article_revision")).toEqual([
+      "id",
+      "article_id",
+      "locale",
+      "kind",
+      "title",
+      "summary",
+      "body_json",
+      "body_markdown",
+      "created_at",
+    ]);
+    expect(columnsOf(harness, "article_slug")).toEqual(["slug", "article_id", "assigned_at"]);
+    expect(columnsOf(harness, "article_slug_history")).toEqual([
+      "slug",
+      "article_id",
+      "replaced_at",
+    ]);
+    expect(columnsOf(harness, "article_tag")).toEqual(["article_id", "tag_id"]);
+    expect(columnsOf(harness, "category")).toEqual([
+      "id",
+      "parent_id",
+      "slug",
+      "path",
+      "position",
+      "created_at",
+    ]);
+    expect(columnsOf(harness, "category_translation")).toEqual(["category_id", "locale", "name"]);
+    expect(columnsOf(harness, "tag")).toEqual(["id", "slug", "created_at"]);
+    expect(columnsOf(harness, "tag_translation")).toEqual(["tag_id", "locale", "name"]);
   });
 
   it("can re-run migrations without changing the established schema", async () => {
