@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ArticleList } from "@/components/article-list";
+import { ArticleGrid } from "@/components/article-grid";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { CategoryPills } from "@/components/category-pills";
+import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { buildCategoryIndexPath, buildCategoryPath } from "@/domain/public-paths";
@@ -91,23 +92,18 @@ export default async function CategoryPage({ params }: { params: Promise<Categor
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <Breadcrumbs label={t.reader.breadcrumb.label} items={breadcrumbs} />
-      <h1>{found.category.name}</h1>
+      <ReaderPageHead
+        locale={locale}
+        title={found.category.name}
+        count={found.category.count}
+      />
       {found.category.children.length > 0 && (
-        <section className="reader-children">
-          <h2>{t.reader.category.children}</h2>
-          <ul>
-            {found.category.children.map((child) => (
-              <li key={child.id}>
-                <Link href={buildCategoryPath({ locale, categoryPath: child.path })}>
-                  {child.name}
-                </Link>
-                <span className="reader-count">{child.count}</span>
-              </li>
-            ))}
-          </ul>
+        <section className="reader-subcategories">
+          <h2 className="reader-subcategories-heading">{t.reader.category.children}</h2>
+          <CategoryPills categories={found.category.children} locale={locale} />
         </section>
       )}
-      <ArticleList articles={found.articles} locale={locale} labels={t.reader.list} />
+      <ArticleGrid articles={found.articles} locale={locale} empty={t.reader.list.empty} />
     </main>
   );
 }
@@ -121,20 +117,11 @@ async function CategoryIndex({ locale }: { locale: "zh" | "en" }) {
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <h1>{t.reader.category.heading}</h1>
+      <ReaderPageHead locale={locale} title={t.reader.category.heading} />
       {tree.length === 0 ? (
         <p className="reader-empty">{t.reader.list.empty}</p>
       ) : (
-        <ul className="reader-children">
-          {tree.map((node) => (
-            <li key={node.id}>
-              <Link href={buildCategoryPath({ locale, categoryPath: node.path })}>
-                {node.name}
-              </Link>
-              <span className="reader-count">{node.count}</span>
-            </li>
-          ))}
-        </ul>
+        <CategoryPills categories={tree} locale={locale} />
       )}
     </main>
   );

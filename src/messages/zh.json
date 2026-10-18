@@ -476,7 +476,8 @@
       "empty": "还没有发布任何长文。"
     },
     "list": {
-      "empty": "这里还没有长文。"
+      "empty": "这里还没有长文。",
+      "count": "{count} 篇长文"
     },
     "category": {
       "heading": "分类",

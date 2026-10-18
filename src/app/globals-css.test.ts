@@ -379,6 +379,10 @@ const CONTROL_BORDERS = [
  */
 const DECORATIVE_BORDERS = [
   ".article-card",
+  ".reader-page-head",
+  ".reader-pill",
+  ".archive-month-head",
+  ".archive-row + .archive-row",
   ".feed-heading",
   ".post-card + .post-card",
   ".post-tag",
@@ -575,6 +579,21 @@ const READER_CONTROLS = [
   ".lightbox-previous",
   ".lightbox-next",
   ".reader-tags a",
+  ".reader-pill",
+] as const;
+
+/**
+ * Links a listing draws. The browser's own blue underline is the tell of a page
+ * nobody styled, so every one of these names its ink and drops the underline;
+ * the hover colour is where a Reader learns it is live.
+ */
+const LIST_ANCHORS = [
+  ".breadcrumbs a",
+  ".article-card-title a",
+  ".article-card-kicker a",
+  ".reader-pill a",
+  ".archive-row-title",
+  ".archive-row-category",
 ] as const;
 
 /** Reader surfaces that render at phone width; 0.875rem is the 14px floor. */
@@ -1071,6 +1090,127 @@ describe("the front page", () => {
     expect(declarations(blockBody(".article-card")).get("min-width")).toBe("0");
     expect(declarations(blockBody(".article-card-title")).get("overflow-wrap")).toBe("anywhere");
     expect(declarations(blockBody(".article-card-cover img")).get("width")).toBe("100%");
+  });
+});
+
+/**
+ * The browse surfaces — a Category, a Tag, the search results — are the front
+ * page's grid under a different head, and the Archive is their opposite: an
+ * index whose density is the feature. Both are geometry, so both are pinned
+ * here rather than left to a screenshot.
+ */
+describe("the browse surfaces", () => {
+  it("sets the page head at 36, then 48px", () => {
+    expect(phoneValue(".reader-page-head h1", "font-size")).toBe("2.25rem");
+    expect(inAtRule(WIDE, ".reader-page-head h1")).toContain("font-size: 3rem");
+  });
+
+  it("counts under the title as a micro-label rather than a sentence", () => {
+    const count = declarations(blockBody(".reader-page-count"));
+    expect(count.get("font-size")).toBe("0.75rem");
+    expect(count.get("text-transform")).toBe("uppercase");
+    expect(count.get("letter-spacing")).toBe("0.1em");
+    expect(count.get("color")).toBe("var(--muted)");
+  });
+
+  it("ends the head with the hairline the listing grows out of", () => {
+    expect(drawnBorder(blockBody(".reader-page-head"))).toBe("1px solid var(--border)");
+    // base.css pads a bare header as a top bar; a page head is one column, and
+    // the hairline it already draws is the only edge it wants.
+    const head = declarations(blockBody(".reader-page-head"));
+    expect(head.get("display")).toBe("block");
+    expect(head.get("padding")).toBe("0 0 1.5rem");
+  });
+
+  it("marks a search hit in the accent, not in the browser's yellow", () => {
+    const mark = declarations(blockBody(".article-card mark"));
+    expect(mark.get("background")).toContain("var(--accent)");
+    expect(mark.get("color")).toBe("var(--fg)");
+  });
+
+  it("sets a child Category as a pill, not as a second list", () => {
+    expect(declarations(blockBody(".reader-pills")).get("flex-wrap")).toBe("wrap");
+    expect(declarations(blockBody(".reader-pill")).get("border-radius")).toBe("999px");
+  });
+
+  it("wraps a long name in the head or a pill rather than widening the page", () => {
+    // A Category may be named in one unbroken word; a head or pill that cannot
+    // break it is a horizontal scrollbar on a 360px phone.
+    expect(declarations(blockBody(".reader-page-head h1")).get("overflow-wrap")).toBe("anywhere");
+    expect(declarations(blockBody(".reader-pill")).get("max-width")).toBe("100%");
+    expect(declarations(blockBody(".reader-pill a")).get("overflow-wrap")).toBe("anywhere");
+  });
+});
+
+describe("the Archive index", () => {
+  it("labels a month at the 12px micro-label, its count across from it", () => {
+    const head = declarations(blockBody(".archive-month-head"));
+    expect(head.get("font-size")).toBe("0.75rem");
+    expect(head.get("text-transform")).toBe("uppercase");
+    expect(head.get("letter-spacing")).toBe("0.1em");
+    expect(head.get("color")).toBe("var(--muted)");
+    expect(head.get("display")).toBe("flex");
+    expect(head.get("justify-content")).toBe("space-between");
+  });
+
+  it("frames no row: one hairline between two rows and nothing else", () => {
+    const row = declarations(blockBody(".archive-row"));
+    expect(row.get("border")).toBeUndefined();
+    expect(row.get("border-radius")).toBeUndefined();
+    expect(row.get("background")).toBeUndefined();
+    expect(row.get("box-shadow")).toBeUndefined();
+    expect(declarations(blockBody(".archive-row + .archive-row")).get("border-top")).toBe(
+      "1px solid var(--border)",
+    );
+  });
+
+  it("aligns the date column on tabular numerals", () => {
+    expect(declarations(blockBody(".archive-row-date")).get("font-variant-numeric")).toBe(
+      "tabular-nums",
+    );
+  });
+
+  it("cannot push the page sideways on a phone, and wraps the title instead", () => {
+    // The date track is the only fixed one; the title takes the rest of the row
+    // and gives way, because a title the Reader cannot read is not an index.
+    expect(phoneValue(".archive-row", "grid-template-columns")).toBe(
+      "2.5rem minmax(0, 1fr)",
+    );
+    const title = declarations(blockBody(".archive-row-title"));
+    expect(title.get("min-width")).toBe("0");
+    expect(title.get("overflow-wrap")).toBe("anywhere");
+    expect(title.get("text-overflow")).toBeUndefined();
+    expect(title.get("white-space")).toBeUndefined();
+  });
+
+  it("draws every link in ink, never in the browser's own blue", () => {
+    // A bare anchor rendering in #0000EE with an underline is the single
+    // clearest "nobody styled this page" signal there is.
+    for (const selector of LIST_ANCHORS) {
+      const style = declarations(blockBody(selector));
+      // A token, or an inherit from a parent that names one. What it may never
+      // be is unset, which is where the browser's own blue lives.
+      expect(style.get("color"), selector).toMatch(/^(var\(--|inherit$)/);
+      expect(style.get("text-decoration"), selector).toBe("none");
+    }
+  });
+
+  it("inks the new listing links from the palette", () => {
+    expect(declarations(blockBody(".reader-pill a")).get("color")).toBe("var(--fg)");
+    expect(declarations(blockBody(".archive-row-title")).get("color")).toBe("var(--fg)");
+    expect(declarations(blockBody(".archive-row-category")).get("color")).toBe("var(--muted)");
+    expect(declarations(blockBody(".breadcrumbs a")).get("color")).toBe("var(--muted)");
+  });
+
+  it("moves nothing when a pointer crosses a row", () => {
+    const rows = rules().filter((rule) => /\barchive-row\b/.test(rule.prelude));
+    const displacement = rows.flatMap((rule) => {
+      const declared = declarations(rule.body);
+      return ["transform", "box-shadow", "translate", "scale"].filter((property) =>
+        declared.has(property),
+      );
+    });
+    expect(displacement).toEqual([]);
   });
 });
 

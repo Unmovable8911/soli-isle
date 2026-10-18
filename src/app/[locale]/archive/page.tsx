@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ArticleList } from "@/components/article-list";
+import { ArchiveIndex } from "@/components/archive-index";
+import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
-import { archiveMonths, formatArchiveMonth } from "@/domain/article-time";
+import { archiveMonths } from "@/domain/article-time";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
 import { listArchiveArticles } from "@/services/reading";
@@ -40,16 +41,11 @@ export default async function ArchivePage({ params }: { params: Promise<{ locale
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <h1>{t.reader.archive.title}</h1>
+      <ReaderPageHead locale={locale} title={t.reader.archive.title} />
       {months.length === 0 ? (
         <p className="reader-empty">{t.reader.archive.empty}</p>
       ) : (
-        months.map((month) => (
-          <section key={`${month.year}-${month.month}`} className="reader-month">
-            <h2>{formatArchiveMonth(month.year, month.month, locale)}</h2>
-            <ArticleList articles={month.items} locale={locale} labels={t.reader.list} />
-          </section>
-        ))
+        <ArchiveIndex months={months} locale={locale} />
       )}
     </main>
   );
