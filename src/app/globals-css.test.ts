@@ -1122,9 +1122,23 @@ describe("the browse surfaces", () => {
     expect(head.get("padding")).toBe("0 0 1.5rem");
   });
 
+  it("marks a search hit in the accent, not in the browser's yellow", () => {
+    const mark = declarations(blockBody(".article-card mark"));
+    expect(mark.get("background")).toContain("var(--accent)");
+    expect(mark.get("color")).toBe("var(--fg)");
+  });
+
   it("sets a child Category as a pill, not as a second list", () => {
     expect(declarations(blockBody(".reader-pills")).get("flex-wrap")).toBe("wrap");
     expect(declarations(blockBody(".reader-pill")).get("border-radius")).toBe("999px");
+  });
+
+  it("wraps a long name in the head or a pill rather than widening the page", () => {
+    // A Category may be named in one unbroken word; a head or pill that cannot
+    // break it is a horizontal scrollbar on a 360px phone.
+    expect(declarations(blockBody(".reader-page-head h1")).get("overflow-wrap")).toBe("anywhere");
+    expect(declarations(blockBody(".reader-pill")).get("max-width")).toBe("100%");
+    expect(declarations(blockBody(".reader-pill a")).get("overflow-wrap")).toBe("anywhere");
   });
 });
 
