@@ -198,5 +198,65 @@
         "hintScheduled": "到达发布时刻后读者才能看到它。"
       }
     }
+  },
+  "reader": {
+    "nav": {
+      "categories": "分类",
+      "archive": "归档",
+      "search": "搜索"
+    },
+    "home": {
+      "title": "最近的长文",
+      "lead": "按发布时间倒序，读最近写下的东西。",
+      "empty": "还没有发布任何长文。"
+    },
+    "list": {
+      "empty": "这里还没有长文。"
+    },
+    "category": {
+      "heading": "分类",
+      "empty": "这个分类下还没有长文。",
+      "children": "子分类"
+    },
+    "tag": {
+      "heading": "标签",
+      "empty": "这个标签下还没有长文。"
+    },
+    "archive": {
+      "title": "归档",
+      "empty": "还没有发布任何长文。"
+    },
+    "search": {
+      "title": "搜索",
+      "label": "在长文中搜索",
+      "placeholder": "关键词",
+      "submit": "搜索",
+      "hint": "匹配标题、正文、标签与分类。",
+      "summary": "找到 {count} 篇与“{query}”相关的长文。",
+      "empty": "没有找到匹配的长文。"
+    },
+    "article": {
+      "publishedOn": "发布于",
+      "tags": "标签",
+      "previous": "上一篇",
+      "next": "下一篇"
+    },
+    "fallback": {
+      "notice": "这篇长文还没有{requested}版本，以下是它的{shown}版本。"
+    },
+    "gone": {
+      "title": "这篇长文已被永久移除",
+      "body": "它不会回到站点上了。",
+      "back": "返回首页"
+    },
+    "breadcrumb": {
+      "label": "路径"
+    },
+    "lightbox": {
+      "dialog": "图片查看",
+      "close": "关闭",
+      "previous": "上一张",
+      "next": "下一张"
+    }
   }
 }

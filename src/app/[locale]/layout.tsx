@@ -6,6 +6,7 @@ import { Suspense, type ReactNode } from "react";
 import LocaleSwitcher from "@/components/locale-switcher";
 import ThemeToggle from "@/components/theme-toggle";
 import { isLocale } from "@/config/site";
+import { buildArchivePath, buildCategoryIndexPath, buildSearchPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { themeInitScript } from "../theme-init";
 
@@ -61,6 +62,19 @@ export default async function LocaleLayout({
               label={t.chrome.switchLocaleLabel}
             />
           </Suspense>
+          <nav className="site-nav" aria-label={t.reader.nav.categories}>
+            <ul>
+              <li>
+                <Link href={buildCategoryIndexPath(locale)}>{t.reader.nav.categories}</Link>
+              </li>
+              <li>
+                <Link href={buildArchivePath(locale)}>{t.reader.nav.archive}</Link>
+              </li>
+              <li>
+                <Link href={buildSearchPath({ locale })}>{t.reader.nav.search}</Link>
+              </li>
+            </ul>
+          </nav>
           <ThemeToggle
             labels={{
               system: t.chrome.themeSystem,

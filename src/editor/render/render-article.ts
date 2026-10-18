@@ -10,31 +10,78 @@ import { imageSrcset } from "./image-srcset";
 
 const IMAGE_SIZES = "(max-width: 900px) 100vw, 800px";
 
-function renderImage(node: ProseMirrorNode): string {
+/**
+ * Above this height-to-width ratio an image counts as an extremely tall one:
+ * CSS contains it within the viewport instead of letting it push the article
+ * off the screen. It is never cropped.
+ */
+export const TALL_IMAGE_RATIO = 2;
+
+export interface ArticleBodyImage {
+  /** The untouched upload, which the lightbox opens. */
+  original: string;
+  width: number;
+  height: number;
+}
+
+export interface ArticleBodyOptions {
+  /**
+   * Resolves a body image's stored Asset. The renderer holds no database
+   * access, so the page supplies the original address and true dimensions.
+   */
+  resolveImage?: (src: string) => ArticleBodyImage | null;
+}
+
+function dimension(node: ProseMirrorNode, key: "width" | "height"): number | null {
+  const value: unknown = node.attrs[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function renderImage(
+  node: ProseMirrorNode,
+  resolveImage: ArticleBodyOptions["resolveImage"],
+): string {
   const src = typeof node.attrs.src === "string" ? node.attrs.src : "";
   const alt = typeof node.attrs.alt === "string" ? node.attrs.alt : "";
-  const attributes = [`src="${escapeHtml(src)}"`, `alt="${escapeHtml(alt)}"`, 'loading="lazy"'];
+  const resolved = src.length > 0 && resolveImage !== undefined ? resolveImage(src) : null;
+
+  const width = resolved?.width ?? dimension(node, "width");
+  const height = resolved?.height ?? dimension(node, "height");
+  const isTall = width !== null && height !== null && height / width > TALL_IMAGE_RATIO;
+
+  const attributes = [
+    `src="${escapeHtml(src)}"`,
+    `alt="${escapeHtml(alt)}"`,
+    'loading="lazy"',
+    `class="article-image${isTall ? " article-image--tall" : ""}"`,
+  ];
 
   const srcset = imageSrcset(src);
   if (srcset !== null) {
     attributes.push(`srcset="${escapeHtml(srcset)}"`, `sizes="${IMAGE_SIZES}"`);
   }
-  for (const dimension of ["width", "height"] as const) {
-    const value = node.attrs[dimension];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      attributes.push(`${dimension}="${value}"`);
-    }
+  if (resolved !== null) {
+    attributes.push(`data-original="${escapeHtml(resolved.original)}"`);
+  }
+  if (width !== null) {
+    attributes.push(`width="${width}"`);
+  }
+  if (height !== null) {
+    attributes.push(`height="${height}"`);
   }
 
   return `<img ${attributes.join(" ")} />`;
 }
 
 /**
- * The one content renderer: the admin preview today, the public Article page in
- * ticket 07. The `nodeMapping` seam is where ticket 09 injects math, callouts
- * and fold blocks.
+ * The one content renderer: the admin preview and the public Article page.
+ * The `nodeMapping` seam is where ticket 09 injects math, callouts and fold
+ * blocks rather than adding a second rendering path.
  */
-export async function renderArticleBody(bodyJson: string): Promise<string> {
+export async function renderArticleBody(
+  bodyJson: string,
+  options: ArticleBodyOptions = {},
+): Promise<string> {
   if (!isRichTextDocument(bodyJson)) {
     return "";
   }
@@ -48,7 +95,7 @@ export async function renderArticleBody(bodyJson: string): Promise<string> {
       nodeMapping: {
         codeBlock: ({ node }) =>
           highlightCode(highlighter, node.textContent, node.attrs.language ?? null),
-        image: ({ node }) => renderImage(node),
+        image: ({ node }) => renderImage(node, options.resolveImage),
       },
     },
   });
