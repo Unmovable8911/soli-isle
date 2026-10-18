@@ -500,7 +500,8 @@
       "tags": "标签",
       "previous": "上一篇",
       "next": "下一篇",
-      "footnoteBack": "回到正文"
+      "footnoteBack": "回到正文",
+      "toc": "目录"
     },
     "fallback": {
       "notice": "这篇长文还没有{requested}版本，以下是它的{shown}版本。"

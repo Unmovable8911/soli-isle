@@ -500,7 +500,8 @@
       "tags": "Tags",
       "previous": "Previous",
       "next": "Next",
-      "footnoteBack": "Back to the text"
+      "footnoteBack": "Back to the text",
+      "toc": "Contents"
     },
     "fallback": {
       "notice": "This article has no {requested} version yet; what follows is its {shown} version."

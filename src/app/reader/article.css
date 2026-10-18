@@ -177,19 +177,59 @@
 }
 
 .reader-article {
-  max-width: 42rem;
+  max-width: 56rem;
+}
+
+/* The header and the contents sit on the measure; the cover takes the whole
+   column. That difference is the point of an editorial header. */
+.reader-article-header {
+  max-width: 65ch;
+  margin: 0 auto 2rem;
+}
+
+.article-kicker {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 .reader-article-header h1 {
-  margin-bottom: 0.5rem;
-  font-size: 1.6rem;
-  line-height: 1.3;
+  margin: 0 0 0.75rem;
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.reader-article-dek {
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 .reader-article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: var(--muted);
+}
+
+.reader-article-date {
+  margin: 0;
+}
+
+/* The fallback notice explains the body, so it takes a line of its own. */
+.reader-article-meta .reader-notice {
+  flex-basis: 100%;
+  margin: 0;
 }
 
 .reader-notice {
@@ -204,7 +244,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 0.75rem;
-  margin: 0 0 1.5rem;
+  margin: 0;
   padding: 0;
   list-style: none;
   font-size: 0.85rem;
@@ -234,10 +274,76 @@
   color: var(--muted);
 }
 
+.reader-article-cover {
+  margin: 0 auto 2.5rem;
+}
+
+/* Never cropped and never taller than the screen: both limits are maximums, so
+   the picture keeps the ratio it was uploaded with. */
+.reader-article-cover img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 80vh;
+  margin-inline: auto;
+  border-radius: 0.5rem;
+}
+
+/* The contents are furniture: a hairline box on the measure, two levels deep. */
+.article-toc {
+  max-width: 65ch;
+  margin: 0 auto 2.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  font-size: 0.9rem;
+}
+
+.article-toc-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.article-toc-list,
+.article-toc-sublist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-toc-sublist {
+  padding-left: 1rem;
+}
+
+.article-toc a {
+  display: block;
+  padding: 0.4rem 0;
+  color: var(--fg);
+}
+
+.article-toc-item[data-level="3"] a {
+  color: var(--muted);
+}
+
+/* Tags close the piece, under the hairline that ends the prose. */
+.reader-article > .reader-tags {
+  max-width: 65ch;
+  margin: 2.5rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
 .reader-article-nav {
   display: grid;
   gap: 0.75rem;
-  margin-top: 3rem;
+  max-width: 65ch;
+  margin: 2.5rem auto 0;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
   font-size: 0.9rem;
@@ -357,11 +463,17 @@
   }
 
   .reader-article-header h1 {
-    font-size: 2rem;
+    font-size: 2.25rem;
   }
 
   .reader-article-nav {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 64rem) {
+  .reader-article-header h1 {
+    font-size: 3rem;
   }
 }
 

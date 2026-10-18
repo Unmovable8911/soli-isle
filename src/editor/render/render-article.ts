@@ -4,6 +4,7 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { renderToHTMLString } from "@tiptap/static-renderer/pm/html-string";
 
 import { isRichTextDocument } from "@/domain/rich-text";
+import { createHeadingAnchors } from "@/domain/table-of-contents";
 import { articleExtensions } from "../extensions";
 import { escapeHtml, getHighlighter, highlightCode } from "./highlighter";
 import { imageSrcset } from "./image-srcset";
@@ -84,6 +85,22 @@ function renderImage(
   return `<img ${attributes.join(" ")} />`;
 }
 
+/**
+ * A heading carries the anchor the table of contents links to. Both sides walk
+ * headings in document order through the one allocator, so the body needs no
+ * stored marker and the same JSON renders the same ids every time.
+ */
+function renderHeading(
+  node: ProseMirrorNode,
+  children: string | string[],
+  anchorOf: (text: string) => string,
+): string {
+  const level = Number(node.attrs.level ?? 2);
+  const tag = `h${Number.isInteger(level) && level >= 1 && level <= 6 ? level : 2}`;
+  const body = Array.isArray(children) ? children.join("") : children;
+  return `<${tag} id="${escapeHtml(anchorOf(node.textContent))}">${body}</${tag}>`;
+}
+
 function renderFootnoteItem(
   node: ProseMirrorNode,
   children: string | string[],
@@ -112,12 +129,14 @@ export async function renderArticleBody(
   }
 
   const highlighter = await getHighlighter();
+  const anchorOf = createHeadingAnchors();
 
   return renderToHTMLString({
     content: JSON.parse(bodyJson) as Parameters<typeof renderToHTMLString>[0]["content"],
     extensions: articleExtensions,
     options: {
       nodeMapping: {
+        heading: ({ node, children }) => renderHeading(node, children ?? "", anchorOf),
         codeBlock: ({ node }) =>
           highlightCode(highlighter, node.textContent, node.attrs.language ?? null),
         image: ({ node }) => renderImage(node, options.resolveImage),

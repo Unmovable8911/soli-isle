@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 
+import { articleHeadings } from "@/domain/table-of-contents";
+
 import { renderArticleBody } from "./render-article";
 
 const ASSET_ID = "3f4b1c9e-5f0a-4b8b-9d3a-4f6a1c2b3d4e";
 
 function doc(content: unknown[]): string {
   return JSON.stringify({ type: "doc", content });
+}
+
+function heading(level: number, text: string): unknown {
+  return { type: "heading", attrs: { level }, content: [{ type: "text", text }] };
 }
 
 describe("article body rendering", () => {
@@ -43,13 +49,32 @@ describe("article body rendering", () => {
       ]),
     );
 
-    expect(html).toContain("<h2>Title</h2>");
+    expect(html).toContain('<h2 id="title">Title</h2>');
     expect(html).toContain("<strong>bold</strong>");
     expect(html).toContain("<mark>marked</mark>");
     expect(html).toContain("<ul>");
     expect(html).toContain("<blockquote>");
     expect(html).toContain("<hr/>");
     expect(html).toContain('data-type="taskList"');
+  });
+
+  it("gives every heading the anchor the table of contents links to", async () => {
+    const body = doc([
+      heading(2, "Overview"),
+      heading(3, "Details"),
+      heading(4, "Aside"),
+      heading(2, "Overview"),
+    ]);
+
+    const html = await renderArticleBody(body);
+
+    // One function decides both: a link is only useful if it lands on the id
+    // the heading actually renders, so the two are checked against each other.
+    expect(articleHeadings(body).map((entry) => entry.id)).toEqual(["overview", "details", "overview-2"]);
+    expect(html).toContain('<h2 id="overview">Overview</h2>');
+    expect(html).toContain('<h3 id="details">Details</h3>');
+    expect(html).toContain('<h4 id="aside">Aside</h4>');
+    expect(html).toContain('<h2 id="overview-2">Overview</h2>');
   });
 
   it("highlights a code block and keeps its language", async () => {
