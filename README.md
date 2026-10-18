@@ -407,12 +407,17 @@ CI 也在 Node 24 上跑这三项。测试使用内存 SQLite、固定时钟和�
 
 ## 演示数据
 
-`seed:demo` 用来快速得到一份可浏览的完整站点：3 篇长文、5 条推文、6 张图片、两个分类、三个标签。
+`seed:demo` 用来快速得到一份可浏览的完整站点：8 篇长文、5 条推文、9 张图片、两个分类、三个标签。最新 5 篇正好填满首页的 Hero 轮播。
 
 ### 内容
 
 | 内容 | 说明 |
 | --- | --- |
+| 长文 `a-quieter-web` | 中文《把网页做得安静一点》，带英文版；轮播首篇，有封面、有摘要，摘要足够长以检查两行截取 |
+| 长文 `read-slowly` | 中文《读得慢一点，才能把一本书读成自己的》，带英文版；长标题用于检查轮播换行与高度 |
+| 长文 `without-a-summary` | 中文《没有摘要的长文》；有封面但 `summary` 为空，用来检查轮播省略摘要后的版式 |
+| 长文 `notes-from-the-margin` | 只有英文版《Notes from the Margin》；只出现在英文首页，用来检查英文轮播与语言缺失 |
+| 长文 `a-short-article` | 中文《短文章》，带英文版；无封面、无摘要，用来检查网格里的文字卡片 |
 | 长文 `element-by-element` | 中文《一篇元素齐全的长文》，带英文版；分类“关于写作”，标签“写作”“技术”，有封面；正文覆盖大部分富文本块 |
 | 长文 `without-a-cover` | 中文《没有封面的长文》；分类“随笔”，标签“长文”；用来检查无封面卡片的回落版式 |
 | 长文 `an-english-essay` | 只有英文版《An English Essay》；用来检查语言切换与缺失提示 |
@@ -433,7 +438,7 @@ npm run seed:demo
 输出：
 
 ```text
-seed:demo wrote 3 Articles, 5 Posts and 6 images
+seed:demo wrote 8 Articles, 5 Posts and 9 images
   database  /path/to/soli-isle/data/database/soli-isle.sqlite
   images    /path/to/soli-isle/data/images
 ```
@@ -446,7 +451,7 @@ npm run seed:demo -- --images ~/Pictures/blog
 
 - 读取 PNG、JPEG、WebP、AVIF、GIF，按文件名排序后循环使用。
 - 图片会走真实的 `uploadAsset` 管线，所以 `display`/`thumb` 变体和真实上传一致。
-- 少于 6 张会重复使用；目录里没有可读图片会报错 `<目录> holds no image the uploader can read`。
+- 少于 9 张会重复使用；目录里没有可读图片会报错 `<目录> holds no image the uploader can read`。
 - 这是**破坏性**操作：会删掉当前数据库里的全部长文、推文、分类、标签、图片记录和 `<RESOURCE_DIR>/assets`，然后重建。它保留会话，也不会改密码。
 - 可以重复运行，每次得到同一份站点，不会翻倍。
 - 如果 `NODE_ENV=production`，会拒绝运行并打印：`seed:demo replaces every Article and Post in the database it is pointed at, so it refuses to run with NODE_ENV=production.`
@@ -475,7 +480,9 @@ docker compose run --rm -e NODE_ENV=development \
 
 | 地址 | 看什么 |
 | --- | --- |
-| `/zh` | 首页长文流 |
+| `/zh` | 首页：最新 5 篇的 Hero 轮播，接 20 篇网格 |
+| `/zh/articles/a-quieter-web` | 轮播首篇：有封面、有摘要 |
+| `/zh/articles/without-a-summary` | 有封面但没有摘要的轮播页 |
 | `/zh/articles/element-by-element` | 元素齐全的中文长文（可切英文版） |
 | `/zh/articles/without-a-cover` | 无封面长文的版式 |
 | `/en/articles/an-english-essay` | 只有英文版的长文 |
@@ -486,7 +493,7 @@ docker compose run --rm -e NODE_ENV=development \
 | `/zh/search?q=元素` | 只搜长文 |
 | `/zh/feed` | 推文 Feed |
 | `/zh/feed?tag=longform` | 按标签过滤 Feed |
-| `/admin` | 后台总览，能看到 3 篇长文、5 条推文的状态 |
+| `/admin` | 后台总览，能看到 8 篇长文、5 条推文的状态 |
 
 注意没有 `/zh/articles` 这个列表页；文章入口在首页、分类、标签、归档和搜索结果里。归档、搜索和 Feed 页面都标记了 `noindex`，它们只用于浏览，不进入搜索引擎索引。
 

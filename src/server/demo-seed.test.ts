@@ -112,16 +112,37 @@ describe("the demo seed", () => {
     await seedDemo(context);
 
     const zh = await listArchiveArticles(context.reading, { locale: "zh" });
-    expect(zh.map((card) => card.title)).toEqual(["一篇元素齐全的长文", "没有封面的长文"]);
+    expect(zh.map((card) => card.title)).toEqual([
+      "把网页做得安静一点",
+      "读得慢一点，才能把一本书读成自己的",
+      "没有摘要的长文",
+      "一篇元素齐全的长文",
+      "短文章",
+      "没有封面的长文",
+    ]);
     expect(zh[0]?.cover).not.toBeNull();
-    expect(zh[1]?.cover).toBeNull();
+    expect(zh[2]?.cover).toBeNull();
+    expect(zh[5]?.cover).toBeNull();
     expect(zh[0]?.category?.slug).toBe("on-writing");
     expect(zh[0]?.tags.map((tag) => tag.slug)).toEqual(["engineering", "writing"]);
 
-    // The same work answers in English: one work, two Locale versions.
+    // The five newest Articles are the home carousel's deck, and between them
+    // they keep both fallbacks on screen: a slide without a cover and a slide
+    // without a summary.
+    const carousel = zh.slice(0, 5);
+    expect(carousel).toHaveLength(5);
+    expect(carousel.some((card) => card.cover === null)).toBe(true);
+    expect(carousel.some((card) => card.summary === "")).toBe(true);
+
+    // English readers see the translated works and the ones written in English;
+    // the zh-only Articles are absent from this list.
     const english = await listArchiveArticles(context.reading, { locale: "en" });
     expect(english.map((card) => card.title)).toEqual([
+      "Making the Web a Quieter Place",
+      "Read Slowly, and a Book Becomes Yours",
+      "Notes from the Margin",
       "A Long Essay, Element by Element",
+      "A Short Article",
       "An English Essay",
     ]);
   });
@@ -152,7 +173,7 @@ describe("the demo seed", () => {
     await seedDemo(context);
 
     const assets = await listAssets(context.assets);
-    expect(assets).toHaveLength(6);
+    expect(assets).toHaveLength(9);
     for (const asset of assets) {
       const display = await getAssetVariantFile(context.assets, asset.id, "display");
       const thumb = await getAssetVariantFile(context.assets, asset.id, "thumb");
@@ -180,7 +201,7 @@ describe("the demo seed", () => {
     expect(
       harness.database.sqlite.prepare("SELECT slug FROM article_slug ORDER BY slug").all(),
     ).toEqual(firstSlugs);
-    await expect(listAssets(context.assets)).resolves.toHaveLength(6);
+    await expect(listAssets(context.assets)).resolves.toHaveLength(9);
   });
 
   it("uses the author's own images when given a directory", async () => {
@@ -197,7 +218,7 @@ describe("the demo seed", () => {
     await seedDemo(context);
 
     const assets = await listAssets(context.assets);
-    expect(assets.map((asset) => asset.fileName)).toEqual(Array(6).fill("mine.png"));
+    expect(assets.map((asset) => asset.fileName)).toEqual(Array(9).fill("mine.png"));
     expect(assets[0]?.width).toBe(900);
   });
 });

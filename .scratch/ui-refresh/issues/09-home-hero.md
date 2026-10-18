@@ -29,9 +29,11 @@
 
 「摘要截取前两行」沿用 Article 的 `summary`（dek），不另取正文：首页卡片一直只读 `summary`，Hero 再引入第二种摘要来源会让同一篇文章在首页出现两段不同的话。
 
+种子补了 5 篇长文，最新五篇正好填满轮播：`a-quieter-web`（有封面、长摘要）、`read-slowly`（长标题）、`without-a-summary`（无摘要）、`notes-from-the-margin`（仅英文，只在 en 首页）、`a-short-article`（无封面）。zh 与 en 首页各自留下 1 篇网格文章。
+
 ## Resolution
 
-**resolved** — 未提交工作树。
+**resolved** — 提交 `43752c8`；种子随后补到八篇长文。
 
 - 新增 `src/components/home-hero.tsx`（client）：5s `setTimeout` 链，`wrapIndex` 共享 `src/domain/carousel.ts`；所有 slide 叠在同一 CSS grid cell，容器高度取最长篇，非当前篇 `inert` + `aria-hidden`。
 - `ReaderHome` 在服务端把 Article 映射成纯 DTO（链接、Locale 日期、封面），客户端不 import `@/services/reading`；`HOME_HERO_LIMIT = 5`、`HOME_GRID_LIMIT = 20`，页面共取 25 篇。

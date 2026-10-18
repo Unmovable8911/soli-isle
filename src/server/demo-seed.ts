@@ -448,6 +448,36 @@ export async function seedDemo(context: DemoSeedContext): Promise<DemoSeedSummar
       label: "Figure two",
     }),
   );
+  // Distinct covers for the newest Articles, so the home carousel is not the
+  // same picture five times. The two Articles without a cover are deliberate:
+  // the carousel's ink plate is a state, not a broken image.
+  const quietCover = await uploadAsset(
+    context.assets,
+    await source.take({
+      fileName: "demo-cover-quiet.png",
+      width: 1600,
+      height: 1000,
+      label: "A quieter web",
+    }),
+  );
+  const readingCover = await uploadAsset(
+    context.assets,
+    await source.take({
+      fileName: "demo-cover-reading.png",
+      width: 1600,
+      height: 1000,
+      label: "Read slowly",
+    }),
+  );
+  const marginCover = await uploadAsset(
+    context.assets,
+    await source.take({
+      fileName: "demo-cover-margin.png",
+      width: 1600,
+      height: 1000,
+      label: "Margin note",
+    }),
+  );
   const gallery: AssetSummary[] = [];
   for (const index of [1, 2, 3]) {
     gallery.push(
@@ -538,6 +568,173 @@ export async function seedDemo(context: DemoSeedContext): Promise<DemoSeedSummar
     publishTime: "2025-06-01T09:00:00.000Z",
   });
 
+  // The five newest Articles are the home carousel's deck. Between them they
+  // cover the states a slide has to survive: a cover and no cover, a summary
+  // and none, Chinese and English only, a title that wraps and one that does
+  // not. Their Publish Times are all before the fixed test clock.
+  const quieterWeb = await createArticleDraft(context.articles, {
+    title: "把网页做得安静一点",
+    summary:
+      "网页不必每分钟都在说话。把动效、浮层和催促收起来之后，剩下的空间才装得下读者的注意力，也装得下作者想慢慢说完的话。",
+    locale: "zh",
+    defaultLocale: "zh",
+    slug: "a-quieter-web",
+    bodyJson: JSON.stringify(
+      plainDocument(
+        "网页越安静，读的人越容易听见自己。",
+        "安静不是空白。它意味着少一次自动播放，少一个挡住正文的浮层，少一句在耳边催促的提示。",
+        "把节奏还给读者之后，页面才重新像一张纸：可以停，可以回看，也可以在任意一行离开。",
+      ),
+    ),
+  });
+  await addArticleTranslation(context.articles, {
+    articleId: quieterWeb.id,
+    locale: "en",
+    title: "Making the Web a Quieter Place",
+    summary:
+      "A page does not have to speak every minute. Take away the motion, the overlays and the prompts, and what is left is room for the reader's attention — and for the sentence the author wanted to finish.",
+    bodyJson: JSON.stringify(
+      plainDocument(
+        "A quiet page leaves room for the reader to hear themselves.",
+        "Quiet is not emptiness. It is one autoplay fewer, one overlay that does not cover the words, one prompt that does not hurry anyone along.",
+        "Give the rhythm back to the reader and the page becomes paper again: something you can pause on, return to, or leave at any line.",
+      ),
+    ),
+  });
+  await updateArticleMeta(context.articles, {
+    articleId: quieterWeb.id,
+    categoryId: onWriting.category.id,
+    tagIds: [writing.tag.id, engineering.tag.id],
+    coverAssetId: quietCover.id,
+  });
+  await publishArticle(context.articles, {
+    articleId: quieterWeb.id,
+    publishTime: "2025-06-14T09:00:00.000Z",
+  });
+
+  const readSlowly = await createArticleDraft(context.articles, {
+    title: "读得慢一点，才能把一本书读成自己的",
+    summary: "慢读不是姿态，是一种把书读进自己生活里的方法。",
+    locale: "zh",
+    defaultLocale: "zh",
+    slug: "read-slowly",
+    bodyJson: JSON.stringify({
+      type: "doc",
+      content: [
+        paragraph("读得快的时候，眼睛在赶路，脑子只负责签收。"),
+        heading(2, "一 · 慢下来"),
+        paragraph("读得慢一点，句子才有机会和已经读过的东西碰面。"),
+        paragraph(
+          "一本书被读成自己的，往往不是因为记住了多少，而是因为它在生活里找到了钩子：一段路、一个人、一次没说出口的反对。",
+        ),
+      ],
+    }),
+  });
+  await addArticleTranslation(context.articles, {
+    articleId: readSlowly.id,
+    locale: "en",
+    title: "Read Slowly, and a Book Becomes Yours",
+    summary: "Slow reading is not a pose; it is how a book gets into your life.",
+    bodyJson: JSON.stringify({
+      type: "doc",
+      content: [
+        paragraph("Read fast and the eye is travelling; the mind only signs for the parcel."),
+        heading(2, "One · Slow down"),
+        paragraph("Read slowly and the sentence has a chance to meet what you have already read."),
+        paragraph(
+          "A book becomes yours not because you remember all of it, but because it finds hooks in your life: a road, a person, an objection you never said out loud.",
+        ),
+      ],
+    }),
+  });
+  await updateArticleMeta(context.articles, {
+    articleId: readSlowly.id,
+    categoryId: essays.category.id,
+    tagIds: [writing.tag.id, longform.tag.id],
+    coverAssetId: readingCover.id,
+  });
+  await publishArticle(context.articles, {
+    articleId: readSlowly.id,
+    publishTime: "2025-06-13T09:00:00.000Z",
+  });
+
+  const withoutSummary = await createArticleDraft(context.articles, {
+    title: "没有摘要的长文",
+    locale: "zh",
+    defaultLocale: "zh",
+    slug: "without-a-summary",
+    bodyJson: JSON.stringify(
+      plainDocument(
+        "这篇长文没有摘要。首页的轮播必须能在缺少一行简介时仍然站得住：分类、标题、日期，以及一块属于文字的底色。",
+        "摘要为空也是一种内容状态，不是数据损坏。",
+      ),
+    ),
+  });
+  await updateArticleMeta(context.articles, {
+    articleId: withoutSummary.id,
+    categoryId: essays.category.id,
+    tagIds: [longform.tag.id],
+  });
+  await publishArticle(context.articles, {
+    articleId: withoutSummary.id,
+    publishTime: "2025-06-12T09:00:00.000Z",
+  });
+
+  const marginNote = await createArticleDraft(context.articles, {
+    title: "Notes from the Margin",
+    summary: "A note that exists only in English, so the carousel has a slide with no Chinese twin.",
+    locale: "en",
+    defaultLocale: "en",
+    slug: "notes-from-the-margin",
+    bodyJson: JSON.stringify(
+      plainDocument(
+        "Notes from the margin are not the argument; they are the place where the argument was interrupted.",
+        "This one is written only in English, which is enough for the site to show it to a reader who has chosen English.",
+      ),
+    ),
+  });
+  await updateArticleMeta(context.articles, {
+    articleId: marginNote.id,
+    categoryId: onWriting.category.id,
+    tagIds: [engineering.tag.id],
+    coverAssetId: marginCover.id,
+  });
+  await publishArticle(context.articles, {
+    articleId: marginNote.id,
+    publishTime: "2025-06-11T09:00:00.000Z",
+  });
+
+  const shortArticle = await createArticleDraft(context.articles, {
+    title: "短文章",
+    summary: "有些事一句话就够了，不必展开成一篇长文。",
+    locale: "zh",
+    defaultLocale: "zh",
+    slug: "a-short-article",
+    bodyJson: JSON.stringify(
+      plainDocument("不是每一件事都需要一篇长文。有些话说完就该停下，留白也是正文的一部分。"),
+    ),
+  });
+  await addArticleTranslation(context.articles, {
+    articleId: shortArticle.id,
+    locale: "en",
+    title: "A Short Article",
+    summary: "Some things are a sentence, not an essay.",
+    bodyJson: JSON.stringify(
+      plainDocument(
+        "Not everything needs a long essay. Some sentences should stop where they end; the white space is part of the text.",
+      ),
+    ),
+  });
+  await updateArticleMeta(context.articles, {
+    articleId: shortArticle.id,
+    categoryId: essays.category.id,
+    tagIds: [writing.tag.id],
+  });
+  await publishArticle(context.articles, {
+    articleId: shortArticle.id,
+    publishTime: "2025-06-08T09:00:00.000Z",
+  });
+
   const longParagraphs = Array.from({ length: 40 }, (_unused, index) =>
     `第 ${index + 1} 段。一条推文可以很长，长到需要折叠；折叠之后仍然要有「展开全文」，而不是一条截断的预言。`,
   );
@@ -605,5 +802,5 @@ export async function seedDemo(context: DemoSeedContext): Promise<DemoSeedSummar
     publishTime: "2025-06-11T21:00:00.000Z",
   });
 
-  return { articles: 3, posts: 5, images: 3 + gallery.length };
+  return { articles: 8, posts: 5, images: 6 + gallery.length };
 }
