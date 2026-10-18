@@ -1,0 +1,262 @@
+/* The Feed: a hairline-separated stream with no card frame around it, and the
+   gallery inside a post. */
+
+/* Post feed (ticket 08) — Reader side. Mobile first: the Feed is the phone's
+   reading surface. Only the four theme tokens are used. */
+
+.feed-heading {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.feed-title {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.feed-filter {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.feed-filter a {
+  color: var(--accent);
+}
+
+.feed {
+  display: grid;
+  gap: 1rem;
+  max-width: 42rem;
+}
+
+.post-empty {
+  color: var(--muted);
+}
+
+.post-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.post-time {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.post-body {
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.post-body > :first-child {
+  margin-top: 0;
+}
+
+.post-body > :last-child {
+  margin-bottom: 0;
+}
+
+.post-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* The clamp is only ever applied by the client after it has measured the body;
+   without JavaScript the body simply reads long. */
+.post-body-folded {
+  position: relative;
+  overflow: hidden;
+}
+
+.post-body-folded::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3rem;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}
+
+.post-expand {
+  margin-top: 0.35rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.post-gallery {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.post-gallery-track {
+  display: flex;
+  gap: 0.5rem;
+  /* A real list (ticket 12), with the browser's list furniture removed; the
+     padding is the room the cell's focus ring needs inside the scroller. */
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.post-gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each cell takes most of the track, so the next picture's edge peeks out and
+   the Reader can see there is more to scroll. The box is viewport-relative and
+   the picture fills it with `cover` — deliberately unlike an Article body
+   image, which keeps its original ratio. */
+.post-gallery-cell {
+  flex: 0 0 85%;
+  scroll-snap-align: start;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+/* The focus ring goes on the cell: the picture fills the button, and the cell
+   is what clips it. */
+.post-gallery-cell:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.post-gallery-open {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.post-gallery-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-gallery-counter {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The visible counter is "3/9"; this is the sentence a screen reader hears. */
+.post-gallery-counter-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-tag {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.feed-more {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
+.feed-more-button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.feed-more-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.feed-more-button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.feed-more-notice {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.85rem;
+}
+
+.feed-more-notice:empty {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .feed-title {
+    font-size: 1.6rem;
+  }
+
+  /* Desktop cells turn landscape; the crop is the same rule, the box moves. */
+  .post-gallery-cell {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .post-gallery-track {
+    scroll-behavior: smooth;
+  }
+
+  .post-tag,
+  .feed-more-button {
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+}
+
+/* Phone-width reading (ticket 12). A Feed card renders the same rich text as an
+   Article, so it needs the same rule for a long code line. */
+.post-body pre {
+  overflow-x: auto;
+}
+
+.post-expand,
+.feed-more-button,
+.post-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}

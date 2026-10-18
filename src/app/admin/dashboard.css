@@ -1,0 +1,199 @@
+/* Dashboard, publication state, row actions, the confirm dialog, and the
+   Category and Tag managers. */
+
+/* ---- Admin dashboard, Categories and Tags (ticket 11) -------------------
+   Additive: same five tokens, no new styling system. */
+
+.dashboard {
+  display: grid;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.dashboard-section > h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
+
+/* The Publication State is a lookup by the visibility the service derived. */
+.publication-state {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.publication-state-visible {
+  color: var(--fg);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.row-actions button,
+.confirm-actions button,
+.category-node-actions button,
+.category-create-form button,
+.tag-create-form button,
+.category-name-form button,
+.category-move-form button,
+.tag-name-form button {
+  min-height: 2.05rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.row-actions button:disabled,
+.confirm-actions button:disabled,
+.category-node-actions button:disabled,
+.category-create-form button:disabled,
+.tag-create-form button:disabled,
+.category-name-form button:disabled,
+.category-move-form button:disabled,
+.tag-name-form button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.row-schedule {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.row-schedule input,
+.category-create-form input,
+.tag-create-form input,
+.category-name-form input,
+.category-move-form select,
+.tag-name-form input,
+.confirm-dialog select {
+  padding: 0.25rem 0.35rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+/* The confirmation dialog: the focus trap lives in the component, the frame here. */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--fg) 45%, transparent);
+}
+
+.confirm-dialog {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 32rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.confirm-dialog h2 {
+  font-size: 1.05rem;
+}
+
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirm-danger {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.category-manager,
+.tag-manager {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.category-create-form,
+.tag-create-form {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 32rem;
+  margin-top: 0.5rem;
+}
+
+.category-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* A nested list is the tree: children are indented under their parent. */
+.category-tree {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  border-left: 1px dashed var(--border);
+  list-style: none;
+}
+
+.category-node {
+  margin-top: 0.6rem;
+}
+
+.category-node-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.category-node-name {
+  font-weight: 600;
+}
+
+.category-node-path {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.category-node-editor {
+  margin-top: 0.35rem;
+}
+
+.category-node-editor > summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.category-name-form,
+.category-move-form,
+.tag-name-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.category-node-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.tag-names {
+  display: grid;
+  gap: 0.2rem;
+}
