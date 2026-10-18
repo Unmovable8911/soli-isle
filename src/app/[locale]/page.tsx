@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { HOME_GRID_LIMIT, ReaderHome } from "@/components/reader-home";
+import { HOME_GRID_LIMIT, HOME_HERO_LIMIT, ReaderHome } from "@/components/reader-home";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { messages } from "@/messages";
@@ -11,8 +11,8 @@ import { listRecentArticles } from "@/services/reading";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-/** The lead is always one more than the grid: both come from the same list. */
-const HOME_LIMIT = HOME_GRID_LIMIT + 1;
+/** The hero and the grid are consecutive slices of one newest-first list. */
+const HOME_LIMIT = HOME_HERO_LIMIT + HOME_GRID_LIMIT;
 
 type LocaleParams = { locale: string };
 

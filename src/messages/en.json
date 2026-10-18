@@ -17,7 +17,6 @@
     "skipToContent": "Skip to content",
     "menuLabel": "Menu",
     "searchLabel": "Search the site",
-    "railLabel": "Site rail",
     "browseLabel": "Browse",
     "footer": {
       "navLabel": "Footer navigation",
@@ -475,17 +474,25 @@
   },
   "reader": {
     "nav": {
+      "home": "Home",
       "archive": "Archive",
       "feed": "Feed",
       "label": "Site navigation"
     },
     "home": {
       "title": "Recent articles",
-      "lead": "Newest first, the things most recently written.",
       "emptyTitle": "Nothing here yet",
       "empty": "No article has been published yet.",
-      "latest": "Latest essay",
-      "more": "More essays"
+      "hero": {
+        "label": "Latest articles",
+        "previous": "Previous article",
+        "next": "Next article",
+        "pause": "Pause the carousel",
+        "play": "Play the carousel",
+        "slide": "Article {current} of {total}",
+        "goTo": "Show article {current}",
+        "choose": "Choose an article to show"
+      }
     },
     "list": {
       "emptyTitle": "Nothing here yet",

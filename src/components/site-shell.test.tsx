@@ -6,7 +6,7 @@ import { messages } from "@/messages";
 
 import { SiteShell } from "./site-shell";
 
-// The rail reads the pathname the same way LocaleSwitcher does: a client
+// The bar reads the pathname the same way LocaleSwitcher does: a client
 // component rendered by the layout, so the server-rendered HTML already carries
 // the marker and a Reader without JavaScript still sees where they are.
 vi.mock("next/navigation", () => ({
@@ -47,17 +47,18 @@ describe("the public shell", () => {
     expect(header).not.toContain("<main");
   });
 
-  it("puts the same navigation and bottom controls in the rail and in the mobile drawer", () => {
+  it("puts the sections in the bar and in the mobile drawer, with no side rail", () => {
     const html = render();
 
-    expect(html).toContain('class="site-rail"');
-    expect(html).toContain(`aria-label="${messages.en.reader.nav.label}"`);
-    expect(html).toContain(`aria-label="${messages.en.chrome.themeLabel}"`);
+    expect(html).not.toContain('class="site-rail"');
     expect(html).not.toContain('class="site-tree"');
+    expect(html).toContain('class="site-topbar-nav"');
+    expect(html).toContain('class="site-menu-panel"');
 
     const navs = html.match(/<nav class="site-nav"[\s\S]*?<\/nav>/g) ?? [];
     expect(navs).toHaveLength(2);
     for (const nav of navs) {
+      expect(nav).toContain('href="/en"');
       expect(nav).toContain('href="/en/archive"');
       expect(nav).toContain('href="/en/feed"');
       expect(nav).not.toContain('href="/en/categories"');
@@ -89,21 +90,31 @@ describe("the public shell", () => {
     for (const anchor of marked) {
       expect(anchor).toContain('href="/en/archive"');
     }
+    expect(html).not.toMatch(/<a[^>]*aria-current="page"[^>]*>Home<\/a>/);
     expect(html).not.toMatch(/<a[^>]*aria-current="page"[^>]*>Feed<\/a>/);
   });
 
-  it("orders the tab stops skip link, then top bar, then rail, then the page body", () => {
+  it("puts the language picker and the theme button in the bar and in the drawer", () => {
+    const html = render();
+
+    const locales = html.match(/<details class="site-locale-menu">/g) ?? [];
+    const themes = html.match(/class="theme-toggle"/g) ?? [];
+    expect(locales).toHaveLength(2);
+    expect(themes).toHaveLength(2);
+    expect(html).toContain(`${messages.en.chrome.switchLocaleLabel}: English`);
+    expect(html).toContain(`aria-label="${messages.en.chrome.themeLabel}: System"`);
+  });
+
+  it("orders the tab stops skip link, then top bar, then the page body", () => {
     const html = render();
 
     const skip = html.indexOf('class="skip-link"');
     const topbar = html.indexOf('class="site-topbar"');
-    const rail = html.indexOf('class="site-rail"');
     const body = html.indexOf("<main");
 
     expect(skip).toBeGreaterThanOrEqual(0);
     expect(skip).toBeLessThan(topbar);
-    expect(topbar).toBeLessThan(rail);
-    expect(rail).toBeLessThan(body);
+    expect(topbar).toBeLessThan(body);
   });
 
   it("word-marks the bar and the footer back to the Locale home", () => {

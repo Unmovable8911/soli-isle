@@ -575,9 +575,9 @@ const READER_CONTROLS = [
   ".site-topbar button",
   ".admin-topbar a",
   ".admin-topbar button",
-  ".site-rail a",
   ".site-menu summary",
-  ".theme-switch button",
+  ".site-locale-menu summary",
+  ".theme-toggle",
   ".site-search-submit",
   ".site-footer-nav a",
   ".site-footer-top-link",
@@ -587,6 +587,9 @@ const READER_CONTROLS = [
   ".lightbox-close",
   ".lightbox-previous",
   ".lightbox-next",
+  ".home-hero-arrow",
+  ".home-hero-pause",
+  ".home-hero-dot",
   ".reader-tags a",
   ".reader-pill",
   ".empty-state-action a",
@@ -602,6 +605,7 @@ const LIST_ANCHORS = [
   ".breadcrumbs a",
   ".article-card-title a",
   ".article-card-kicker a",
+  ".home-hero-title a",
   ".reader-pill a",
   ".archive-row-title",
   ".archive-row-category",
@@ -648,7 +652,8 @@ describe("phone width", () => {
 
 /**
  * The shell is where a Reader lands before any page exists, so its promise is
- * mechanical: the rail stays put and scrolls on its own.
+ * mechanical: the top bar stays put, and the reading column is capped and
+ * centred rather than stretched across a wide desktop.
  */
 describe("the public shell", () => {
   it("pins the top bar at 64px", () => {
@@ -657,12 +662,11 @@ describe("the public shell", () => {
     expect(bar.get("height")).toBe("4rem");
   });
 
-  it("pins the rail under the bar and scrolls it independently", () => {
-    const rail = declarations(blockBody(".site-rail"));
-    expect(rail.get("position")).toBe("sticky");
-    expect(rail.get("top")).toBe("4rem");
-    expect(rail.get("overflow-y")).toBe("auto");
-    expect(declarations(blockBody(".site-shell")).get("grid-template-columns")).toContain("16rem");
+  it("caps and centres the reading column", () => {
+    const content = declarations(blockBody(".site-content"));
+    expect(content.get("max-width")).toBe("80rem");
+    expect(content.get("margin-inline")).toBe("auto");
+    expect(content.get("width")).toBe("100%");
   });
 });
 
@@ -905,8 +909,17 @@ describe("the sign-in page", () => {
  */
 describe("the Article page", () => {
   it("sets the page in a 896px column and the prose to a 65ch measure", () => {
-    expect(declarations(blockBody(".reader-article")).get("max-width")).toBe("56rem");
-    expect(declarations(blockBody(".article-body")).get("max-width")).toBe("65ch");
+    expect(phoneValue(".reader-article", "max-width")).toBe("56rem");
+    expect(phoneValue(".article-body", "max-width")).toBe("65ch");
+  });
+
+  it("widens the page and the prose once the screen can carry it", () => {
+    expect(inAtRule("@media (min-width: 80rem)", ".reader-article")).toContain(
+      "max-width: 72rem",
+    );
+    expect(inAtRule("@media (min-width: 80rem)", ".article-body")).toContain(
+      "max-width: 72ch",
+    );
   });
 
   it("sets body text at 18px on a 1.78 line", () => {
@@ -1043,26 +1056,74 @@ const WIDE = "@media (min-width: 64rem)";
 const WIDER = "@media (min-width: 90rem)";
 
 /**
- * The front page is the first thing every Reader sees, and its three moves are
- * geometric rather than decorative: the masthead grows, the lead only splits
- * where there is room for a 5/7 pair, and the grid is one, two, three columns.
- * The card is also where "no cover" has to be a designed state, not a gap.
+ * The front page is the first thing every Reader sees, and its moves are
+ * geometric rather than decorative: the hero stacks its slides so the longest
+ * title sets the frame, and the grid is one, two, three columns. The card is
+ * also where "no cover" has to be a designed state, not a gap.
  */
 describe("the front page", () => {
-  it("sets the masthead at 48, 64 and 72px, tracked like a wordmark", () => {
-    expect(phoneValue(".home-masthead h1", "font-size")).toBe("3rem");
-    expect(inAtRule(WIDE, ".home-masthead h1")).toContain("font-size: 4rem");
-    expect(inAtRule(WIDER, ".home-masthead h1")).toContain("font-size: 4.5rem");
-    expect(declarations(blockBody(".home-masthead h1")).get("letter-spacing")).toBe("-0.03em");
+  it("keeps the page's first-level heading out of the visual composition", () => {
+    const title = declarations(blockBody(".home-title"));
+    expect(title.get("position")).toBe("absolute");
+    expect(title.get("width")).toBe("1px");
+    expect(title.get("height")).toBe("1px");
+    expect(title.get("overflow")).toBe("hidden");
+    expect(title.get("clip-path")).toBe("inset(50%)");
   });
 
-  it("stacks the lead until 64rem, then splits five parts text to seven of cover", () => {
-    expect(declarations(blockBody(".article-lead")).get("grid-template-columns")).toBeUndefined();
+  it("stacks the hero slides in one cell so the longest title sets the frame", () => {
+    const slide = declarations(blockBody(".home-hero-slide"));
+    expect(slide.get("grid-area")).toBe("1 / 1");
+    expect(slide.get("position")).toBe("relative");
+    // A fixed ratio would crop the type; the frame follows the content instead.
+    expect(slide.get("aspect-ratio")).toBeUndefined();
+    expect(slide.get("min-height")).toContain("clamp(");
+    expect(slide.get("opacity")).toBe("0");
+    expect(slide.get("visibility")).toBe("hidden");
+    expect(declarations(blockBody(".home-hero-slide--active")).get("opacity")).toBe("1");
+  });
 
-    const split = inAtRule(WIDE, ".article-lead--split");
-    expect(split).toContain("5fr");
-    expect(split).toContain("7fr");
-    expect(inAtRule(WIDE, ".article-lead--split .article-card-cover")).toContain("grid-column: 2");
+  it("paints the hero's type out of its own palette, never off the photograph", () => {
+    // The scrim is ink and the words are paper: one inversion of the token pair,
+    // so the contrast is measured rather than guessed against an image.
+    expect(declarations(blockBody(".home-hero-slide::after")).get("background")).toContain(
+      "var(--fg)",
+    );
+    expect(declarations(blockBody(".home-hero-title")).get("color")).toBe("var(--bg)");
+    expect(declarations(blockBody(".home-hero-title a")).get("color")).toBe("var(--bg)");
+    expect(declarations(blockBody(".home-hero-summary")).get("color")).toBe("var(--bg)");
+    expect(declarations(blockBody(".home-hero-meta")).get("color")).toBe("var(--bg)");
+
+    const category = declarations(blockBody(".home-hero-category"));
+    expect(category.get("background")).toBe("var(--accent)");
+    expect(category.get("color")).toBe("var(--on-accent)");
+  });
+
+  it("clamps the hero excerpt at two lines", () => {
+    expect(declarations(blockBody(".home-hero-summary")).get("-webkit-line-clamp")).toBe("2");
+  });
+
+  it("keeps the arrows out of the way until the pointer or focus arrives", () => {
+    const arrow = declarations(blockBody(".home-hero-arrow"));
+    expect(arrow.get("opacity")).toBe("0");
+    expect(arrow.get("pointer-events")).toBe("none");
+
+    const revealed = declarations(blockBody(".home-hero:hover .home-hero-arrow"));
+    expect(revealed.get("opacity")).toBe("1");
+    expect(revealed.get("pointer-events")).toBe("auto");
+
+    // Pause is the exception: a moving carousel has to offer its own stop.
+    expect(declarations(blockBody(".home-hero-pause")).get("opacity")).toBeUndefined();
+  });
+
+  it("keeps the focus ring legible on the hero's inverted ground", () => {
+    const ring = declarations(blockBody(".home-hero-arrow:focus-visible"));
+    expect(ring.get("outline-color")).toBe("var(--bg)");
+  });
+
+  it("draws the current slide as a long line and the others as dots", () => {
+    expect(declarations(blockBody(".home-hero-dot::before")).get("width")).toBe("0.375rem");
+    expect(declarations(blockBody(".home-hero-dot--active::before")).get("width")).toBe("1.5rem");
   });
 
   it("lays the grid out as one column, two at 64rem and three at 90rem", () => {
@@ -1125,6 +1186,8 @@ describe("the front page", () => {
     expect(declarations(blockBody(".article-card")).get("min-width")).toBe("0");
     expect(declarations(blockBody(".article-card-title")).get("overflow-wrap")).toBe("anywhere");
     expect(declarations(blockBody(".article-card-cover img")).get("width")).toBe("100%");
+    expect(declarations(blockBody(".home-hero-slide")).get("min-width")).toBe("0");
+    expect(declarations(blockBody(".home-hero-title")).get("overflow-wrap")).toBe("anywhere");
   });
 });
 
@@ -1320,7 +1383,7 @@ describe("the Article page's measure", () => {
   ] as const;
 
   it.each(MEASURE_BLOCKS)("%s sits on the prose measure", (selector, fontSizeOwner) => {
-    expect(declarations(blockBody(selector)).get("max-width")).toBe("65ch");
+    expect(phoneValue(selector, "max-width")).toBe("65ch");
     expect(declarations(blockBody(fontSizeOwner)).get("font-size")).toBe("1.125rem");
   });
 

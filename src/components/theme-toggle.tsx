@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 
 import { MoonIcon, SunIcon, SystemIcon } from "./icons";
 
 const STORAGE_KEY = "soli-theme";
-/** The same switch is mounted in the bar and in the drawer; one event syncs them. */
+
+// Layout effects are client-only; on the server this falls back to useEffect so
+// rendering a client component during SSR does not warn.
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/** The same button is mounted in the bar and in the drawer; one event syncs them. */
 const CHANGE_EVENT = "soli-theme-change";
 
 type ThemePreference = "system" | "light" | "dark";
@@ -25,21 +31,27 @@ interface ThemeToggleProps {
   ariaLabel: string;
 }
 
-const OPTIONS: {
-  value: ThemePreference;
-  labelKey: keyof ThemeToggleProps["labels"];
-  icon: ReactNode;
-}[] = [
-  { value: "system", labelKey: "system", icon: <SystemIcon /> },
-  { value: "light", labelKey: "light", icon: <SunIcon /> },
-  { value: "dark", labelKey: "dark", icon: <MoonIcon /> },
-];
+const OPTIONS: Record<
+  ThemePreference,
+  { labelKey: keyof ThemeToggleProps["labels"]; icon: ReactNode }
+> = {
+  system: { labelKey: "system", icon: <SystemIcon /> },
+  light: { labelKey: "light", icon: <SunIcon /> },
+  dark: { labelKey: "dark", icon: <MoonIcon /> },
+};
+
+/** One tap moves the preference on: system → light → dark → system. */
+const NEXT: Record<ThemePreference, ThemePreference> = {
+  system: "light",
+  light: "dark",
+  dark: "system",
+};
 
 export default function ThemeToggle({ labels, ariaLabel }: ThemeToggleProps) {
   const [preference, setPreference] = useState<ThemePreference | null>(null);
   const [mediaQuery, setMediaQuery] = useState<MediaQueryList | null>(null);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     setMediaQuery(media);
 
@@ -53,12 +65,17 @@ export default function ThemeToggle({ labels, ariaLabel }: ThemeToggleProps) {
       // localStorage access can throw in private browsing.
     }
     setPreference(stored);
+    // A client navigation can replace the server-rendered <html> attributes
+    // with the ones the new layout sent, which do not carry the stored theme.
+    // The blocking theme script only runs on document loads, so restore the
+    // preference here after a locale switch as well.
+    applyTheme(stored === "system" ? systemTheme() : stored);
   }, []);
 
-  // The bar's switch and the drawer's switch are two instances of the same
+  // The bar's button and the drawer's button are two instances of the same
   // control, and only one of them is ever visible. Without this, the hidden one
-  // would keep the preference it mounted with and show the wrong segment after
-  // a resize.
+  // would keep the preference it mounted with and show the wrong icon after a
+  // resize.
   useEffect(() => {
     function handleChange(event: Event) {
       const detail = (event as CustomEvent<string>).detail;
@@ -101,20 +118,20 @@ export default function ThemeToggle({ labels, ariaLabel }: ThemeToggleProps) {
     window.dispatchEvent(new CustomEvent<string>(CHANGE_EVENT, { detail: value }));
   }
 
+  const current = preference ?? "system";
+  const option = OPTIONS[current];
+  const label = `${ariaLabel}: ${labels[option.labelKey]}`;
+
   return (
-    <div className="theme-switch" role="group" aria-label={ariaLabel}>
-      {OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={preference === option.value}
-          aria-label={labels[option.labelKey]}
-          title={labels[option.labelKey]}
-          onClick={() => select(option.value)}
-        >
-          {option.icon}
-        </button>
-      ))}
-    </div>
+    <button
+      className="theme-toggle"
+      type="button"
+      aria-label={label}
+      title={label}
+      data-theme-preference={current}
+      onClick={() => select(NEXT[current])}
+    >
+      {option.icon}
+    </button>
   );
 }

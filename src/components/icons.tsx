@@ -111,6 +111,25 @@ export function ChevronDownIcon(props: IconProps) {
   );
 }
 
+/** The two bars of a stopped clock: the carousel holds its slide. */
+export function PauseIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 6v12" />
+      <path d="M15 6v12" />
+    </Icon>
+  );
+}
+
+/** The same control, released. */
+export function PlayIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M8 5.5 18 12 8 18.5Z" />
+    </Icon>
+  );
+}
+
 /** The island: a sun over two lines of sea. It is the site's only drawn mark. */
 export function BrandMark({ size = 26, ...props }: IconProps & { size?: number }) {
   return (

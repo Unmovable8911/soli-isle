@@ -1,16 +1,13 @@
-/* The public shell: a 64px sticky top bar that carries the wordmark, the search
-   field and the theme switch; a 256px sticky rail below it that carries the
-   sections; a native <details> drawer below 64rem that carries the same things;
-   and the footer every page closes on.
+/* The public shell: a 64px sticky top bar carrying the wordmark, the sections,
+   the search field and the language and theme controls; a native <details>
+   drawer below 64rem carrying the same sections and controls; and the footer
+   every page closes on.
 
-   The rail exists because the sections deserve a permanent place beside the
-   reading column (ADR-0001). The wordmark moved up into the bar in the
-   editorial refresh (ADR-0004), and the Category tree moved into the Archive
-   (ADR-0005), so the rail starts with navigation.
-
-   Both copies of the rail's sections are in the DOM and the breakpoint decides
-   which one a pointer and a Tab can reach, so the shell needs no client state
-   to open the menu. */
+   The sections live in the bar on desktop and in the drawer below 64rem. Both
+   copies are in the DOM and the breakpoint decides which one a pointer and a
+   Tab can reach, so the shell needs no client state to open the menu. The
+   reading column is capped and centred rather than stretched across a wide
+   desktop (ADR-0006). */
 
 .site-topbar {
   position: sticky;
@@ -30,9 +27,9 @@
    rather than as another link. */
 .site-brand {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 0.55rem;
-  margin-right: auto;
   color: var(--fg);
   text-decoration: none;
 }
@@ -50,6 +47,11 @@
   letter-spacing: -0.01em;
 }
 
+/* The sections are in the bar from 64rem up and in the drawer below it. */
+.site-topbar-nav {
+  display: none;
+}
+
 /* The search field is one pill: the input draws the boundary, the submit button
    sits inside it on the right. The bar hides it below 64rem, where the drawer
    carries the same form. */
@@ -57,7 +59,6 @@
   display: none;
   flex: 0 1 21rem;
   min-width: 0;
-  margin-left: auto;
 }
 
 .site-search-field {
@@ -123,6 +124,14 @@
   margin-left: auto;
 }
 
+/* The language menu and the theme button travel together: on desktop they sit
+   at the right of the bar, and below 64rem they sit at the foot of the drawer. */
+.site-topbar-controls {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .site-search-link {
   display: inline-flex;
   align-items: center;
@@ -135,36 +144,105 @@
   text-decoration: none;
 }
 
-/* The theme switch: three icon segments in one pill. The visible label is the
-   icon; the accessible name is the label the messages already carry. */
-.theme-switch {
-  display: none;
-  align-items: center;
-  gap: 0.125rem;
-  padding: 0.125rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-}
-
-.theme-switch button {
+/* The theme button: one control that cycles system → light → dark. The icon is
+   the visible label; the accessible name says which preference is active. */
+.theme-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  min-height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
   padding: 0;
-  border: 0;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: transparent;
+  background: var(--surface);
   color: var(--muted);
   cursor: pointer;
 }
 
-.theme-switch button[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+.theme-toggle:hover {
+  border-color: var(--accent);
   color: var(--accent);
+}
+
+/* The language picker is a native disclosure: one summary, one panel of links.
+   It needs no script to open, and the links keep working without JavaScript. */
+.site-locale-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.site-locale-menu summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+}
+
+.site-locale-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-locale-menu summary:hover,
+.site-locale-menu[open] summary {
+  border-color: var(--accent);
+}
+
+.site-locale-menu:not([open]) > .site-locale-panel {
+  display: none;
+}
+
+.site-locale-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  z-index: 5;
+  min-width: 10rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow: 0 18px 40px -24px color-mix(in srgb, var(--fg) 45%, transparent);
+}
+
+.site-locale ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-locale a {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.site-locale a:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.site-locale a[aria-current="page"] {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .site-menu summary {
@@ -211,23 +289,7 @@
   margin: 0 0 1.75rem;
 }
 
-/* The bar hides the switch below 64rem; the drawer is where it lives then. */
-.site-menu-panel .theme-switch {
-  display: inline-flex;
-  align-self: flex-start;
-}
-
-.site-rail {
-  display: none;
-}
-
-.site-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
-
-.site-rail-heading {
+.site-menu-heading {
   margin: 0 0 0.5rem;
   color: var(--muted);
   font-size: 0.75rem;
@@ -236,7 +298,25 @@
   text-transform: uppercase;
 }
 
-.site-sections .site-nav ul {
+.site-menu-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+/* In the drawer the language panel opens upward: the control sits at the foot
+   of the panel, where a downward panel would be clipped. */
+.site-menu-panel .site-locale-panel {
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+}
+
+.site-nav ul {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -264,8 +344,9 @@
   font-weight: 600;
 }
 
-/* The marker is a short accent rule in the gutter, not a dot inside the line:
-   every label then starts on the same edge whether it is current or not. */
+/* The drawer marks the current section with a short accent rule in the gutter,
+   not a dot inside the line: every label then starts on the same edge whether
+   it is current or not. The bar has no gutter, so it drops the rule. */
 .site-nav a[aria-current="page"]::before {
   content: "";
   position: absolute;
@@ -276,95 +357,67 @@
   background: var(--accent);
 }
 
-.site-rail-foot {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border);
-}
-
-.site-locale ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.site-locale a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  color: var(--muted);
-  font-size: 0.875rem;
-  text-decoration: none;
-}
-
-.site-locale a:hover {
-  color: var(--fg);
-}
-
-.site-locale a[aria-current="page"] {
-  color: var(--fg);
-  font-weight: 600;
-}
-
 .site-content {
+  width: 100%;
+  max-width: 80rem;
   min-width: 0;
+  margin-inline: auto;
 }
 
-/* The sign-off. A publication ends on its own name, its sections, and the year
-   — the reader should never arrive at a page's end and find nothing there. */
+/* The sign-off. One compact rule: the masthead and its one-line description on
+   the left, the two sections and the year on the right. The old footer stacked
+   three full-width bands and read like a second masthead. */
 .site-footer {
-  display: grid;
-  gap: 1.5rem;
-  margin-top: 3rem;
-  padding: 2.25rem 1.25rem 3rem;
+  margin-top: 2.5rem;
+  padding: 1.25rem 1.25rem 1.5rem;
   border-top: 1px solid var(--border);
 }
 
-.site-footer-top {
+.site-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 1.5rem;
+}
+
+.site-footer-identity {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1rem 2rem;
+  align-items: baseline;
+  gap: 0.125rem 0.75rem;
+  min-width: 0;
 }
 
 .site-footer-brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   color: var(--fg);
   font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.015em;
   text-decoration: none;
 }
 
-.site-rail-note {
+.site-footer-note {
+  display: none;
   margin: 0;
+  max-width: 24rem;
   color: var(--muted);
   font-size: 0.8125rem;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
-.site-footer-note {
-  margin: 0;
-  max-width: 26rem;
-  color: var(--muted);
-  font-size: 0.9375rem;
-  line-height: 1.6;
+.site-footer-nav {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .site-footer-nav ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 1.5rem;
+  gap: 0 1.125rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -375,7 +428,7 @@
   align-items: center;
   min-height: 2.75rem;
   color: var(--muted);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   text-decoration: none;
 }
 
@@ -383,17 +436,18 @@
   color: var(--accent);
 }
 
-.site-footer-bottom {
+.site-footer-meta {
   display: flex;
+  grid-column: 1 / -1;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
+  gap: 0.25rem 1.5rem;
   color: var(--muted);
   font-size: 0.8125rem;
 }
 
-.site-footer-bottom p {
+.site-footer-meta p {
   margin: 0;
 }
 
@@ -410,11 +464,32 @@
   color: var(--accent);
 }
 
-/* Thumb targets. The bar's own controls come from base.css; these are the ones
-   the rail and the drawer add. */
-.site-rail a,
+@media (min-width: 48rem) {
+  .site-footer-inner {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .site-footer-note {
+    display: block;
+  }
+
+  .site-footer-nav {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .site-footer-meta {
+    grid-column: auto;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+}
+
+/* Thumb targets. The bar's own links come from base.css; these are the ones the
+   bar's controls, the drawer and the footer add. */
 .site-menu summary,
-.theme-switch button,
+.site-locale-menu summary,
+.theme-toggle,
 .site-search-submit {
   display: inline-flex;
   align-items: center;
@@ -422,12 +497,38 @@
 }
 
 @media (min-width: 64rem) {
+  /* Keep the bar's content on the same left edge as the capped reading column:
+     80rem column, 2.5rem main padding, so the text edge is 75rem wide. */
   .site-topbar {
-    padding-inline: 2rem;
+    padding-inline: max(2.5rem, calc((100% - 75rem) / 2));
+  }
+
+  .site-topbar-nav {
+    display: block;
+    margin-left: 0.5rem;
+  }
+
+  .site-topbar .site-nav ul {
+    flex-direction: row;
+    gap: 1.25rem;
+  }
+
+  .site-topbar .site-nav a[aria-current="page"]::before {
+    display: none;
   }
 
   .site-search {
     display: block;
+    margin-left: auto;
+  }
+
+  /* The search field, not the action group, is what absorbs the free space. */
+  .site-topbar-actions {
+    margin-left: 0;
+  }
+
+  .site-topbar-controls {
+    display: flex;
   }
 
   /* More specific than base.css's `.site-topbar a`, which is what sets a bar
@@ -436,31 +537,8 @@
     display: none;
   }
 
-  .theme-switch {
-    display: inline-flex;
-  }
-
   .site-menu {
     display: none;
-  }
-
-  .site-shell {
-    display: grid;
-    grid-template-columns: 16rem minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .site-rail {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    position: sticky;
-    top: 4rem;
-    align-self: start;
-    height: calc(100vh - 4rem);
-    overflow-y: auto;
-    padding: 2rem 1.5rem 1.5rem 2rem;
-    border-inline-end: 1px solid var(--border);
   }
 
   .site-content > main {
@@ -468,13 +546,14 @@
   }
 
   .site-footer {
-    margin-top: 3.5rem;
-    padding: 2.5rem 2.5rem 3.5rem;
+    margin-top: 3rem;
+    padding: 1.5rem 2.5rem 2rem;
   }
 }
 
 .site-search-submit:active,
-.theme-switch button:active,
+.theme-toggle:active,
+.site-locale-menu summary:active,
 .site-menu summary:active {
   opacity: 0.8;
 }
@@ -485,8 +564,17 @@
   .site-footer-nav a,
   .site-footer-top-link,
   .site-search-submit,
-  .theme-switch button {
+  .theme-toggle,
+  .site-locale-menu summary {
     transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  }
+
+  .site-locale-menu summary svg {
+    transition: transform 150ms ease;
+  }
+
+  .site-locale-menu[open] summary svg {
+    transform: rotate(180deg);
   }
 
   .site-brand-mark {

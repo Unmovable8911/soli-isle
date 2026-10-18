@@ -33,6 +33,7 @@
 ### 读者端
 
 - 首页 `/{locale}` 直接展示最近的长文流。**没有** `/{locale}/articles` 这样的文章列表页。
+- 外壳：单条顶栏容纳站名、`首页` / `归档` / `推文`、搜索、语言与主题；<64rem 收进「菜单」抽屉。没有常驻侧栏，页脚是一条紧凑的署名栏。内容列上限 80rem；长文页在宽屏为 72rem，正文 72ch。
 - 长文详情 `/{locale}/articles/{slug}`：封面、摘要、富文本正文、目录、脚注、上一篇/下一篇。
 - 分类：分类目录在归档页顶部（`/{locale}/archive#categories`），旧的 `/{locale}/categories` 索引会重定向到那里；分类详情仍为 `/{locale}/categories/...` 的嵌套地址，例如 `/zh/categories/essays`、`/zh/categories/essays/on-writing`。
 - 标签 `/{locale}/tags/{slug}`，只列长文。

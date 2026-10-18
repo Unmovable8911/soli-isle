@@ -1,18 +1,18 @@
 import Link from "next/link";
 
 import type { Locale } from "@/config/site";
-import { buildArchivePath, buildFeedPath } from "@/domain/public-paths";
+import { buildArchivePath, buildFeedPath, buildHomePath } from "@/domain/public-paths";
 import type { Messages } from "@/messages";
 
 export type SiteNavLabels = Messages["reader"]["nav"];
 
 /**
- * The site navigation. Its accessible name is its own — the links are the
- * archive and the Feed, so naming the whole navigation after one of its two
- * destinations tells a screen reader nothing.
+ * The site navigation: the home page, the archive and the Feed. Its accessible
+ * name is its own; naming the whole navigation after one of its destinations
+ * tells a screen reader nothing.
  *
  * `currentPath` is passed in rather than read from a hook so this stays a plain
- * component: the rail and the drawer each get the marker from one client
+ * component: the top bar and the drawer each get the marker from one client
  * wrapper, and the server-rendered HTML already carries it with JavaScript off.
  */
 export function SiteNav({
@@ -25,8 +25,9 @@ export function SiteNav({
   currentPath?: string | null;
 }) {
   const items = [
-    { href: buildArchivePath(locale), label: labels.archive },
-    { href: buildFeedPath({ locale }), label: labels.feed },
+    { href: buildHomePath(locale), label: labels.home, exact: true },
+    { href: buildArchivePath(locale), label: labels.archive, exact: false },
+    { href: buildFeedPath({ locale }), label: labels.feed, exact: false },
   ] as const;
 
   return (
@@ -36,7 +37,7 @@ export function SiteNav({
           <li key={item.href}>
             <Link
               href={item.href}
-              aria-current={isCurrent(currentPath, item.href) ? "page" : undefined}
+              aria-current={isCurrent(currentPath, item.href, item.exact) ? "page" : undefined}
             >
               {item.label}
             </Link>
@@ -49,11 +50,12 @@ export function SiteNav({
 
 /**
  * A section is current at its own address and below it — a Tag-filtered Feed is
- * still "Feed".
+ * still "Feed". Home is the exception: every path is below the Locale root, so
+ * only its exact address is "Home".
  */
-function isCurrent(pathname: string | null, href: string): boolean {
+function isCurrent(pathname: string | null, href: string, exact: boolean): boolean {
   if (pathname === null) {
     return false;
   }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return pathname === href || (!exact && pathname.startsWith(`${href}/`));
 }

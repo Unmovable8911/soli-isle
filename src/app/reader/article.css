@@ -556,6 +556,22 @@
   }
 }
 
+/* An ultra-wide screen earns a wider page: 1,152px gives the cover and title
+   room to breathe, while the prose stops at 72ch so the line length stays
+   readable. The contents keep their margin rail. */
+@media (min-width: 80rem) {
+  .reader-article-page,
+  .reader-article {
+    max-width: 72rem;
+  }
+
+  .article-body,
+  .reader-article-tags,
+  .reader-article-nav {
+    max-width: 72ch;
+  }
+}
+
 .reader-search-form button:active,
 .lightbox-close:active,
 .lightbox-previous:active,
@@ -585,19 +601,17 @@
   min-height: 2.75rem;
 }
 
-/* On paper the shell is not the point: the piece is. The rail, the bar, the
+/* On paper the shell is not the point: the piece is. The bar, the drawer, the
    footer, the contents and the pager all go, the column opens to the page, and
    the prose is set for ink rather than for a screen. */
 @media print {
   .site-topbar,
-  .site-rail,
   .site-menu,
   .site-footer,
   .breadcrumbs,
   .article-toc,
   .reader-article-nav,
-  .reader-article-tags,
-  .theme-switch {
+  .reader-article-tags {
     display: none;
   }
 
