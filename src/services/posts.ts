@@ -32,7 +32,7 @@ import {
   localeOrder,
   syncTranslationAssets,
 } from "./content";
-import { loadTagViews, type TagContext, type TagView } from "./tags";
+import { findTagViewBySlug, loadTagViews, type TagContext, type TagView } from "./tags";
 import { visibleToReader } from "./visibility";
 
 /**
@@ -687,6 +687,35 @@ export async function unarchivePost(
 }
 
 /**
+ * What a Tag-filtered Feed does with the Slug it was asked for — the service's
+ * judgement, not the adapter's.
+ *
+ * A Slug no Tag answers to cannot filter anything: passing it through would
+ * label the Feed with a Tag that does not exist, so the Feed stays unfiltered
+ * and the page renders no filter heading. Reporting the answer instead of
+ * inventing a name keeps the cards and the heading derived from one decision.
+ */
+export type FeedTagFilter = { kind: "all" } | { kind: "tag"; tag: FeedTagRef };
+
+export function resolveFeedTag(
+  ctx: PostContext,
+  input: { locale: Locale; tagSlug?: string | null },
+): FeedTagFilter {
+  const slug = input.tagSlug;
+  if (slug === undefined || slug === null || slug.length === 0) {
+    return { kind: "all" };
+  }
+  const found = findTagViewBySlug(ctx, slug);
+  if (found === null) {
+    return { kind: "all" };
+  }
+  return {
+    kind: "tag",
+    tag: { slug: found.slug, name: pickLocalised(found.names, input.locale, found.slug) },
+  };
+}
+
+/**
  * One page of the Feed, newest first.
  *
  * Locale-strict by construction: the join is on a Post Translation in the
@@ -713,8 +742,9 @@ export async function readFeedPage(
     visibleToReader(post.publicationState, post.publishTime, nowIso),
     isNotNull(post.publishTime),
   ];
-  if (input.tagSlug !== undefined && input.tagSlug !== null && input.tagSlug.length > 0) {
-    const tagSlug = input.tagSlug;
+  const tagFilter = resolveFeedTag(ctx, { locale: input.locale, tagSlug: input.tagSlug ?? null });
+  if (tagFilter.kind === "tag") {
+    const tagSlug = tagFilter.tag.slug;
     conditions.push(
       exists(
         db

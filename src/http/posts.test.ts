@@ -369,6 +369,22 @@ describe("the feed endpoint", () => {
     expect(page.posts.map((post) => post.id)).toEqual([tagged]);
   });
 
+  it("renders no Tag filter for a Slug that names no Tag, and does not filter either", async () => {
+    const fixture = await createFixture();
+    const first = await seedPublished(fixture, { publishTime: "2025-06-01T00:00:00.000Z" });
+    const second = await seedPublished(fixture, { publishTime: "2025-06-02T00:00:00.000Z" });
+
+    const page = (await (
+      await feedResponse(
+        fixture.posts,
+        new Request("http://localhost/api/public/feed?locale=zh&tag=no-such-tag"),
+      )
+    ).json()) as { posts: { id: string }[]; tag: unknown };
+
+    expect(page.tag).toBeNull();
+    expect(page.posts.map((post) => post.id)).toEqual([second, first]);
+  });
+
   it("refuses a cursor it did not issue and a Locale it does not serve", async () => {
     const fixture = await createFixture();
 

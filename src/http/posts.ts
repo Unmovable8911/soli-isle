@@ -7,11 +7,9 @@ import {
   type FeedCursor,
 } from "@/domain/feed-cursor";
 import type { FeedView } from "@/domain/feed-view";
-import { pickLocalised } from "@/domain/localised";
 import { formatAbsoluteMinute, formatRelativeTime } from "@/domain/relative-time";
 import { renderArticleBody } from "@/editor/render/render-article";
 import { imageSrcset } from "@/editor/render/image-srcset";
-import { listTags } from "@/services/tags";
 import type { AuthorAuthContext } from "@/services/auth";
 import {
   addPostTranslation,
@@ -23,6 +21,7 @@ import {
   publishPost,
   readFeedPage,
   removePostTranslation,
+  resolveFeedTag,
   setPostDefaultLocale,
   savePostTranslation,
   setPostImages,
@@ -372,10 +371,8 @@ export async function feedView(
   },
 ): Promise<FeedView> {
   const now = posts.clock.now();
-  const [page, tags] = await Promise.all([
-    readFeedPage(posts, input),
-    input.tagSlug === undefined || input.tagSlug === null ? Promise.resolve([]) : listTags(posts),
-  ]);
+  const tagFilter = resolveFeedTag(posts, { locale: input.locale, tagSlug: input.tagSlug ?? null });
+  const page = await readFeedPage(posts, input);
 
   const cards = await Promise.all(
     page.posts.map(async (post) => ({
@@ -396,21 +393,10 @@ export async function feedView(
     })),
   );
 
-  const tagSlug = input.tagSlug ?? null;
-  const tag =
-    tagSlug === null
-      ? null
-      : (() => {
-          const found = tags.find((candidate) => candidate.slug === tagSlug);
-          return found === undefined
-            ? { slug: tagSlug, name: tagSlug }
-            : { slug: found.slug, name: pickLocalised(found.names, input.locale, found.slug) };
-        })();
-
   return {
     posts: cards,
     nextCursor: page.nextCursor === null ? null : encodeFeedCursor(page.nextCursor),
-    tag,
+    tag: tagFilter.kind === "tag" ? tagFilter.tag : null,
   };
 }
 

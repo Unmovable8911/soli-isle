@@ -19,6 +19,7 @@ import {
   publishPost,
   readFeedPage,
   removePostTranslation,
+  resolveFeedTag,
   setPostDefaultLocale,
   savePostTranslation,
   setPostImages,
@@ -775,9 +776,36 @@ describe("the feed read", () => {
         (post) => post.id,
       ),
     ).toEqual([withTag]);
-    await expect(
-      readFeedPage(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" }),
-    ).resolves.toEqual({ posts: [], nextCursor: null });
+  });
+
+  it("treats a Slug no Tag answers to as no filter at all, instead of inventing a Tag", async () => {
+    const fixture = await createFixture();
+    const travel = await createNamedTag(fixture, "旅行", "travel");
+    const tagged = await seedFeedPost(fixture, {
+      publishTime: "2025-06-01T00:00:00.000Z",
+      tagIds: [travel.id],
+    });
+    const untagged = await seedFeedPost(fixture, { publishTime: "2025-06-02T00:00:00.000Z" });
+
+    expect(resolveFeedTag(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" })).toEqual({
+      kind: "all",
+    });
+    expect(
+      (await readFeedPage(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" })).posts.map(
+        (post) => post.id,
+      ),
+    ).toEqual([untagged, tagged]);
+  });
+
+  it("names the Tag a filtered Feed is showing, in the Reader's Locale", async () => {
+    const fixture = await createFixture();
+    await createNamedTag(fixture, "旅行", "travel");
+
+    expect(resolveFeedTag(fixture.posts, { locale: "zh", tagSlug: "travel" })).toEqual({
+      kind: "tag",
+      tag: { slug: "travel", name: "旅行" },
+    });
+    expect(resolveFeedTag(fixture.posts, { locale: "zh", tagSlug: null })).toEqual({ kind: "all" });
   });
 
   it("carries the body, the ordered image set and the Tag names a card needs", async () => {
