@@ -1,0 +1,205 @@
+/* The published body, once. The editor mounts the same component, so these
+   rules cover both surfaces by design rather than by accident. */
+
+/* The rendered Article body. Ticket 07 mounts the same markup on the
+   public page, so this block is the published form. */
+
+.article-body {
+  max-width: 42rem;
+  line-height: 1.75;
+  /* A pasted URL is one unbreakable word; at 360px it must wrap rather than
+     scroll the whole document sideways. */
+  overflow-wrap: anywhere;
+}
+
+.article-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.article-body blockquote {
+  margin: 0 0 1rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--muted);
+}
+
+.article-body pre {
+  overflow-x: auto;
+  padding: 0.85rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.article-body code {
+  font-size: 0.9em;
+}
+
+.article-body mark {
+  background: color-mix(in srgb, var(--accent) 28%, var(--bg));
+  color: inherit;
+}
+
+.article-body hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+
+.article-body ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.article-body ul[data-type="taskList"] li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.article-body ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+.article-body a {
+  color: var(--accent);
+}
+
+/* Power blocks (issue 09). The same markup is produced for the admin preview
+   and for the public page, so one rule set covers both surfaces; the editor's
+   own surface reuses it through .article-editor-surface. */
+
+.article-body table,
+.article-editor-surface table {
+  width: 100%;
+  margin: 0 0 1rem;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.article-body th,
+.article-body td,
+.article-editor-surface th,
+.article-editor-surface td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-body th,
+.article-editor-surface th {
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.article-body th > p,
+.article-body td > p,
+.article-editor-surface th > p,
+.article-editor-surface td > p {
+  margin: 0;
+}
+
+/* A wide formula scrolls inside the column instead of breaking the layout. */
+.article-body .katex-display,
+.article-editor-surface .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.15rem;
+}
+
+.article-body .callout,
+.article-editor-surface .callout {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--accent);
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.article-body .callout[data-tone="note"],
+.article-editor-surface .callout[data-tone="note"] {
+  border-left-color: var(--border);
+}
+
+.article-body .callout[data-tone="warn"],
+.article-editor-surface .callout[data-tone="warn"] {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+
+.article-body .callout[data-tone="danger"],
+.article-editor-surface .callout[data-tone="danger"] {
+  border-left-color: var(--fg);
+  background: var(--surface);
+}
+
+.article-body .callout > .callout-body > :last-child,
+.article-editor-surface .callout > .callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Fold blocks expand through native <details>, so the public page needs no
+   JavaScript. The editor renders its own wrapper with a toggle button. */
+.article-body details {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.article-body summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.article-body details[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.article-editor-surface [data-type="details"] {
+  margin: 0 0 1rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.article-editor-surface .details-toggle {
+  padding: 0 0.35rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.25rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.article-editor-surface summary {
+  font-weight: 600;
+}
+
+.article-body .footnotes {
+  margin: 2rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.article-body .footnote-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.article-body .footnote-list > li {
+  margin-bottom: 0.35rem;
+}
+
+.article-body .footnote-ref,
+.article-body .footnote-back {
+  text-decoration: none;
+}
+
+.article-body .footnote-back {
+  margin-left: 0.35rem;
+}

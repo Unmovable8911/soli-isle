@@ -1,0 +1,43 @@
+/* The console shell and the sign-in panel: the admin layout's own chrome, the
+   badge that marks it, and nothing shared with the public document. */
+
+.admin-badge {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  color: var(--muted);
+  font-size: 0.8em;
+  font-weight: 400;
+}
+
+.admin-login-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 24rem;
+}
+
+.admin-login-form label {
+  font-weight: 600;
+}
+
+.admin-login-form input,
+.admin-login-form button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.admin-login-form button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
+.admin-home-entry a {
+  color: var(--accent);
+}

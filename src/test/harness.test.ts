@@ -86,6 +86,9 @@ describe("shared test harness", () => {
       "category_id",
       "created_at",
       "updated_at",
+      // Added by ALTER TABLE, so the column lands after the original ones —
+      // the same way article_translation.version did.
+      "cover_asset_id",
     ]);
     expect(columnsOf(harness, "article_translation")).toEqual([
       "article_id",

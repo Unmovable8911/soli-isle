@@ -1,0 +1,288 @@
+/* The asset library, and the picker the editor opens from it. */
+
+/* Admin asset library and reusable image picker. Colors stay on the four
+   global tokens so both themes keep working. */
+
+.asset-library {
+  display: grid;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.asset-section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.asset-section > h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.asset-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.asset-empty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.375rem;
+  color: var(--muted);
+}
+
+.asset-uploader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.asset-uploader label {
+  font-weight: 600;
+}
+
+.asset-uploader input {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.asset-upload-list {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.asset-upload-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.asset-upload-name {
+  font-weight: 600;
+}
+
+.asset-upload-status {
+  color: var(--muted);
+}
+
+.asset-upload-success .asset-upload-status {
+  color: var(--accent);
+}
+
+.asset-upload-error .asset-upload-status {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asset-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--fg);
+  min-width: 0;
+}
+
+.asset-card-body {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.asset-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--surface);
+}
+
+.asset-file-name {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.asset-facts {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.asset-refs {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.asset-refs-title {
+  color: var(--muted);
+}
+
+.asset-ref-list {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asset-ref-kind {
+  margin-right: 0.4rem;
+  color: var(--muted);
+}
+
+.asset-ref-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.asset-badge {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  color: var(--muted);
+}
+
+.asset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.asset-button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.asset-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.asset-button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.asset-button-danger {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.asset-button-danger:hover:not(:disabled) {
+  color: var(--on-accent);
+}
+
+.asset-notice {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.85rem;
+}
+
+.asset-notice:empty {
+  display: none;
+}
+
+.asset-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--fg) 55%, transparent);
+}
+
+.asset-picker {
+  display: grid;
+  gap: 0.85rem;
+  width: min(56rem, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  padding: 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.asset-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.asset-picker-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.asset-picker-grid {
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+}
+
+.asset-pick-button {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.asset-pick-button:hover {
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .asset-pick-button,
+  .asset-button {
+    transition:
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+}

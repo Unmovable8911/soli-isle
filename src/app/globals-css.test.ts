@@ -1,16 +1,38 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 /**
- * The one stylesheet is the whole visual contract, so these assertions read it
- * as data: the theme tokens must carry real WCAG contrast, the controls must
- * draw a perceivable boundary, and no animation may escape the reduced-motion
- * switch. Parsing the file (rather than importing values) is what makes the
- * test fail when someone edits a hex literal for looks.
+ * The stylesheets are the whole visual contract, so these assertions read them
+ * as data: tokens.css alone owns the palette and the theme must carry real
+ * WCAG contrast, the rules in every layer must draw a control boundary from a
+ * proven token, and no animation may escape the reduced-motion switch. Parsing
+ * the files (rather than importing values) is what makes the test fail when
+ * someone edits a colour literal for looks.
+ *
+ * globals.css is the entry: it only imports, and its import list is the
+ * cascade. Everything below reads that list, so a stylesheet added to the
+ * layer stack is audited without anyone remembering to register it here.
  */
-const CSS = readFileSync(path.resolve(process.cwd(), "src/app/globals.css"), "utf8");
+const STYLES = path.resolve(process.cwd(), "src/app");
+const ENTRY = path.join(STYLES, "globals.css");
+
+function importsOf(file: string): string[] {
+  return [...readFileSync(file, "utf8").matchAll(/@import\s+"([^"]+)"\s*;/g)].map(
+    (match) => match[1] ?? "",
+  );
+}
+
+const ENTRY_SOURCE = readFileSync(ENTRY, "utf8");
+const IMPORTS = importsOf(ENTRY);
+const STYLESHEETS = IMPORTS.map((specifier) => path.resolve(STYLES, specifier));
+
+/** The imported layers, concatenated in cascade order. */
+const CSS = STYLESHEETS.map((file) => readFileSync(file, "utf8")).join("\n");
+
+/** tokens.css is the only file allowed to declare a colour, so it is read alone. */
+const TOKENS = readFileSync(path.join(STYLES, "tokens.css"), "utf8");
 
 /** Comments are prose, not rules; drop them so no prelude starts with a story. */
 const SOURCE = CSS.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -37,29 +59,47 @@ interface TokenPair {
 const TOKEN_PAIRS: readonly TokenPair[] = [
   { foreground: "fg", background: "bg", min: TEXT_MIN, use: "body text" },
   { foreground: "muted", background: "bg", min: TEXT_MIN, use: "secondary text" },
-  { foreground: "accent", background: "bg", min: TEXT_MIN, use: "link text" },
-  { foreground: "bg", background: "accent", min: TEXT_MIN, use: "label on a filled control" },
-  { foreground: "accent", background: "bg", min: UI_MIN, use: "focus ring and UI boundary" },
-  { foreground: "line", background: "bg", min: UI_MIN, use: "control boundary" },
+  { foreground: "accent", background: "bg", min: TEXT_MIN, use: "link text and the focus ring" },
+  { foreground: "on-accent", background: "accent", min: TEXT_MIN, use: "label on a filled control" },
+  { foreground: "fg", background: "surface", min: TEXT_MIN, use: "body text on a card" },
+  { foreground: "muted", background: "surface", min: TEXT_MIN, use: "secondary text on a card" },
+  { foreground: "border-strong", background: "bg", min: UI_MIN, use: "control boundary" },
 ];
 
-/** Every `{ … }` body in the stylesheet, with the selector (or at-rule) it answers to. */
-function rules(): { prelude: string; body: string }[] {
+/**
+ * The eight roles, in the order tokens.css declares them. A role is only as
+ * good as its measurement, so this list and TOKEN_PAIRS are deliberately
+ * different tables: one proves a token is a colour, the other proves it is a
+ * `readable` colour.
+ */
+const TOKEN_ROLES = [
+  "--bg",
+  "--surface",
+  "--fg",
+  "--muted",
+  "--border",
+  "--border-strong",
+  "--accent",
+  "--on-accent",
+] as const;
+
+/** Every `{ … }` body in one stylesheet, with the selector (or at-rule) it answers to. */
+function rulesIn(source: string): { prelude: string; body: string }[] {
   const found: { prelude: string; body: string }[] = [];
-  for (let index = 0; index < SOURCE.length; index += 1) {
-    if (SOURCE[index] !== "{") {
+  for (let index = 0; index < source.length; index += 1) {
+    if (source[index] !== "{") {
       continue;
     }
     let start = index - 1;
-    while (start >= 0 && !"{};".includes(SOURCE[start] ?? "")) {
+    while (start >= 0 && !"{};".includes(source[start] ?? "")) {
       start -= 1;
     }
     let depth = 0;
-    let end = SOURCE.length - 1;
-    for (let scan = index; scan < SOURCE.length; scan += 1) {
-      if (SOURCE[scan] === "{") {
+    let end = source.length - 1;
+    for (let scan = index; scan < source.length; scan += 1) {
+      if (source[scan] === "{") {
         depth += 1;
-      } else if (SOURCE[scan] === "}") {
+      } else if (source[scan] === "}") {
         depth -= 1;
         if (depth === 0) {
           end = scan;
@@ -67,10 +107,18 @@ function rules(): { prelude: string; body: string }[] {
         }
       }
     }
-    found.push({ prelude: SOURCE.slice(start + 1, index).trim(), body: SOURCE.slice(index + 1, end) });
+    found.push({ prelude: source.slice(start + 1, index).trim(), body: source.slice(index + 1, end) });
   }
   return found;
 }
+
+function rules(): { prelude: string; body: string }[] {
+  return rulesIn(SOURCE);
+}
+
+/** Tokens are read from tokens.css alone: the palette has exactly one home. */
+const TOKEN_SOURCE = TOKENS.replace(/\/\*[\s\S]*?\*\//g, "");
+const TOKEN_RULES = rulesIn(TOKEN_SOURCE);
 
 /**
  * Every declaration that applies to `selector` — alone, in a selector list, or
@@ -106,8 +154,12 @@ function declarations(body: string): Map<string, string> {
 }
 
 function themeTokens(theme: Theme): Map<string, string> {
+  const body = TOKEN_RULES.find((rule) => rule.prelude === THEMES[theme])?.body;
+  if (body === undefined) {
+    throw new Error(`tokens.css has no ${THEMES[theme]} block`);
+  }
   const tokens = new Map<string, string>();
-  for (const match of blockBody(THEMES[theme]).matchAll(/(--[a-z-]+)\s*:\s*([^;]+);/g)) {
+  for (const match of body.matchAll(/(--[a-z-]+)\s*:\s*([^;]+);/g)) {
     const [, name, value] = match;
     if (name !== undefined && value !== undefined) {
       tokens.set(name, value.trim());
@@ -149,6 +201,95 @@ function measured(theme: Theme, pair: TokenPair): number {
   return contrastRatio(foreground, background);
 }
 
+describe("the stylesheet layers", () => {
+  it("keeps the entry to imports alone, in cascade order", () => {
+    const leftover = ENTRY_SOURCE.replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/@import\s+"[^"]+"\s*;/g, "")
+      .trim();
+    expect(leftover).toBe("");
+    expect(IMPORTS.length).toBeGreaterThan(1);
+
+    // Palette first, then the reset, then the reading surfaces, then the console.
+    expect(path.basename(IMPORTS[0] ?? "")).toBe("tokens.css");
+    expect(path.basename(IMPORTS[1] ?? "")).toBe("base.css");
+    const reader = IMPORTS.findIndex((specifier) => specifier.startsWith("./reader/"));
+    const admin = IMPORTS.findIndex((specifier) => specifier.startsWith("./admin/"));
+    expect(reader, "globals.css imports no reader layer").toBeGreaterThan(1);
+    expect(admin, "globals.css imports no admin layer").toBeGreaterThan(reader);
+  });
+
+  it("never imports the palette twice", () => {
+    expect(IMPORTS.filter((specifier) => specifier.endsWith("tokens.css"))).toHaveLength(1);
+  });
+});
+
+/**
+ * Type is the other half of the visual contract and the one part of it a
+ * network request could quietly replace: a CDN face means a third party learns
+ * who read what, and an offline reader gets a fallback. Both families are OFL,
+ * so both are shipped with their licence next to them.
+ */
+const FONT_DIR = path.resolve(process.cwd(), "public/fonts");
+
+const FACES = [
+  { family: "Lora", file: "lora-latin-wght-normal.woff2", weights: "400 700", licence: "OFL-Lora.txt" },
+  { family: "Inter", file: "inter-latin-wght-normal.woff2", weights: "100 900", licence: "OFL-Inter.txt" },
+] as const;
+
+function fontFace(family: string): Map<string, string> | undefined {
+  return rules()
+    .filter((rule) => rule.prelude === "@font-face")
+    .map((rule) => declarations(rule.body))
+    .find((face) => face.get("font-family") === `"${family}"`);
+}
+
+describe("self-hosted type", () => {
+  it.each(FACES)("ships $family as a local latin subset", ({ family, file, weights, licence }) => {
+    expect(statSync(path.join(FONT_DIR, file)).size, file).toBeGreaterThan(8000);
+    expect(readdirSync(FONT_DIR), `${family} licence`).toContain(licence);
+
+    const face = fontFace(family);
+    expect(face, `no @font-face for ${family}`).toBeDefined();
+    expect(face?.get("src"), family).toContain(`/fonts/${file}`);
+    expect(face?.get("font-display"), family).toBe("swap");
+    expect(face?.get("font-weight"), family).toBe(weights);
+  });
+
+  it("never fetches a face from another origin", () => {
+    expect(SOURCE).not.toMatch(/https?:\/\//);
+    expect(SOURCE).not.toMatch(/@import\s+url\(/);
+  });
+
+  it("puts the Latin serif on headings and the Latin sans on body text", () => {
+    // The Chinese faces follow in the same stack, so a han glyph falls through
+    // to the system CJK face without a second rule on every element.
+    const body = declarations(blockBody("body")).get("font-family") ?? "";
+    expect(body.indexOf('"Inter"')).toBe(0);
+    expect(body).toContain('"PingFang SC"');
+    expect(body).toContain('"Noto Sans CJK SC"');
+    expect(body).toContain("sans-serif");
+
+    const heading = declarations(blockBody("h1")).get("font-family") ?? "";
+    expect(heading.indexOf('"Lora"')).toBe(0);
+    expect(heading).toContain('"Songti SC"');
+    expect(heading).toContain('"Noto Serif CJK SC"');
+    expect(heading).toContain("serif");
+  });
+
+  it("changes only the metrics under :lang(zh)", () => {
+    // Serifs and sans are the same faces; what a han glyph needs is air
+    // between the lines and a hair of tracking, and what it does not need is
+    // the negative tracking a Latin display face is cut for.
+    const prose = declarations(blockBody(":lang(zh) .article-body"));
+    expect(prose.get("line-height")).toBe("1.9");
+    expect(prose.get("letter-spacing")).toBe("0.01em");
+
+    const heading = declarations(blockBody(":lang(zh) h1"));
+    expect(heading.get("line-height")).toBe("1.4");
+    expect(heading.get("letter-spacing")).toBe("0");
+  });
+});
+
 describe("the contrast maths", () => {
   it("agrees with the published WCAG reference values", () => {
     // Independent source of truth: WCAG 2.1 relative luminance and the classic
@@ -160,9 +301,9 @@ describe("the contrast maths", () => {
 });
 
 describe.each(Object.keys(THEMES) as Theme[])("the %s theme", (theme) => {
-  it("defines only six-digit hex tokens", () => {
+  it("defines every role as a six-digit hex token", () => {
     const tokens = themeTokens(theme);
-    for (const name of ["--bg", "--fg", "--muted", "--accent", "--line"]) {
+    for (const name of TOKEN_ROLES) {
       expect(tokens.get(name), `${theme} ${name}`).toMatch(/^#[0-9a-f]{6}$/i);
     }
   });
@@ -187,13 +328,37 @@ const CONTROL_BORDERS = [
   ".article-callout-tone select",
 ] as const;
 
+/**
+ * Cards, chips and section rules: the decorative hairline. It is deliberately
+ * under 3:1 — that is what a hairline is — so a card that reached for
+ * --border-strong would shout every box on the page.
+ */
+const DECORATIVE_BORDERS = [
+  ".post-card",
+  ".post-tag",
+  ".article-meta",
+  ".asset-card",
+  ".article-preview",
+  ".article-locales a",
+  ".reader-article-nav a",
+  ".article-body details",
+] as const;
+
 describe("control boundaries", () => {
-  it.each(CONTROL_BORDERS)("%s draws its border from a proven boundary token", (selector) => {
+  it.each(CONTROL_BORDERS)("%s draws its border from the control boundary token", (selector) => {
     const border = declarations(blockBody(selector)).get("border");
     expect(border, selector).toBeDefined();
     // A diluted mix is how a boundary ends up under 3:1 without anyone noticing.
     expect(border, selector).not.toContain("color-mix");
-    expect(border, selector).toMatch(/var\(--(line|muted)\)/);
+    // Only --border-strong is measured at 3:1. Accepting --border here would let
+    // the 1.22:1 hairline become an input's edge without failing a single test.
+    expect(border, selector).toMatch(/var\(--border-strong\)/);
+  });
+
+  it.each(DECORATIVE_BORDERS)("%s draws only the decorative hairline", (selector) => {
+    const border = declarations(blockBody(selector)).get("border");
+    expect(border, selector).toBeDefined();
+    expect(border, selector).toMatch(/var\(--border\)/);
   });
 });
 
@@ -224,17 +389,18 @@ describe("visible focus", () => {
 });
 
 /**
- * The other half of the contrast proof: text colour may only come from the five
+ * The other half of the contrast proof: text colour may only come from the
  * audited tokens, so no rule can quietly paint text in a raw or diluted colour
  * that the ratio table above never sees.
  */
 describe("text colour", () => {
   const ALLOWED = new Set([
     "var(--bg)",
+    "var(--surface)",
     "var(--fg)",
     "var(--muted)",
     "var(--accent)",
-    "var(--line)",
+    "var(--on-accent)",
     "inherit",
     "currentColor",
     "transparent",
@@ -246,6 +412,96 @@ describe("text colour", () => {
       const colour = declarations(rule.body).get("color");
       if (colour !== undefined && !ALLOWED.has(colour.trim())) {
         offenders.push(`${rule.prelude} { color: ${colour} }`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * Token ownership, the other direction: a colour literal outside tokens.css is
+ * a decision the ratio table can never see. Comments are prose and are dropped
+ * first, so a hex value quoted in a note is not mistaken for a declaration.
+ */
+const LITERAL = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|lab|lch|color)\(/gi;
+
+describe("colour literals", () => {
+  const layered = STYLESHEETS.filter((file) => path.resolve(file) !== path.join(STYLES, "tokens.css"));
+
+  it.each(layered.map((file) => [path.relative(STYLES, file), file] as const))(
+    "%s declares no colour of its own",
+    (name, file) => {
+      const source = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+      const offenders = [...source.matchAll(LITERAL)].map((match) => match[0]);
+      expect(offenders, name).toEqual([]);
+    },
+  );
+});
+
+/**
+ * Token registration: a role that is not in TOKEN_PAIRS is a colour nobody
+ * measured, and a var() that is not declared renders as nothing at all. Both
+ * are silence, which is the failure mode this test exists to break.
+ */
+/**
+ * The one role that may stay unmeasured: the decorative hairline. It carries no
+ * text and frames nothing a Reader has to perceive as an edge, so its 1.2:1 is
+ * the point of it rather than a failure — and CONTROL_BORDERS below is what
+ * stops it from becoming a control's outline instead.
+ */
+const UNMEASURED_ROLES = new Set(["--border"]);
+
+describe("token registration", () => {
+  it.each(Object.keys(THEMES) as Theme[])("registers a measured pair for every %s role", (theme) => {
+    const measured = new Set(TOKEN_PAIRS.flatMap((pair) => [pair.foreground, pair.background]));
+    const unregistered = [...themeTokens(theme).keys()].filter(
+      (name) => !measured.has(name.slice(2)) && !UNMEASURED_ROLES.has(name),
+    );
+    expect(unregistered).toEqual([]);
+  });
+
+  it("declares exactly the eight roles", () => {
+    expect([...themeTokens("light").keys()].sort()).toEqual([...TOKEN_ROLES].sort());
+    expect([...themeTokens("dark").keys()].sort()).toEqual([...TOKEN_ROLES].sort());
+  });
+
+  it("resolves every var() the layers name", () => {
+    const declared = new Set(themeTokens("light").keys());
+    const unknown = new Set<string>();
+    for (const match of SOURCE.matchAll(/var\((--[a-z-]+)\)/g)) {
+      const name = match[1] ?? "";
+      if (!declared.has(name)) {
+        unknown.add(name);
+      }
+    }
+    expect([...unknown]).toEqual([]);
+  });
+});
+
+/**
+ * The scale bottoms out at 12px for anything a Reader has to read. The one
+ * exception the design system allows is a kicker: 10px, uppercase, 0.1em of
+ * tracking, never a sentence. Registering a selector here is the price of going
+ * under the floor, and the other two properties are checked as well.
+ */
+const SMALL_TEXT: readonly string[] = [];
+
+describe("the type floor", () => {
+  it("never sets type below 12px without a registered kicker", () => {
+    const offenders: string[] = [];
+    for (const rule of rules()) {
+      if (rule.prelude.startsWith("@")) {
+        continue;
+      }
+      const size = declarations(rule.body).get("font-size");
+      const match = /^([\d.]+)(rem|em|px)$/.exec(size ?? "");
+      if (match === null) {
+        continue;
+      }
+      const value = Number.parseFloat(match[1] ?? "0");
+      const floor = match[2] === "px" ? 12 : 0.75;
+      if (value < floor && !SMALL_TEXT.includes(rule.prelude)) {
+        offenders.push(`${rule.prelude} { font-size: ${size} }`);
       }
     }
     expect(offenders).toEqual([]);
