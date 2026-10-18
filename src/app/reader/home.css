@@ -1,0 +1,211 @@
+/* The front page: a masthead closed by a hairline, the newest Article at lead
+   scale, then the rest as a card grid.
+
+   The lead is the same Article card, so it draws the same title link and the
+   same three-line excerpt; only the arrangement changes. Its cover comes first
+   in the DOM — a card always reads cover, then text — and the wide layout puts
+   it in the second column, where the split is 5 parts text to 7 parts picture.
+
+   No Article has to have a cover. When one does not, the card has no image
+   area at all: nothing is reserved, no placeholder stands in, and the title
+   simply starts at the card's own padding. In a grid row the cards grow to the
+   row's height and the meta line is pushed to the bottom, so a covered card
+   and a bare one line up without either looking broken. */
+
+.home-masthead {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.home-masthead h1 {
+  margin: 0 0 0.75rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.home-dek {
+  margin: 0;
+  color: var(--muted);
+}
+
+.article-lead {
+  margin-bottom: 3rem;
+}
+
+.article-lead .article-card-title {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.article-lead .article-card-summary {
+  font-size: 1rem;
+}
+
+.article-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-grid > li {
+  display: flex;
+  min-width: 0;
+}
+
+.article-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+/* The crop: one ratio for every card, so a row of covers is a row of the same
+   shape whatever the photographs inside them are. */
+.article-card-cover {
+  aspect-ratio: 16 / 10;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.article-card-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.article-card-kicker {
+  margin: 0 0 0.5rem;
+  overflow-wrap: anywhere;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.article-card-kicker a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.article-card-title {
+  margin: 0 0 0.5rem;
+  overflow-wrap: anywhere;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.375;
+}
+
+.article-card-title a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+/* Three lines, then an ellipsis: the excerpt is a way in, not the Article. */
+.article-card-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: var(--muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.article-card-meta {
+  margin: 0;
+  margin-top: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+@media (min-width: 64rem) {
+  .home-masthead h1 {
+    font-size: 3rem;
+  }
+
+  .article-lead .article-card-title {
+    font-size: 2.25rem;
+  }
+
+  /* Text on the left, cover on the right: the cover spans the four rows the
+     kicker, title, excerpt and meta line occupy. */
+  .article-lead--split {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+    gap: 2.5rem;
+  }
+
+  .article-lead--split > *:not(.article-card-cover) {
+    grid-column: 1;
+  }
+
+  .article-lead--split .article-card-cover {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    margin-bottom: 0;
+  }
+
+  .article-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 80rem) {
+  .home-masthead h1 {
+    font-size: 3.5rem;
+  }
+
+  .article-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .article-card {
+    transition: transform 300ms ease, box-shadow 300ms ease;
+  }
+
+  /* A hovered card lifts off the page; a card whose title has the keyboard's
+     focus lifts the same way, so the Reader can see where they are. */
+  .article-card:hover,
+  .article-card:focus-within {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -16px color-mix(in srgb, var(--fg) 22%, transparent);
+  }
+
+  .article-card-cover img {
+    transition: transform 500ms ease;
+  }
+
+  .article-card:hover .article-card-cover img,
+  .article-card:focus-within .article-card-cover img {
+    transform: scale(1.03);
+  }
+
+  .article-card-title a,
+  .article-card-kicker a {
+    transition: color 200ms ease;
+  }
+
+  .article-card-title a:hover,
+  .article-card-kicker a:hover {
+    color: var(--accent);
+  }
+}

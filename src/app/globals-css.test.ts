@@ -338,6 +338,7 @@ const CONTROL_BORDERS = [
  */
 const DECORATIVE_BORDERS = [
   ".post-card",
+  ".article-card",
   ".post-tag",
   ".article-meta",
   ".asset-card",
@@ -487,9 +488,15 @@ describe("token registration", () => {
  * tracking, never a sentence. Registering a selector here is the price of going
  * under the floor, and the other two properties are checked as well.
  */
-const SMALL_TEXT: readonly string[] = [];
+const SMALL_TEXT: readonly string[] = [".article-card-kicker"];
 
 describe("the type floor", () => {
+  it.each(SMALL_TEXT)("%s is a kicker, not a sentence", (selector) => {
+    const style = declarations(blockBody(selector));
+    expect(style.get("text-transform"), selector).toBe("uppercase");
+    expect(style.get("letter-spacing"), selector).toBe("0.1em");
+  });
+
   it("never sets type below 12px without a registered kicker", () => {
     const offenders: string[] = [];
     for (const rule of rules()) {
@@ -639,3 +646,116 @@ describe("reduced motion", () => {
     expect(reduce).toContain("scroll-behavior: auto");
   });
 });
+
+/**
+ * A selector's declarations as one breakpoint declares them. blockBody() joins
+ * every context a selector appears in, which is right for "does this rule
+ * exist" and wrong for "what happens at 64rem", so a rule that only applies
+ * inside an at-rule is read from the block that holds it. Every block carrying
+ * the prelude is searched, because a later layer may open the same query again.
+ */
+function inAtRule(prelude: string, selector: string): string {
+  const bodies: string[] = [];
+  for (const block of rules()) {
+    if (block.prelude !== prelude) {
+      continue;
+    }
+    for (const rule of rulesIn(block.body)) {
+      const inList =
+        !rule.prelude.startsWith("@") &&
+        rule.prelude.split(",").map((part) => part.trim()).includes(selector);
+      if (rule.prelude === selector || inList) {
+        bodies.push(rule.body);
+      }
+    }
+  }
+  if (bodies.length === 0) {
+    throw new Error(prelude + " has no rule for " + selector);
+  }
+  return bodies.join("\n");
+}
+
+/**
+ * The first value a property takes: the layers are mobile-first, so a
+ * selector's base rule is declared before the queries that widen it.
+ */
+function phoneValue(selector: string, property: string): string | undefined {
+  const bodies = blockBody(selector);
+  const start = bodies.indexOf(property + ":");
+  if (start === -1) {
+    return undefined;
+  }
+  const rest = bodies.slice(start + property.length + 1);
+  const end = rest.indexOf(";");
+  return end === -1 ? undefined : rest.slice(0, end).trim();
+}
+
+const WIDE = "@media (min-width: 64rem)";
+const WIDER = "@media (min-width: 80rem)";
+
+/**
+ * The front page is the first thing every Reader sees, and its three moves are
+ * geometric rather than decorative: the masthead grows, the lead only splits
+ * where there is room for a 5/7 pair, and the grid is one, two, three columns.
+ * The card is also where "no cover" has to be a designed state, not a gap.
+ */
+describe("the front page", () => {
+  it("sets the masthead at 40, 48 and 56px, tracked like a wordmark", () => {
+    expect(phoneValue(".home-masthead h1", "font-size")).toBe("2.5rem");
+    expect(inAtRule(WIDE, ".home-masthead h1")).toContain("font-size: 3rem");
+    expect(inAtRule(WIDER, ".home-masthead h1")).toContain("font-size: 3.5rem");
+    expect(declarations(blockBody(".home-masthead h1")).get("letter-spacing")).toBe("-0.02em");
+  });
+
+  it("stacks the lead until 64rem, then splits five parts text to seven of cover", () => {
+    expect(declarations(blockBody(".article-lead")).get("grid-template-columns")).toBeUndefined();
+
+    const split = inAtRule(WIDE, ".article-lead--split");
+    expect(split).toContain("5fr");
+    expect(split).toContain("7fr");
+    expect(inAtRule(WIDE, ".article-lead--split .article-card-cover")).toContain("grid-column: 2");
+  });
+
+  it("lays the grid out as one column, two at 64rem and three at 80rem", () => {
+    expect(phoneValue(".article-grid", "grid-template-columns")).toBe("minmax(0, 1fr)");
+    expect(inAtRule(WIDE, ".article-grid")).toContain("repeat(2, minmax(0, 1fr))");
+    expect(inAtRule(WIDER, ".article-grid")).toContain("repeat(3, minmax(0, 1fr))");
+  });
+
+  it("crops every cover to the same 16:10 frame with an 8px radius", () => {
+    const cover = declarations(blockBody(".article-card-cover"));
+    expect(cover.get("aspect-ratio")).toBe("16 / 10");
+    expect(cover.get("border-radius")).toBe("0.5rem");
+    expect(cover.get("overflow")).toBe("hidden");
+    expect(declarations(blockBody(".article-card-cover img")).get("object-fit")).toBe("cover");
+  });
+
+  it("lets a card be as tall as its content, so no cover reserves no image", () => {
+    const card = declarations(blockBody(".article-card"));
+    expect(card.get("height")).toBeUndefined();
+    expect(card.get("min-height")).toBeUndefined();
+    // The meta line falls to the bottom of the row, which is what lines a
+    // covered card up with a bare one beside it.
+    expect(declarations(blockBody(".article-card-meta")).get("margin-top")).toBe("auto");
+  });
+
+  it("clamps the excerpt at three lines", () => {
+    expect(declarations(blockBody(".article-card-summary")).get("-webkit-line-clamp")).toBe("3");
+  });
+
+  it("lifts a hovered card 4px, but only when motion is welcome", () => {
+    const hover = declarations(inAtRule(NO_PREFERENCE, ".article-card:hover"));
+    expect(hover.get("transform")).toBe("translateY(-4px)");
+    expect(hover.get("box-shadow")).toBeDefined();
+  });
+
+  it("cannot push the page sideways on a phone", () => {
+    // A grid item is min-width: auto by default, so one long word can widen a
+    // column past the viewport; the card opts out and lets its title wrap.
+    expect(declarations(blockBody(".article-grid > li")).get("min-width")).toBe("0");
+    expect(declarations(blockBody(".article-card")).get("min-width")).toBe("0");
+    expect(declarations(blockBody(".article-card-title")).get("overflow-wrap")).toBe("anywhere");
+    expect(declarations(blockBody(".article-card-cover img")).get("width")).toBe("100%");
+  });
+});
+
