@@ -2,6 +2,8 @@ import { cookies, headers } from "next/headers";
 
 import { LifecycleActions } from "@/components/admin/dashboard-actions";
 import { DashboardTable } from "@/components/admin/dashboard-table";
+import { AdminPageHead } from "@/components/admin/page-head";
+import { NewWorkButton } from "@/components/admin/new-work-button";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
@@ -30,8 +32,18 @@ export default async function AdminHomePage() {
 
   return (
     <>
-      <h1>{t.admin.dashboard.title}</h1>
-      <p>{t.admin.dashboard.tagline}</p>
+      <AdminPageHead
+        title={t.admin.dashboard.title}
+        description={t.admin.dashboard.tagline}
+        actions={
+          <NewWorkButton
+            kind="article"
+            locale={locale}
+            label={t.admin.dashboard.articles.newArticle}
+            failedLabel={t.admin.articles.meta.createFailed}
+          />
+        }
+      />
       <DashboardTable
         articles={articles}
         posts={posts}

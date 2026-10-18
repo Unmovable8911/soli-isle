@@ -1,14 +1,146 @@
-/* The console shell and the sign-in panel: the admin layout's own chrome, the
-   badge that marks it, and nothing shared with the public document. */
+/* The console's own chrome: the 56px sticky top bar and its six entries, the
+   badge that marks it, the one page head every console page shares, and the
+   sign-in card. Nothing here is shared with the public document — ADR-0001 keeps
+   the rail out of the console, because the editor's writing width outranks shell
+   symmetry, so this bar is the whole shell and it holds navigation only. */
+
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-wrap: nowrap;
+  gap: 0.5rem 1rem;
+  height: 3.5rem;
+  padding: 0 1.25rem;
+  background: var(--bg);
+}
+
+/* The wordmark stays a wordmark: the bar is the console's own document, and the
+   serif is what ties it to the site it edits. */
+.admin-topbar .site-name {
+  margin-right: 0;
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.admin-nav ul {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-nav a {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+/* Six entries in a bar: the current one is the only one at full ink, so the eye
+   finds it without a second accent next to the six links. */
+.admin-nav a[aria-current="page"] {
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.admin-topbar form {
+  display: flex;
+  margin-left: auto;
+}
 
 .admin-badge {
-  margin-left: 0.5rem;
   padding: 0.1rem 0.45rem;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
   color: var(--muted);
-  font-size: 0.8em;
+  font-size: 0.75rem;
   font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* One head for the six pages: H1 and its description, the primary action at the
+   far end, and on a phone the action drops under the text instead of squeezing
+   it. */
+.admin-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.admin-page-head-text h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.admin-page-head-text p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.admin-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* A page's one action: a ghost pill, or the accent when the page has exactly one
+   thing to do. */
+.admin-page-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-page-action-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.admin-login {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 2.5rem);
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 24rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.admin-login-wordmark {
+  display: block;
+  margin-bottom: 1.5rem;
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.admin-login-card h1 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
 }
 
 .admin-login-form {
@@ -18,6 +150,7 @@
 }
 
 .admin-login-form label {
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -40,4 +173,25 @@
 
 .admin-home-entry a {
   color: var(--accent);
+}
+
+/* Six entries will not sit on one line of a tablet's worth of bar, and a fixed
+   height would clip them rather than show them, so below 64rem the bar keeps its
+   minimum and wraps. */
+@media (max-width: 64rem) {
+  .admin-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 3.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-nav a,
+  .admin-page-action {
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease;
+  }
 }

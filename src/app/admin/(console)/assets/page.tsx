@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 
 import AssetLibrary from "@/components/admin/asset-library";
+import { AdminPageHead } from "@/components/admin/page-head";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
@@ -20,8 +21,15 @@ export default async function AdminAssetsPage() {
 
   return (
     <>
-      <h1>{t.admin.assets.title}</h1>
-      <p>{t.admin.assets.description}</p>
+      <AdminPageHead
+        title={t.admin.assets.title}
+        description={t.admin.assets.description}
+        actions={
+          <a className="admin-page-action" href="#asset-upload">
+            {t.admin.assets.upload.label}
+          </a>
+        }
+      />
       <AssetLibrary assets={assets} locale={locale} labels={t.admin.assets} />
     </>
   );

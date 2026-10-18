@@ -98,7 +98,7 @@ export function TagManager({ tags, locale, labels, localeNames }: TagManagerProp
         </p>
       )}
 
-      <section className="tag-create" aria-labelledby={`${nameId}-heading`}>
+      <section className="tag-create" id="tag-create" aria-labelledby={`${nameId}-heading`}>
         <h2 id={`${nameId}-heading`}>{labels.create.title}</h2>
         <form
           className="tag-create-form"

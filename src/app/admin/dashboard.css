@@ -15,14 +15,37 @@
   font-size: 1.05rem;
 }
 
-/* The Publication State is a lookup by the visibility the service derived. */
+/* The Publication State is a lookup by the visibility the service derived, said
+   as text and a dot. The dot takes the state's own ink (currentColor), so a
+   state never introduces a colour the ratio table has not measured: muted for
+   the states that wait, full ink for the one Readers can see. */
+.article-state,
 .publication-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
 }
 
+.article-state::before,
+.publication-state::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.article-state-visible,
 .publication-state-visible {
   color: var(--fg);
+}
+
+.article-state-scheduled::before,
+.publication-state-scheduled::before {
+  border: 1px solid currentColor;
+  background: transparent;
 }
 
 .row-actions {
@@ -32,7 +55,23 @@
   align-items: center;
 }
 
-.row-actions button,
+.row-actions button {
+  min-height: 2rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.row-actions button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .confirm-actions button,
 .category-node-actions button,
 .category-create-form button,

@@ -27,6 +27,7 @@ import type { AssetSummary } from "@/services/assets";
 import { ArticleBody } from "../article-body";
 import { AssetPicker } from "./asset-picker";
 import type { AssetLabels } from "./asset-library";
+import { CoverField } from "./cover-field";
 import {
   getArticleDraftStore,
   type ArticleDraftStore,
@@ -126,6 +127,7 @@ export default function ArticleEditor({
   const [newDraftBusy, setNewDraftBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
@@ -636,6 +638,19 @@ export default function ArticleEditor({
     setPickerOpen(false);
   }
 
+  // The Cover is one Asset, chosen through the same library the body images come
+  // from: the picker hands back an Asset, and the metadata path registers the
+  // reference (services/articles.ts, syncArticleAssets) so a chosen Cover is
+  // never an unreferenced image.
+  function chooseCover(asset: AssetSummary) {
+    setCoverPickerOpen(false);
+    void patchMeta({ coverAssetId: asset.id });
+  }
+
+  function removeCover() {
+    void patchMeta({ coverAssetId: null });
+  }
+
   function applyLink() {
     const href = window.prompt(labels.editor.linkPrompt, "https://");
     if (href === null) {
@@ -938,6 +953,13 @@ export default function ArticleEditor({
             />
           </label>
 
+          <CoverField
+            coverAssetId={detail.coverAssetId}
+            labels={labels.meta}
+            onChoose={() => setCoverPickerOpen(true)}
+            onRemove={removeCover}
+          />
+
           <label className="article-field">
             <span>{labels.meta.defaultLocale}</span>
             <select
@@ -1034,7 +1056,11 @@ export default function ArticleEditor({
             )}
             {detail.visibility === "scheduled" ? <p>{labels.publish.hintScheduled}</p> : null}
 
-            <button type="button" onClick={() => void postPublication({ action: "publish" })}>
+            <button
+              type="button"
+              className="article-publish-primary"
+              onClick={() => void postPublication({ action: "publish" })}
+            >
               {labels.publish.publishNow}
             </button>
 
@@ -1105,6 +1131,13 @@ export default function ArticleEditor({
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={insertAsset}
+        labels={assetLabels}
+      />
+
+      <AssetPicker
+        open={coverPickerOpen}
+        onClose={() => setCoverPickerOpen(false)}
+        onSelect={chooseCover}
         labels={assetLabels}
       />
     </div>
