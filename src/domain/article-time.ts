@@ -1,6 +1,7 @@
 import { siteConfig, type Locale } from "@/config/site";
 
-const INTL_LOCALE_TAG: Record<Locale, string> = { zh: "zh-CN", en: "en-US" };
+/** The BCP 47 tag each Locale formats with; the relative-time formatter reads it too. */
+export const INTL_LOCALE_TAG: Record<Locale, string> = { zh: "zh-CN", en: "en-US" };
 
 const DATE_OPTIONS: Intl.DateTimeFormatOptions = {
   timeZone: siteConfig.timeZone,

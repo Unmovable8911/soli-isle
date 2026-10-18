@@ -7,6 +7,7 @@ import { systemClock, type Clock } from "@/domain/clock";
 import { createArticleContext, type ArticleContext } from "@/services/articles";
 import { createAssetContext, type AssetContext } from "@/services/assets";
 import { createAuthorAuthContext, type AuthorAuthContext } from "@/services/auth";
+import { createPostContext, type PostContext } from "@/services/posts";
 import type { HealthContext } from "@/services/health";
 import { FileSystemResourceStorage } from "@/storage/filesystem-resource-storage";
 
@@ -18,6 +19,7 @@ export interface AppContext {
   auth: AuthorAuthContext;
   assets: AssetContext;
   articles: ArticleContext;
+  posts: PostContext;
 }
 
 let cachedContext: AppContext | undefined;
@@ -50,6 +52,7 @@ export function createAppContext(
     },
     assets,
     articles: createArticleContext(database, systemClock, assets),
+    posts: createPostContext(database, systemClock, assets),
     auth: createAuthorAuthContext(
       database,
       systemClock,

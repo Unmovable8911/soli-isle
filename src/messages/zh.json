@@ -211,13 +211,88 @@
         "newDraftFailed": "另存为新草稿失败，本地改动仍然保留。",
         "discardFailed": "读取服务端版本失败，本地改动仍然保留。"
       }
+    },
+    "posts": {
+      "title": "推文",
+      "description": "推文是短小的图文：只有正文、图片与标签，没有标题，也没有独立页面。",
+      "newPost": "新建推文",
+      "empty": "还没有推文。",
+      "open": "打开",
+      "backToList": "返回推文列表",
+      "loadFailed": "无法载入推文。",
+      "saveFailed": "保存失败，请重试。",
+      "saving": "保存中…",
+      "save": "保存",
+      "saved": "已保存",
+      "stale": "别处已保存了更新的版本，本次改动没有写入。",
+      "body": {
+        "placeholder": "写点什么……"
+      },
+      "images": {
+        "title": "图片",
+        "add": "添加图片",
+        "empty": "还没有图片。",
+        "remove": "移除",
+        "up": "前移",
+        "down": "后移",
+        "hint": "添加顺序就是信息流里的展示顺序。"
+      },
+      "tags": {
+        "title": "标签",
+        "empty": "还没有标签",
+        "add": "添加",
+        "remove": "移除",
+        "select": "选择已有标签",
+        "newPlaceholder": "新标签名称",
+        "create": "创建",
+        "creating": "创建中…",
+        "createFailed": "创建失败。"
+      },
+      "languages": {
+        "label": "语言版本",
+        "add": "添加此语言版本",
+        "missing": "此语言还没有正文"
+      },
+      "state": {
+        "draft": "草稿",
+        "published": "已发布",
+        "archived": "已归档"
+      },
+      "visibility": {
+        "visible": "读者可见",
+        "scheduled": "等待发布时刻",
+        "draft": "仅草稿",
+        "archived": "已归档"
+      },
+      "list": {
+        "state": "状态",
+        "publishTime": "发布时刻",
+        "updatedAt": "最后更新",
+        "images": "图片",
+        "languages": "语言版本"
+      },
+      "publish": {
+        "panel": "发布",
+        "publishNow": "立即发布",
+        "publishTime": "发布时刻（站点时区）",
+        "schedule": "定时发布",
+        "archive": "归档",
+        "unarchive": "取消归档",
+        "delete": "永久删除",
+        "confirmDelete": "确认永久删除",
+        "cancel": "取消",
+        "publishFailed": "发布失败。",
+        "deleteFailed": "删除失败。",
+        "hintScheduled": "到达发布时刻后读者才能在信息流里看到它。"
+      }
     }
   },
   "reader": {
     "nav": {
       "categories": "分类",
       "archive": "归档",
-      "search": "搜索"
+      "search": "搜索",
+      "feed": "推文"
     },
     "home": {
       "title": "最近的长文",
@@ -271,6 +346,20 @@
       "close": "关闭",
       "previous": "上一张",
       "next": "下一张"
+    },
+    "feed": {
+      "title": "推文",
+      "empty": "还没有推文。",
+      "loadOlder": "加载更早",
+      "loading": "加载中…",
+      "loadFailed": "加载失败，请重试。",
+      "expand": "展开全文",
+      "gallery": {
+        "label": "图片集",
+        "counter": "第 {current} 张，共 {total} 张"
+      },
+      "tagFiltered": "标签：{name}",
+      "clearTag": "查看全部推文"
     }
   }
 }

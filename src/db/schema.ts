@@ -220,6 +220,79 @@ export const articleSlugHistory = sqliteTable(
   (table) => [index("article_slug_history_article_idx").on(table.articleId)],
 );
 
+/**
+ * A Post: the short, untitled sibling of an Article. It has no Slug, no
+ * Category and no Revision — it never has a URL of its own, so there is
+ * nothing to address and nothing to keep history for.
+ */
+export const post = sqliteTable(
+  "post",
+  {
+    id: text("id").primaryKey().notNull(),
+    defaultLocale: text("default_locale", { enum: siteConfig.locales }).notNull(),
+    publicationState: text("publication_state", { enum: PUBLICATION_STATES }).notNull(),
+    publishTime: text("publish_time"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    index("post_publication_state_idx").on(table.publicationState),
+    index("post_publish_time_idx").on(table.publishTime),
+  ],
+);
+
+export const postTranslation = sqliteTable(
+  "post_translation",
+  {
+    postId: text("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    locale: text("locale", { enum: siteConfig.locales }).notNull(),
+    bodyJson: text("body_json").notNull(),
+    bodyMarkdown: text("body_markdown").notNull(),
+    /** Bumped by every write; the composer saves against the version it read. */
+    version: integer("version").notNull().default(1),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.postId, table.locale] })],
+);
+
+/** The Post's ordered image set. `position` is rewritten as 0..n-1 on every reorder. */
+export const postImage = sqliteTable(
+  "post_image",
+  {
+    postId: text("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    assetId: text("asset_id")
+      .notNull()
+      .references(() => asset.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.postId, table.assetId] }),
+    index("post_image_post_position_idx").on(table.postId, table.position),
+    index("post_image_asset_idx").on(table.assetId),
+  ],
+);
+
+export const postTag = sqliteTable(
+  "post_tag",
+  {
+    postId: text("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tag.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.postId, table.tagId] }),
+    index("post_tag_tag_idx").on(table.tagId),
+  ],
+);
+
 export const articleRevision = sqliteTable(
   "article_revision",
   {

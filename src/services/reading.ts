@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
 
 import type { Locale } from "@/config/site";
 import type { DatabaseConnection } from "@/db/database";
@@ -24,6 +24,7 @@ import { pickLocalised } from "@/domain/localised";
 import { escapeLikeTerm, parseSearchTerms } from "@/domain/search";
 import { loadCategoryViews, listCategoryTree, type CategoryContext } from "./categories";
 import { loadTagViews, listTags, type TagContext } from "./tags";
+import { visibleToReader } from "./visibility";
 
 /**
  * Reader-facing reads: what a public page may list and how.
@@ -120,11 +121,13 @@ interface CardRow {
   slug: string;
 }
 
+/**
+ * The Article lists and search are locale-strict: a Post or Article without a
+ * version in the requested Locale is never listed. The visibility half of the
+ * rule comes from the shared predicate so the Feed cannot drift from it.
+ */
 function publishedFilter(nowIso: string) {
-  return and(
-    eq(article.publicationState, "published"),
-    or(isNull(article.publishTime), lte(article.publishTime, nowIso)),
-  );
+  return visibleToReader(article.publicationState, article.publishTime, nowIso);
 }
 
 function toCard(

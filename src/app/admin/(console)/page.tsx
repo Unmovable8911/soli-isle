@@ -23,6 +23,9 @@ export default async function AdminHomePage() {
         <Link href="/admin/articles">{t.admin.articles.title}</Link>
       </p>
       <p className="admin-home-entry">
+        <Link href="/admin/posts">{t.admin.posts.title}</Link>
+      </p>
+      <p className="admin-home-entry">
         <Link href="/admin/assets">{t.admin.assets.title}</Link>
       </p>
     </>

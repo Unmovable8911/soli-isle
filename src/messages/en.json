@@ -211,13 +211,88 @@
         "newDraftFailed": "Saving a new draft failed; the local changes are still here.",
         "discardFailed": "The server copy could not be read; the local changes are still here."
       }
+    },
+    "posts": {
+      "title": "Posts",
+      "description": "A Post is short: body, images and Tags only — no title, no page of its own.",
+      "newPost": "New post",
+      "empty": "No posts yet.",
+      "open": "Open",
+      "backToList": "Back to posts",
+      "loadFailed": "Could not load the post.",
+      "saveFailed": "Save failed. Please try again.",
+      "saving": "Saving…",
+      "save": "Save",
+      "saved": "Saved",
+      "stale": "A newer version was saved elsewhere; this change was not written.",
+      "body": {
+        "placeholder": "Say something…"
+      },
+      "images": {
+        "title": "Images",
+        "add": "Add image",
+        "empty": "No images yet.",
+        "remove": "Remove",
+        "up": "Move earlier",
+        "down": "Move later",
+        "hint": "The order here is the order the Feed shows them in."
+      },
+      "tags": {
+        "title": "Tags",
+        "empty": "No tags yet",
+        "add": "Add",
+        "remove": "Remove",
+        "select": "Pick an existing tag",
+        "newPlaceholder": "New tag name",
+        "create": "Create",
+        "creating": "Creating…",
+        "createFailed": "Could not create it."
+      },
+      "languages": {
+        "label": "Language versions",
+        "add": "Add this language version",
+        "missing": "No body in this language yet"
+      },
+      "state": {
+        "draft": "Draft",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "visibility": {
+        "visible": "Visible to readers",
+        "scheduled": "Waiting for its publish time",
+        "draft": "Draft only",
+        "archived": "Archived"
+      },
+      "list": {
+        "state": "State",
+        "publishTime": "Publish time",
+        "updatedAt": "Last updated",
+        "images": "Images",
+        "languages": "Language versions"
+      },
+      "publish": {
+        "panel": "Publish",
+        "publishNow": "Publish now",
+        "publishTime": "Publish time (site time zone)",
+        "schedule": "Schedule",
+        "archive": "Archive",
+        "unarchive": "Unarchive",
+        "delete": "Delete permanently",
+        "confirmDelete": "Confirm permanent delete",
+        "cancel": "Cancel",
+        "publishFailed": "Publishing failed.",
+        "deleteFailed": "Deleting failed.",
+        "hintScheduled": "Readers see it in the Feed once its publish time arrives."
+      }
     }
   },
   "reader": {
     "nav": {
       "categories": "Categories",
       "archive": "Archive",
-      "search": "Search"
+      "search": "Search",
+      "feed": "Feed"
     },
     "home": {
       "title": "Recent articles",
@@ -271,6 +346,20 @@
       "close": "Close",
       "previous": "Previous image",
       "next": "Next image"
+    },
+    "feed": {
+      "title": "Feed",
+      "empty": "No posts yet.",
+      "loadOlder": "Load older",
+      "loading": "Loading…",
+      "loadFailed": "Could not load older posts. Please try again.",
+      "expand": "Read more",
+      "gallery": {
+        "label": "Image gallery",
+        "counter": "Image {current} of {total}"
+      },
+      "tagFiltered": "Tag: {name}",
+      "clearTag": "Show every post"
     }
   }
 }
