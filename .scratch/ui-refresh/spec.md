@@ -123,3 +123,16 @@ kicker（分类）→ H1 → dek（摘要）→ 元信息（发布日期 · 本�
 - 深色强调色必须实测，候选值只是起点。
 - 占位图不利于判断摄影质感；检查点可用自己的图替换。
 - Lora 与 Inter 均为 OFL，需在 `public/fonts/` 放许可说明。
+
+## 实现备注（08 收尾）
+
+- **空态**：`src/components/empty-state.tsx` 一个组件——标题、一句话、可选操作。首页、分类页与分类索引、标签、搜索无结果、归档、信息流、资源库（全部图片与未引用图片）、仪表盘（长文与推文）共用它；文案在 `zh.json` / `en.json` 同步。以上每一处都能在「迁移完成但没有任何内容」的空库上直接看到，不依赖 seed 数据。
+- **404 / 410 / 500**：公开站与后台是两个根布局（`[locale]/layout.tsx` 与 `admin-document.tsx` 各自渲染 `<html>`），所以 `notFound()` 没有单一根 layout 可渲染。整页 404 与未匹配路由由 `src/app/global-not-found.tsx` 提供完整文档（外壳、样式表、Locale、`noindex`）；客户端导航仍落在 `[locale]/not-found.tsx`。410 由 middleware 的 `goneResponse` 提供：Edge 运行时取不到编译后的样式表，因此该文档自带 Lora/Inter 与 42rem 版心，颜色取平台关键字（`Canvas` / `CanvasText`）跟随深浅色，不复制 `tokens.css` 的色值；状态码 410 与 `x-robots-tag: noindex` 不变。500 是 `[locale]/error.tsx`，带重试按钮。三者都没有 params，Locale 由 middleware 写入的 `x-soli-locale` 请求头传递。
+- **链接可辨识**：正文内链接与 Feed 的标签筛选保留显式下划线（WCAG 1.4.1：正文中的链接不能只靠颜色区分）；长文 kicker、Locale 胶囊、目录条目是「链接列表」而不是正文里的链接，去掉浏览器默认下划线——胶囊以边框为形状线索，kicker 与目录在 hover/focus 时补回下划线。
+- **宽表与 200% 缩放**：等价于把 CSS 视口减半（360px → 180px）。控制台的单列栅格写 `minmax(0, 1fr)`，表格放进 `.table-scroll` 自带横向滚动，资源网格用 `minmax(min(11rem, 100%), 1fr)`，原生 file input 视觉隐藏、由 label 承担 44px 胶囊并接住焦点环。
+- **契约测试新增**：每个 class 选择器都必须被非测试组件渲染（模板字面量拼出的四类前缀与 KaTeX 的 `.katex-display` 例外）；每个已声明 token 都必须被读取；空态与错误页的 markup；200% 下的表格滚动与单列栅格。
+- **已知框架限制**：动态页面要在响应开始流式输出之后才判定 `notFound()`，Next 15 此时只能返回客户端错误文档——因此「未知 Slug」的 404 在关闭 JS 时是空白文档（本轮之前也是），开启 JS 后是本站的 404 页；未匹配路由的 404 则在服务端完整渲染。若将来要把未知 Slug 也做成服务端 404，需要在 middleware 里缓存一份已发布 Slug 清单（与 `gone-slugs` 同构），本次不新增该路由。
+
+## 实现备注（09 审查修复）
+
+- **Feed 的 `.post-time` 保留 14px，只把字距对齐 micro-label（偏离已记录）**：规范里的微标签是 10px / 0.1em，但一条 Post 的时间戳是读者必须读到内容，不是标题之上的标签；`READER_TEXT` 契约把 `.post-time` 钉在 14px 的阅读下限。这是规范（10px）、ticket 01（「旧断言 14px 仍然生效」）与契约测试（≥14px）三者之间的真实冲突，裁决是**可读性下限优先**：字号保持 14px，字距改为微标签的 0.1em，使 kicker 的形式仍然成立。此处写明，而不是让代码与规范默默分歧。

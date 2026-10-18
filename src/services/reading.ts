@@ -61,8 +61,9 @@ export interface ReaderTagRef {
 /**
  * The cover a card draws, as the display derivation of the chosen image: cards
  * crop it, the Article header shows it whole, and both want the same file.
- * Optional on the DTO because "no cover" is a legal Article — a list fixture
- * with no cover must still be a ReaderArticleCard.
+ * Nullable on the DTO because "no cover" is a legal Article — a list fixture
+ * with no cover still is a ReaderArticleCard, and null is the only way to say
+ * so. Every caller asks `hasCover` rather than re-testing emptiness.
  */
 export interface ReaderCover {
   address: string;
@@ -77,7 +78,8 @@ export interface ReaderArticleCard {
   summary: string;
   publishTime: string | null;
   category: ReaderCategoryRef | null;
-  cover?: ReaderCover | null;
+  /** Null is the one way to say "no cover": a designed state, not a gap. */
+  cover: ReaderCover | null;
   tags: ReaderTagRef[];
   /**
    * Only a search result carries one: the body prose around the keyword it
@@ -85,6 +87,14 @@ export interface ReaderArticleCard {
    * body holds none of the terms.
    */
   snippet?: string | null;
+}
+
+/**
+ * The one test for "does this have a cover", shared by the card, the front
+ * page's lead and the Article header. Absence has exactly one spelling: null.
+ */
+export function hasCover(cover: ReaderCover | null): cover is ReaderCover {
+  return cover !== null;
 }
 
 export interface ReaderCategoryNode {

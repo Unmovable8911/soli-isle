@@ -359,6 +359,8 @@ const CONTROL_BORDERS = [
   ".article-field select",
   ".article-field textarea",
   ".article-cover-actions button",
+  ".asset-button",
+  ".asset-pick-button",
   ".article-table button",
   ".article-toolbar button",
   ".article-editor-locales button",
@@ -721,7 +723,17 @@ describe("the Feed is a stream", () => {
     const time = declarations(blockBody(".post-time"));
     expect(time.get("color")).toBe("var(--muted)");
     expect(time.get("text-transform")).toBe("uppercase");
-    expect(time.get("letter-spacing")).toBe("0.08em");
+    // The floor keeps 14px (a Post's timestamp is read, not glanced at); the
+    // tracking is the kicker's, so the form still says "micro-label".
+    expect(time.get("letter-spacing")).toBe("0.1em");
+  });
+
+  it("grows its H1 on the one 64rem step every page head takes", () => {
+    expect(phoneValue(".feed-title", "font-size")).toBe("2.25rem");
+    expect(inAtRule(WIDE, ".feed-title")).toContain("font-size: 3rem");
+    // 48rem is the Feed's own gallery breakpoint; the page scale is not ours to
+    // move earlier than the rest of the site.
+    expect(() => inAtRule("@media (min-width: 48rem)", ".feed-title")).toThrow();
   });
 });
 
@@ -1090,6 +1102,15 @@ describe("the front page", () => {
 
   it("clamps the excerpt at three lines", () => {
     expect(declarations(blockBody(".article-card-summary")).get("-webkit-line-clamp")).toBe("3");
+  });
+
+  it("rests on the hairline alone, keeping the lift and its shadow for hover", () => {
+    const card = declarations(blockBody(".article-card"));
+    expect(card.get("border")).toBe("1px solid var(--border)");
+    expect(card.get("box-shadow")).toBeUndefined();
+    expect(
+      declarations(inAtRule(NO_PREFERENCE, ".article-card:hover")).get("box-shadow"),
+    ).toBeDefined();
   });
 
   it("lifts a hovered card 4px, but only when motion is welcome", () => {

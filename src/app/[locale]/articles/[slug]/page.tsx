@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 
 import { ArticleView } from "@/components/article-view";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale, type Locale } from "@/config/site";
 import {
@@ -15,7 +16,7 @@ import {
 import { alternateLanguageMap, articleLanguageLinks } from "@/domain/article-language";
 import { formatPublishDate } from "@/domain/article-time";
 import { buildArticlePath } from "@/domain/article-url";
-import { buildCategoryPath, buildTagPath } from "@/domain/public-paths";
+import { buildCategoryIndexPath, buildCategoryPath, buildTagPath } from "@/domain/public-paths";
 import { pickLocalised } from "@/domain/localised";
 import { buildTableOfContents } from "@/domain/table-of-contents";
 import { absoluteUrl } from "@/domain/urls";
@@ -146,21 +147,31 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
       ? null
       : { address: buildAssetAddress({ assetId: article.coverAssetId, variant: "display", format: "webp" }) };
 
+  const category =
+    article.category === null
+      ? null
+      : {
+          name: pickLocalised(article.category.names, locale, article.category.slug),
+          href: buildCategoryPath({ locale, categoryPath: article.category.path }),
+        };
+  // The shell keeps the breadcrumb on the Category page and the long-form page,
+  // out of the top bar: the Article shows where it sits in the one tree it
+  // belongs to, and its own title closes the walk.
+  const breadcrumbs = [
+    { href: buildCategoryIndexPath(locale), label: t.reader.category.heading },
+    ...(category === null ? [] : [{ href: category.href, label: category.name }]),
+    { href: buildArticlePath({ locale, slug: article.slug }), label: translation.title },
+  ];
+
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
+      <Breadcrumbs label={t.reader.breadcrumb.label} items={breadcrumbs} />
       <ArticleView
         title={translation.title}
         summary={translation.summary}
         publishTime={article.publishTime}
         publishedOn={article.publishTime === null ? "" : formatPublishDate(article.publishTime, locale)}
-        category={
-          article.category === null
-            ? null
-            : {
-                name: pickLocalised(article.category.names, locale, article.category.slug),
-                href: buildCategoryPath({ locale, categoryPath: article.category.path }),
-              }
-        }
+        category={category}
         cover={cover}
         bodyHtml={html}
         toc={toc}

@@ -14,6 +14,7 @@ const CARD: ReaderArticleCard = {
   summary: "syntax highlighting for a static site",
   publishTime: "2025-06-15T08:30:00.000Z",
   category: { slug: "notes", path: "notes", name: "Notes" },
+  cover: null,
   tags: [{ slug: "editor", name: "Editor" }],
 };
 

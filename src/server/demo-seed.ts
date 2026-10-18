@@ -102,7 +102,21 @@ interface ImageSource {
   take(slot: ImageSlot): Promise<UploadedImage>;
 }
 
-/** Two muted pairs, alternated: a placeholder is scaffolding, not a photograph. */
+/**
+ * The colours of a placeholder raster — the one colour literal outside
+ * tokens.css, and a named exception rather than a leak.
+ *
+ * ADR-0003 keeps the *site's* palette in one auditable file, because a colour
+ * in a stylesheet is a colour the contrast test must measure. These four values
+ * never reach a stylesheet: they are SVG fill and stroke handed to sharp, the
+ * pixels of a scaffold that stands in for a photograph on a developer's
+ * machine. They are deliberately not roles — a placeholder that borrowed
+ * `--surface` and `--muted` would read as designed content, and the whole point
+ * of a placeholder is to look like one. ADR-0003 records the same exception, so
+ * "colours only in tokens.css" stays true instead of quietly false.
+ *
+ * Two muted pairs, alternated: a placeholder is scaffolding, not a photograph.
+ */
 const PLACEHOLDER_TONES = [
   { paper: "#e8e4dc", ink: "#8a8477" },
   { paper: "#e2e5e2", ink: "#77807a" },

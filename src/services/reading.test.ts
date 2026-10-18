@@ -23,6 +23,7 @@ import {
   findArticleNeighbours,
   findReaderCategory,
   findReaderTag,
+  hasCover,
   listArchiveArticles,
   listIndexableArticlePaths,
   listReaderCategories,
@@ -799,4 +800,15 @@ describe("the cover on a card", () => {
       }
     },
   );
+});
+
+describe("a card's cover", () => {
+  const cover = { address: "/media/01JCOVER/display.webp", width: 1600, height: 1000 };
+
+  it("is one nullable field with one test, shared by every surface", () => {
+    // "No cover" is a legal Article, not a missing one: null is the only way to
+    // say so, and the predicate is the only way to ask.
+    expect(hasCover(null)).toBe(false);
+    expect(hasCover(cover)).toBe(true);
+  });
 });

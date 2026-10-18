@@ -68,7 +68,6 @@
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   background: var(--surface);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 6%, transparent);
 }
 
 /* The crop: one ratio for every card, so a row of covers is a row of the same

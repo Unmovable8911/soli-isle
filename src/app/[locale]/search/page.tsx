@@ -61,7 +61,11 @@ export default async function SearchPage({
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <ReaderPageHead locale={locale} title={t.reader.search.title}>
+      <ReaderPageHead
+        locale={locale}
+        title={t.reader.search.title}
+        count={query.length === 0 ? undefined : search.results.length}
+      >
         <form
           className="reader-search-form"
           action={buildSearchPath({ locale })}
