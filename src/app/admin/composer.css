@@ -45,12 +45,6 @@
   font-size: 0.85rem;
 }
 
-.post-composer-save-error,
-.post-composer-save-stale {
-  color: var(--fg);
-  font-weight: 600;
-}
-
 .post-composer-main {
   display: grid;
   gap: 1.25rem;

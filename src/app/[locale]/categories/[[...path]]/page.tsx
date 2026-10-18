@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArticleGrid } from "@/components/article-grid";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CategoryPills } from "@/components/category-pills";
+import { EmptyState } from "@/components/empty-state";
 import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
@@ -103,7 +104,11 @@ export default async function CategoryPage({ params }: { params: Promise<Categor
           <CategoryPills categories={found.category.children} locale={locale} />
         </section>
       )}
-      <ArticleGrid articles={found.articles} locale={locale} empty={t.reader.list.empty} />
+      {found.articles.length === 0 ? (
+        <EmptyState title={t.reader.list.emptyTitle} body={t.reader.category.empty} />
+      ) : (
+        <ArticleGrid articles={found.articles} locale={locale} />
+      )}
     </main>
   );
 }
@@ -119,7 +124,7 @@ async function CategoryIndex({ locale }: { locale: "zh" | "en" }) {
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <ReaderPageHead locale={locale} title={t.reader.category.heading} />
       {tree.length === 0 ? (
-        <p className="reader-empty">{t.reader.list.empty}</p>
+        <EmptyState title={t.reader.category.emptyTitle} body={t.reader.category.emptyIndex} />
       ) : (
         <CategoryPills categories={tree} locale={locale} />
       )}

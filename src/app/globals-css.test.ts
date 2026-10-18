@@ -370,6 +370,8 @@ const CONTROL_BORDERS = [
   ".site-menu summary",
   ".site-rail button",
   ".feed-more-button",
+  ".empty-state-action a",
+  ".empty-state-action button",
 ] as const;
 
 /**
@@ -567,8 +569,10 @@ describe("the type floor", () => {
 
 /** Controls a thumb has to hit on a 360–430px phone. */
 const READER_CONTROLS = [
-  "header a",
-  "header button",
+  ".site-topbar a",
+  ".site-topbar button",
+  ".admin-topbar a",
+  ".admin-topbar button",
   ".site-rail a",
   ".site-rail button",
   ".site-menu summary",
@@ -580,6 +584,8 @@ const READER_CONTROLS = [
   ".lightbox-next",
   ".reader-tags a",
   ".reader-pill",
+  ".empty-state-action a",
+  ".empty-state-action button",
 ] as const;
 
 /**
@@ -594,6 +600,15 @@ const LIST_ANCHORS = [
   ".reader-pill a",
   ".archive-row-title",
   ".archive-row-category",
+  // Outside the reading column too: the console's and the reader's top bars,
+  // the Article's kicker, its Locale pills, its contents and its pager.
+  "header nav a",
+  ".article-kicker",
+  ".article-locales a",
+  ".article-toc a",
+  ".reader-tags a",
+  ".reader-article-nav a",
+  ".empty-state-action a",
 ] as const;
 
 /** Reader surfaces that render at phone width; 0.875rem is the 14px floor. */
@@ -1214,3 +1229,173 @@ describe("the Archive index", () => {
   });
 });
 
+/**
+ * The masthead is a wordmark, not a link: the site's own name rendered in the
+ * browser's blue and underlined is the one place a stylesheet forgets to
+ * finish, and it is the first thing a Reader sees.
+ */
+describe("the wordmark", () => {
+  it("sets the rail's wordmark in the site's ink rather than the browser's blue", () => {
+    const wordmark = declarations(blockBody(".site-rail-wordmark"));
+    expect(wordmark.get("color")).toBe("var(--fg)");
+    expect(wordmark.get("text-decoration")).toBe("none");
+    expect(wordmark.get("font-family")).toContain('"Lora"');
+    expect(wordmark.get("font-weight")).toBe("700");
+  });
+
+  it("keeps the top bar's name and the rail's name in the same ink", () => {
+    const name = declarations(blockBody(".site-name"));
+    expect(name.get("color")).toBe("inherit");
+    expect(name.get("text-decoration")).toBe("none");
+  });
+});
+
+/**
+ * base.css styles a bare <header> as a shell's top bar — a flex row — and the
+ * Article header reuses the element, so it has to opt back out. The spec's order
+ * is kicker, title, dek: stacked, the way the DOM already reads.
+ */
+describe("the Article header", () => {
+  it("stacks the kicker over the title instead of laying them out as a bar", () => {
+    expect(declarations(blockBody(".reader-article-header")).get("display")).toBe("block");
+  });
+
+  it("keeps the underline where a link sits inside a sentence", () => {
+    // Prose and the Feed's Tag filter are text with a link in it, so the
+    // underline is the affordance a Reader without colour vision needs.
+    expect(declarations(blockBody(".article-body a")).get("text-decoration")).toBe("underline");
+    expect(declarations(blockBody(".feed-filter a")).get("text-decoration")).toBe("underline");
+  });
+
+  it("gives a stripped link a second affordance", () => {
+    // The kicker, the Locale pills and the contents are lists of links, not
+    // sentences containing one link, so they drop the UA underline; the pill
+    // keeps its border as a shape and the other two underline on interaction.
+    expect(declarations(blockBody(".article-toc a:hover")).get("text-decoration")).toBe("underline");
+    expect(declarations(blockBody(".article-kicker:hover")).get("text-decoration")).toBe("underline");
+    expect(declarations(blockBody(".article-locales a")).get("border")).toContain("var(--border)");
+  });
+});
+/**
+ * The page is set on one measure. 65ch is measured in the element's own type,
+ * so a header, a contents box or a pager that names 65ch while inheriting 14px
+ * lands on a narrower column than the prose and the page reads ragged.
+ */
+describe("the Article page's measure", () => {
+  const MEASURE_BLOCKS = [
+    [".reader-article-header", ".reader-article-header"],
+    [".article-toc", ".article-toc"],
+    [".reader-article > .reader-tags", ".reader-tags"],
+    [".reader-article-nav", ".reader-article-nav"],
+  ] as const;
+
+  it.each(MEASURE_BLOCKS)("%s sits on the prose measure", (selector, fontSizeOwner) => {
+    expect(declarations(blockBody(selector)).get("max-width")).toBe("65ch");
+    // The prose declares 1.125rem; a block that measures its ch in smaller type
+    // is a narrower column, which is what "aligned" must not mean.
+    expect(declarations(blockBody(fontSizeOwner)).get("font-size")).toBe("1.125rem");
+  });
+
+  it("turns the shell's bar header back into a page header", () => {
+    const header = declarations(blockBody(".reader-article-header"));
+    expect(header.get("display")).toBe("block");
+    expect(header.get("padding")).toBe("0");
+    expect(header.get("border")).toBe("0");
+  });
+
+  it("keeps the bars' 44px thumb boxes out of every other <header>", () => {
+    // The Article kicker and its Locale pills live in a <header> too. A bare
+    // `header a` rule would render them 44px tall with the text at the top.
+    expect(() => blockBody("header a")).toThrow(/has no rule/);
+    for (const bar of [".site-topbar a", ".admin-topbar a"]) {
+      expect(blockBody(bar), bar).toContain("min-height: 2.75rem");
+    }
+  });
+});
+/**
+ * Dead CSS is invisible to every other assertion here: a rule for a class no
+ * component renders still parses, still measures, and never reaches a Reader.
+ * A class built by a template literal is not dead, and neither is a class KaTeX
+ * puts on its own markup, so both are named rather than guessed at.
+ */
+const COMPOSED_CLASS_PREFIXES = [
+  // dashboard-table.tsx: `publication-state-${article.visibility}`
+  "publication-state-",
+  // article-list.tsx and post-list.tsx: `article-state-${work.visibility}`
+  "article-state-",
+  // article-editor.tsx: `article-save-${status}`
+  "article-save-",
+  // asset-library.tsx: `asset-upload-${record.status}`
+  "asset-upload-",
+] as const;
+
+const THIRD_PARTY_CLASSES = new Set([
+  // KaTeX marks its display blocks itself; the rule lets a wide formula scroll
+  // inside the prose instead of widening the page.
+  "katex-display",
+]);
+
+function componentSource(): string {
+  const files: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) {
+        files.push(full);
+      }
+    }
+  };
+  walk(path.resolve(process.cwd(), "src"));
+  return files.map((file) => readFileSync(file, "utf8")).join("\n");
+}
+
+/** Whole-word, hyphens included: `post-empty` must not match `post-empty-x`. */
+function rendersClass(source: string, name: string): boolean {
+  return new RegExp("(^|[^\\w-])" + name + "(?![\\w-])").test(source);
+}
+
+describe("no dead rules", () => {
+  const RENDERED = componentSource();
+
+  it("styles no class a component never renders", () => {
+    const classes = [...new Set([...SOURCE.matchAll(/\.([a-zA-Z][a-zA-Z0-9_-]*)/g)].map((match) => match[1] ?? ""))];
+    const dead = classes.filter(
+      (name) =>
+        !rendersClass(RENDERED, name) &&
+        !COMPOSED_CLASS_PREFIXES.some((prefix) => name.startsWith(prefix)) &&
+        !THIRD_PARTY_CLASSES.has(name),
+    );
+
+    expect(dead).toEqual([]);
+  });
+
+  it("declares no token nothing reads", () => {
+    const read = new Set([...SOURCE.matchAll(/var\((--[a-z-]+)\)/g)].map((match) => match[1] ?? ""));
+    const unused = [...themeTokens("light").keys()].filter((name) => !read.has(name));
+
+    expect(unused).toEqual([]);
+  });
+});
+/**
+ * A console page at 200% zoom is a 180px-wide page. A six-column table and a
+ * grid that sizes its track to the table's min-content both widen the document
+ * instead of scrolling, so the table is wrapped and the tracks are allowed to
+ * be narrower than their content.
+ */
+describe("the console at 200% zoom", () => {
+  it("scrolls a wide table inside its own box", () => {
+    const scroll = declarations(blockBody(".table-scroll"));
+    expect(scroll.get("overflow-x")).toBe("auto");
+    expect(scroll.get("max-width")).toBe("100%");
+  });
+
+  it("lets every single-column grid be narrower than its content", () => {
+    for (const selector of [".article-list", ".dashboard", ".tag-manager", ".category-manager", ".asset-library"]) {
+      expect(declarations(blockBody(selector)).get("grid-template-columns"), selector).toBe(
+        "minmax(0, 1fr)",
+      );
+    }
+  });
+});

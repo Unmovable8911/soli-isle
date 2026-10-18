@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArticleGrid } from "@/components/article-grid";
+import { EmptyState } from "@/components/empty-state";
 import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
@@ -85,7 +86,7 @@ export default async function SearchPage({
         )}
       </ReaderPageHead>
       {query.length === 0 ? null : search.results.length === 0 ? (
-        <p className="reader-empty">{t.reader.search.empty}</p>
+        <EmptyState title={t.reader.search.emptyTitle} body={t.reader.search.empty} />
       ) : (
         <ArticleGrid articles={search.results} locale={locale} terms={search.terms} />
       )}

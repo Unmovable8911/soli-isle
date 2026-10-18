@@ -8,6 +8,7 @@ import type { FeedCardView } from "@/domain/feed-view";
 import { buildFeedPath } from "@/domain/public-paths";
 import type { Messages } from "@/messages";
 
+import { EmptyState } from "./empty-state";
 import type { LightboxLabels } from "./lightbox";
 import { PostCard, type FeedLabels } from "./post-card";
 
@@ -69,7 +70,7 @@ export function Feed({
   }
 
   if (posts.length === 0) {
-    return <p className="post-empty">{labels.empty}</p>;
+    return <EmptyState title={labels.emptyTitle} body={labels.empty} />;
   }
 
   return (

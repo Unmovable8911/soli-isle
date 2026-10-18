@@ -25,4 +25,24 @@ describe("permanently removed article", () => {
   it("speaks the Locale of the URL that was asked for", async () => {
     await expect(goneResponse("en").text()).resolves.toContain("permanently removed");
   });
+
+  it("draws the site's own dead-end page instead of the browser's default", async () => {
+    const body = await goneResponse("en").text();
+
+    expect(body).toContain('<section class="empty-state">');
+    expect(body).toContain('<p class="empty-state-kicker">410</p>');
+    expect(body).toContain('<h1 class="empty-state-title">');
+    expect(body).toContain('<div class="empty-state-action">');
+    // The document is served from the Edge runtime, which cannot reach the
+    // compiled stylesheet or the database, so it carries its own typography.
+    expect(body).toContain("<style>");
+    expect(body).toContain("/fonts/lora-latin-wght-normal.woff2");
+  });
+
+  it("says 410, never the 404 page's copy", async () => {
+    const body = await goneResponse("en").text();
+
+    expect(body).toContain("permanently removed");
+    expect(body).not.toContain("This page does not exist");
+  });
 });

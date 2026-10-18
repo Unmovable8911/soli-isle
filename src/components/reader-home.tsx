@@ -4,6 +4,7 @@ import type { ReaderArticleCard } from "@/services/reading";
 
 import { ArticleCard } from "./article-card";
 import { ArticleGrid, articleCardProps } from "./article-grid";
+import { EmptyState } from "./empty-state";
 
 /**
  * How many Articles the grid holds. The lead is not one of them: it is always
@@ -40,7 +41,7 @@ export function ReaderHome({
         <p className="home-dek">{t.reader.home.lead}</p>
       </div>
       {lead === undefined ? (
-        <p className="reader-empty">{t.reader.home.empty}</p>
+        <EmptyState title={t.reader.home.emptyTitle} body={t.reader.home.empty} />
       ) : (
         <>
           <ArticleCard

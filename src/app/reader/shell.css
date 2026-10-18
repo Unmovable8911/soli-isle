@@ -102,10 +102,19 @@
   text-decoration: none;
 }
 
+/* The masthead. It is a link home, but it is set as the site's own name: the
+   bare header/nav rules do not reach it, so it names its ink and drops the
+   underline the browser would otherwise add to every anchor. */
 .site-rail-wordmark {
+  color: var(--fg);
+  text-decoration: none;
   font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+.site-rail-wordmark:hover {
+  color: var(--accent);
 }
 
 .site-categories {
@@ -257,7 +266,8 @@
 
   /* The theme control is a three-way switch: 200ms reads as a change of
      setting rather than a page transition. */
-  .site-rail button {
+  .site-rail button,
+  .site-rail-wordmark {
     transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
   }
 }

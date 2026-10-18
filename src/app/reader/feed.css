@@ -36,6 +36,7 @@
 
 .feed-filter a {
   color: var(--accent);
+  text-decoration: underline;
 }
 
 /* One column, and the Posts divide it themselves. There is no gap here: a gap
@@ -43,10 +44,6 @@
 .feed {
   display: grid;
   max-width: 42rem;
-}
-
-.post-empty {
-  color: var(--muted);
 }
 
 .post-card {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArticleGrid } from "@/components/article-grid";
+import { EmptyState } from "@/components/empty-state";
 import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
@@ -69,7 +70,11 @@ export default async function TagPage({ params }: { params: Promise<TagParams> }
         }
         count={found.articles.length}
       />
-      <ArticleGrid articles={found.articles} locale={locale} empty={t.reader.list.empty} />
+      {found.articles.length === 0 ? (
+        <EmptyState title={t.reader.list.emptyTitle} body={t.reader.tag.empty} />
+      ) : (
+        <ArticleGrid articles={found.articles} locale={locale} />
+      )}
     </main>
   );
 }

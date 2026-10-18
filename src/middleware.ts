@@ -1,6 +1,6 @@
 import { SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "@/config/auth";
 import { parseArticlePath } from "@/domain/article-url";
-import { decideLocaleRedirect, withLocalePrefix } from "@/domain/locale";
+import { LOCALE_HEADER, decideLocaleRedirect, localeFromPathname, withLocalePrefix } from "@/domain/locale";
 import { normalizeProxyHeaders } from "@/domain/proxy-headers";
 import { forwardedProtocol } from "@/domain/urls";
 import { goneResponse } from "@/http/gone";
@@ -81,13 +81,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 307);
   }
 
-  return NextResponse.next({ request: { headers: normalizeProxyHeaders(request.headers) } });
+  return passThrough(request);
+}
+
+/**
+ * The request headers every non-redirect passes on. The Locale is in the address,
+ * and a not-found or error boundary has no params of its own, so it is published
+ * here rather than re-derived from a cookie that may name another Locale.
+ */
+function passThrough(request: NextRequest) {
+  const requestHeaders = normalizeProxyHeaders(request.headers);
+  const locale = localeFromPathname(request.nextUrl.pathname);
+  if (locale !== null) {
+    requestHeaders.set(LOCALE_HEADER, locale);
+  }
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 function adminPassThrough(request: NextRequest) {
-  const response = NextResponse.next({
-    request: { headers: normalizeProxyHeaders(request.headers) },
-  });
+  const requestHeaders = normalizeProxyHeaders(request.headers);
+  const locale = localeFromPathname(request.nextUrl.pathname);
+  if (locale !== null) {
+    requestHeaders.set(LOCALE_HEADER, locale);
+  }
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
   if (sessionCookie) {
     response.cookies.set(SESSION_COOKIE_NAME, sessionCookie.value, {

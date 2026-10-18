@@ -7,6 +7,7 @@
 
 .article-list {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   margin-top: 1.5rem;
 }
@@ -25,6 +26,14 @@
 .article-table {
   width: 100%;
   border-collapse: collapse;
+}
+
+/* A wide table scrolls inside its own box. Without this a six-column row makes
+   the page wider than the viewport, which at 200% zoom means the whole console
+   scrolls sideways instead of the table. */
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .article-table th,

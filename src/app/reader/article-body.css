@@ -104,6 +104,9 @@
 
 .article-body a {
   color: var(--accent);
+  /* A link inside prose is text with a link in it: the underline is what a
+     Reader without colour vision has to go on, so it is declared, not assumed. */
+  text-decoration: underline;
 }
 
 /* Power blocks (issue 09). The same markup is produced for the admin preview
