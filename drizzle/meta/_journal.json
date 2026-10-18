@@ -15,6 +15,13 @@
       "when": 1792247930484,
       "tag": "0001_overrated_revanche",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792283437466,
+      "tag": "0002_right_leader",
+      "breakpoints": true
     }
   ]
 }

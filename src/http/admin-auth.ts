@@ -8,6 +8,7 @@ import {
   type AuthorAuthContext,
 } from "@/services/auth";
 import { NextResponse } from "next/server";
+import { readCookieValue } from "./request-cookie";
 
 export async function loginResponse(
   auth: AuthorAuthContext,
@@ -72,19 +73,4 @@ export async function logoutResponse(
       ),
     },
   });
-}
-
-function readCookieValue(cookieHeader: string | null, name: string): string | null {
-  if (cookieHeader === null) {
-    return null;
-  }
-
-  for (const part of cookieHeader.split(";")) {
-    const [partName = "", ...rest] = part.trim().split("=");
-    if (partName === name) {
-      return rest.join("=") || null;
-    }
-  }
-
-  return null;
 }

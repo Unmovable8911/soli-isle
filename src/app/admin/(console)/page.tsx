@@ -1,6 +1,7 @@
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
 import { cookies, headers } from "next/headers";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,6 +19,9 @@ export default async function AdminHomePage() {
       <h1>{t.admin.home.title}</h1>
       <p>{t.admin.home.tagline}</p>
       <p>{t.admin.home.hint}</p>
+      <p className="admin-home-entry">
+        <Link href="/admin/assets">{t.admin.assets.title}</Link>
+      </p>
     </>
   );
 }

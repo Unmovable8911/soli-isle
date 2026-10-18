@@ -4,6 +4,7 @@ import { openDatabase, type DatabaseConnection } from "@/db/database";
 import { createDatabaseAvailabilityProbe } from "@/db/database-health";
 import { runMigrations } from "@/db/migrate";
 import { systemClock, type Clock } from "@/domain/clock";
+import { createAssetContext, type AssetContext } from "@/services/assets";
 import { createAuthorAuthContext, type AuthorAuthContext } from "@/services/auth";
 import type { HealthContext } from "@/services/health";
 import { FileSystemResourceStorage } from "@/storage/filesystem-resource-storage";
@@ -14,6 +15,7 @@ export interface AppContext {
   storage: FileSystemResourceStorage;
   health: HealthContext;
   auth: AuthorAuthContext;
+  assets: AssetContext;
 }
 
 let cachedContext: AppContext | undefined;
@@ -34,6 +36,7 @@ export function createAppContext(
 
   const storage = new FileSystemResourceStorage(paths.resourceDir);
   const authConfig = resolveAuthConfig(env);
+  const assets = createAssetContext(database, systemClock, paths.resourceDir);
 
   return {
     database,
@@ -43,6 +46,7 @@ export function createAppContext(
       database: createDatabaseAvailabilityProbe(database.sqlite, paths.databasePath),
       storage,
     },
+    assets,
     auth: createAuthorAuthContext(
       database,
       systemClock,

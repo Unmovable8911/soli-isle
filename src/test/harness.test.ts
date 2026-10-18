@@ -23,7 +23,14 @@ describe("shared test harness", () => {
       .filter((row) => row.type === "table")
       .map((row) => row.name);
 
-    expect(tables).toEqual(["auth_audit_log", "health_check", "session"]);
+    expect(tables).toEqual([
+      "asset",
+      "asset_reference",
+      "asset_variant",
+      "auth_audit_log",
+      "health_check",
+      "session",
+    ]);
     expect(columnsOf(harness, "health_check")).toEqual(["id", "touched_at"]);
     expect(columnsOf(harness, "session")).toEqual(["id", "created_at", "last_seen_at", "expires_at"]);
     expect(columnsOf(harness, "auth_audit_log")).toEqual([
@@ -32,6 +39,30 @@ describe("shared test harness", () => {
       "kind",
       "source",
       "detail",
+    ]);
+    expect(columnsOf(harness, "asset")).toEqual([
+      "id",
+      "file_name",
+      "mime_type",
+      "byte_size",
+      "width",
+      "height",
+      "content_hash",
+      "uploaded_at",
+    ]);
+    expect(columnsOf(harness, "asset_variant")).toEqual([
+      "asset_id",
+      "variant",
+      "byte_size",
+      "width",
+      "height",
+      "format",
+    ]);
+    expect(columnsOf(harness, "asset_reference")).toEqual([
+      "id",
+      "asset_id",
+      "content_kind",
+      "content_id",
     ]);
   });
 

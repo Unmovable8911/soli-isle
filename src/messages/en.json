@@ -35,6 +35,52 @@
       "title": "Admin console",
       "tagline": "The Author's workbench.",
       "hint": "Content management will arrive in a later task."
+    },
+    "assets": {
+      "title": "Asset library",
+      "description": "Every uploaded image lives here. Images nothing references can be deleted.",
+      "upload": {
+        "label": "Upload images",
+        "hint": "JPEG, PNG, WebP, AVIF and GIF are supported. Pick several files at once; each uploads immediately.",
+        "uploading": "Uploading…",
+        "success": "Uploaded",
+        "failed": "Upload failed",
+        "errorUnsupportedType": "Unsupported image format.",
+        "errorTooLarge": "The file is larger than the upload limit.",
+        "errorInvalidImage": "That file is not a usable image.",
+        "errorGeneric": "Upload failed. Please try again."
+      },
+      "list": {
+        "title": "All images",
+        "empty": "No images uploaded yet. Add the first one with the uploader above.",
+        "dimensions": "Dimensions",
+        "size": "Size",
+        "uploadedAt": "Uploaded"
+      },
+      "references": {
+        "title": "Referenced by",
+        "none": "Not referenced by any content"
+      },
+      "orphans": {
+        "title": "Unreferenced images",
+        "description": "No content references these images. Deleting one cannot be undone.",
+        "empty": "No unreferenced images.",
+        "delete": "Delete",
+        "confirmDelete": "Confirm delete",
+        "cancel": "Cancel",
+        "deleteFailed": "Delete failed. Please try again.",
+        "referenced": "Still referenced, nothing was deleted."
+      },
+      "picker": {
+        "title": "Choose an image",
+        "close": "Close",
+        "loading": "Loading…",
+        "loadFailed": "Could not load the library. Please try again.",
+        "empty": "The library has no images yet.",
+        "select": "Choose",
+        "uploading": "Uploading…",
+        "uploadFailed": "Upload failed. Please try again."
+      }
     }
   }
 }
