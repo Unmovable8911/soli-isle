@@ -13,7 +13,8 @@
     "localeNames": {
       "zh": "中文",
       "en": "English"
-    }
+    },
+    "skipToContent": "跳到正文"
   },
   "home": {
     "title": "Soli Isle",

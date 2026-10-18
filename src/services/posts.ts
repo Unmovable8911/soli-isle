@@ -74,7 +74,7 @@ export interface PostTranslationView extends PostTranslationSummary {
 
 export interface PostImageRef {
   assetId: string;
-  /** The uploaded file's name, used as the picture's alt text. */
+  /** The uploaded file's name — metadata about the Asset, never alt text. */
   fileName: string;
   width: number;
   height: number;
@@ -851,7 +851,11 @@ export async function readFeedPage(
             }),
       width: original?.width ?? row.width,
       height: original?.height ?? row.height,
-      alt: row.fileName,
+      // A picture has no authored description yet. The uploaded file's name is
+      // metadata about the Asset, not a sentence for a screen reader, so the
+      // card names the control by its position instead and the picture is
+      // decorative.
+      alt: "",
     });
     imagesByPost.set(row.postId, list);
   }

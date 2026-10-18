@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Feed, FeedHeading } from "@/components/feed";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { feedView } from "@/http/posts";
 import { messages } from "@/messages";
@@ -58,7 +59,7 @@ export default async function FeedPage({
   const t = messages[locale];
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <FeedHeading
         locale={locale}
         tag={view.tag}

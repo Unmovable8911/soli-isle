@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { Lightbox } from "./lightbox";
+import { Lightbox, focusTrapTarget, wrapIndex } from "./lightbox";
 
 const IMAGES = [
   { src: "/media/a/display.webp", original: "/media/a/original.png", alt: "diagram" },
@@ -20,6 +20,32 @@ function render(startIndex = 0): string {
     <Lightbox images={IMAGES} startIndex={startIndex} labels={LABELS} onClose={() => {}} />,
   );
 }
+
+describe("lightbox keyboard rules", () => {
+  it("wraps at both ends so the arrow keys always move somewhere", () => {
+    expect(wrapIndex(0, 1, 3)).toBe(1);
+    expect(wrapIndex(2, 1, 3)).toBe(0);
+    expect(wrapIndex(0, -1, 3)).toBe(2);
+    expect(wrapIndex(0, -1, 1)).toBe(0);
+  });
+
+  it("keeps Tab inside the dialog: forward from the last control, back from the first", () => {
+    expect(focusTrapTarget({ shiftKey: false, activeIsFirst: false, activeIsLast: true, activeIsDialog: false }))
+      .toBe("first");
+    expect(focusTrapTarget({ shiftKey: true, activeIsFirst: true, activeIsLast: false, activeIsDialog: false }))
+      .toBe("last");
+    // Focus sitting on the dialog container itself counts as "before the first control".
+    expect(focusTrapTarget({ shiftKey: true, activeIsFirst: false, activeIsLast: false, activeIsDialog: true }))
+      .toBe("last");
+  });
+
+  it("leaves ordinary tabbing alone", () => {
+    expect(focusTrapTarget({ shiftKey: false, activeIsFirst: false, activeIsLast: false, activeIsDialog: false }))
+      .toBeNull();
+    expect(focusTrapTarget({ shiftKey: true, activeIsFirst: false, activeIsLast: false, activeIsDialog: false }))
+      .toBeNull();
+  });
+});
 
 describe("lightbox", () => {
   it("is a modal dialog labelled for assistive technology", () => {

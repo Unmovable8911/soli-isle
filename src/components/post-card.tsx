@@ -15,6 +15,28 @@ export type FeedLabels = Messages["reader"]["feed"];
 
 const IMAGE_SIZES = "(max-width: 48rem) 85vw, 640px";
 
+/**
+ * The cell an arrow key moves focus to, or null for every other key. The arrows
+ * stop at the ends — a Feed card is not a carousel that wraps — and Enter/Space
+ * need no rule at all, because the cells are real buttons.
+ *
+ * The cells share one Tab stop (roving `tabIndex`): a nine-picture gallery is
+ * one stop, and every picture is still reachable, so the lightbox can hand focus
+ * back to the exact cell it was opened from.
+ */
+export function galleryNextIndex(key: string, current: number, length: number): number | null {
+  if (length === 0) {
+    return null;
+  }
+  if (key === "ArrowRight") {
+    return Math.min(current + 1, length - 1);
+  }
+  if (key === "ArrowLeft") {
+    return Math.max(current - 1, 0);
+  }
+  return null;
+}
+
 function counterText(labels: FeedLabels, current: number, total: number): string {
   return labels.gallery.counter
     .replaceAll("{current}", String(current))
@@ -117,8 +139,21 @@ export function MeasuredPostBody({ html, labels }: { html: string; labels: FeedL
     setFolded(postBodyShouldFold(node.scrollHeight));
   }, [html]);
 
+  // Expanding removes the control that was just used, so focus is moved onto the
+  // text it revealed instead of falling back to the top of the document.
+  useEffect(() => {
+    if (!expanded) {
+      return;
+    }
+    const node = bodyRef.current;
+    if (node === null || node.contains(document.activeElement)) {
+      return;
+    }
+    node.focus();
+  }, [expanded]);
+
   return (
-    <div className="post-body-measure" ref={bodyRef}>
+    <div className="post-body-measure" ref={bodyRef} tabIndex={-1}>
       <PostBody
         html={html}
         labels={labels}
@@ -134,7 +169,8 @@ export function MeasuredPostBody({ html, labels }: { html: string; labels: FeedL
  * A horizontally scrolling image set: each cell takes most of the track so the
  * next picture's edge peeks out, one picture snaps per swipe, a `current/total`
  * counter follows the scroll, the arrow keys move between pictures and a tap
- * opens the shared lightbox. The cells are cropped to a viewport-relative box
+ * opens the shared lightbox. Keyboard-wise it is one Tab stop on the picture on
+ * view, with the arrows moving focus cell to cell (ticket 12). The cells are cropped to a viewport-relative box
  * (`cover`) — an Article body image keeps its original ratio, and the two rules
  * are meant to stay different.
  */
@@ -147,7 +183,8 @@ export function PostGallery({
   labels: FeedLabels;
   lightboxLabels: LightboxLabels;
 }) {
-  const trackRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLUListElement | null>(null);
+  const cellRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const pointerScrollLeft = useRef(0);
   const [current, setCurrent] = useState(0);
   const [opened, setOpened] = useState<number | null>(null);
@@ -155,18 +192,6 @@ export function PostGallery({
   function cells(): HTMLElement[] {
     const track = trackRef.current;
     return track === null ? [] : Array.from(track.children).filter(isElement);
-  }
-
-  function scrollToIndex(index: number) {
-    const target = cells()[index];
-    if (target === undefined) {
-      return;
-    }
-    const reduced =
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    target.scrollIntoView?.({ behavior: reduced ? "auto" : "smooth", inline: "start", block: "nearest" });
-    setCurrent(index);
   }
 
   function handleScroll() {
@@ -187,24 +212,41 @@ export function PostGallery({
     setCurrent(closest);
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      scrollToIndex(Math.min(current + 1, images.length - 1));
-    }
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      scrollToIndex(Math.max(current - 1, 0));
-    }
+  /** Which cell holds focus, so a key moves from where the Reader actually is. */
+  function focusedIndex(): number {
+    const focused = cellRefs.current.findIndex((cell) => cell === document.activeElement);
+    return focused === -1 ? current : focused;
   }
 
-  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+  /** Arrow keys move focus and the track together, keeping the two in step. */
+  function focusIndex(index: number) {
+    setCurrent(index);
+    const cell = cells()[index];
+    const reduced =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    cell?.scrollIntoView?.({ behavior: reduced ? "auto" : "smooth", inline: "start", block: "nearest" });
+    cellRefs.current[index]?.focus({ preventScroll: true });
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLUListElement>) {
+    const index = galleryNextIndex(event.key, focusedIndex(), images.length);
+    if (index === null) {
+      return;
+    }
+    event.preventDefault();
+    focusIndex(index);
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLUListElement>) {
     pointerScrollLeft.current = event.currentTarget.scrollLeft;
   }
 
-  function open(index: number, track: HTMLDivElement) {
-    // A swipe also produces a click; only a tap that did not scroll opens the lightbox.
-    if (Math.abs(track.scrollLeft - pointerScrollLeft.current) > 4) {
+  function open(index: number, track: Element, fromPointer: boolean) {
+    // A swipe also produces a click; only a tap that did not scroll opens the
+    // lightbox. Keyboard activation (`event.detail === 0`) has no pointerdown
+    // behind it, so the swipe guard must not be applied to it.
+    if (fromPointer && Math.abs(track.scrollLeft - pointerScrollLeft.current) > 4) {
       return;
     }
     setOpened(index);
@@ -218,26 +260,31 @@ export function PostGallery({
 
   return (
     <div className="post-gallery">
-      <div
+      <ul
         className="post-gallery-track"
         ref={trackRef}
-        role="group"
+        role="list"
         aria-label={labels.gallery.label}
-        tabIndex={0}
         onScroll={handleScroll}
         onKeyDown={handleKeyDown}
         onPointerDown={handlePointerDown}
       >
         {images.map((image, index) => (
-          <div className="post-gallery-cell" key={`${image.src}-${index}`}>
+          <li className="post-gallery-cell" key={`${image.src}-${index}`}>
             <button
               type="button"
               className="post-gallery-open"
-              tabIndex={-1}
-              onClick={() => {
+              ref={(element) => {
+                cellRefs.current[index] = element;
+              }}
+              tabIndex={index === current ? 0 : -1}
+              aria-haspopup="dialog"
+              aria-label={counterText(labels, index + 1, images.length)}
+              onClick={(event) => {
                 const track = trackRef.current;
                 if (track !== null) {
-                  open(index, track);
+                  // A pointer click carries a click count; keyboard activation is 0.
+                  open(index, track, event.detail > 0);
                 }
               }}
             >
@@ -254,9 +301,9 @@ export function PostGallery({
                 data-original={image.original}
               />
             </button>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
       <p className="post-gallery-counter" aria-live="polite">
         <span aria-hidden="true">
           {current + 1}/{images.length}
@@ -270,6 +317,7 @@ export function PostGallery({
           images={lightboxImages}
           startIndex={opened}
           labels={lightboxLabels}
+          returnFocusTo={cellRefs.current[opened] ?? null}
           onClose={() => setOpened(null)}
         />
       )}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArticleList } from "@/components/article-list";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { buildSearchPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
@@ -57,7 +58,7 @@ export default async function SearchPage({
     .replaceAll("{query}", query);
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <h1>{t.reader.search.title}</h1>
       <form className="reader-search-form" action={buildSearchPath({ locale })} method="get" role="search">
         <label htmlFor="reader-search-input">{t.reader.search.label}</label>

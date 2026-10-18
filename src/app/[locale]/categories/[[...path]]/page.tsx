@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { ArticleList } from "@/components/article-list";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { buildCategoryIndexPath, buildCategoryPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
@@ -88,7 +89,7 @@ export default async function CategoryPage({ params }: { params: Promise<Categor
   ];
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <Breadcrumbs label={t.reader.breadcrumb.label} items={breadcrumbs} />
       <h1>{found.category.name}</h1>
       {found.category.children.length > 0 && (
@@ -119,7 +120,7 @@ async function CategoryIndex({ locale }: { locale: "zh" | "en" }) {
   });
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <h1>{t.reader.category.heading}</h1>
       {tree.length === 0 ? (
         <p className="reader-empty">{t.reader.list.empty}</p>

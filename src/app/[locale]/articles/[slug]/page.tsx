@@ -7,6 +7,7 @@ import { cache } from "react";
 import { ArticleBody } from "@/components/article-body";
 import { ArticleLanguageVersions, FallbackNotice } from "@/components/article-language";
 import { ImageZoom } from "@/components/lightbox";
+import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale, type Locale } from "@/config/site";
 import { extractAssetIds, parseAssetAddress } from "@/domain/asset-address";
 import { alternateLanguageMap, articleLanguageLinks } from "@/domain/article-language";
@@ -137,7 +138,7 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
   });
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}>
       <article className="reader-article">
         <header className="reader-article-header">
           <h1>{translation.title}</h1>

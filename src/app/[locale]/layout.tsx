@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
 import LocaleSwitcher from "@/components/locale-switcher";
+import { SkipLink } from "@/components/skip-link";
 import ThemeToggle from "@/components/theme-toggle";
 import { isLocale } from "@/config/site";
 import {
@@ -57,6 +58,7 @@ export default async function LocaleLayout({
         <script data-theme-init dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
+        <SkipLink label={t.chrome.skipToContent} />
         <header>
           <Link href={`/${locale}`} className="site-name">
             {t.chrome.siteName}

@@ -13,7 +13,8 @@
     "localeNames": {
       "zh": "中文",
       "en": "English"
-    }
+    },
+    "skipToContent": "Skip to content"
   },
   "home": {
     "title": "Soli Isle",
