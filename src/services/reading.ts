@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, exists, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import type { Locale } from "@/config/site";
 import type { DatabaseConnection } from "@/db/database";
@@ -21,10 +21,11 @@ import {
 import { categoryAncestorPaths, isWithinCategoryPath } from "@/domain/category-path";
 import type { Clock } from "@/domain/clock";
 import { pickLocalised } from "@/domain/localised";
-import { escapeLikeTerm, parseSearchTerms } from "@/domain/search";
+import { escapeLikeTerm, matchSnippet, parseSearchTerms } from "@/domain/search";
+import { flattenTree } from "@/domain/tree";
 import { loadCategoryViews, listCategoryTree, type CategoryContext } from "./categories";
 import { loadTagViews, listTags, type TagContext } from "./tags";
-import { visibleToReader } from "./visibility";
+import { readableByUrl, visibleToReader } from "./visibility";
 
 /**
  * Reader-facing reads: what a public page may list and how.
@@ -65,6 +66,12 @@ export interface ReaderArticleCard {
   publishTime: string | null;
   category: ReaderCategoryRef | null;
   tags: ReaderTagRef[];
+  /**
+   * Only a search result carries one: the body prose around the keyword it
+   * matched, so a body hit is readable on the card. Null (or absent) when the
+   * body holds none of the terms.
+   */
+  snippet?: string | null;
 }
 
 export interface ReaderCategoryNode {
@@ -89,9 +96,14 @@ export interface ReaderTagPage {
   articles: ReaderArticleCard[];
 }
 
+export interface ReaderSearchResult extends ReaderArticleCard {
+  snippet: string | null;
+}
+
 export interface ReaderSearch {
   terms: string[];
-  results: ReaderArticleCard[];
+  /** Ordered best-first; every result carries the snippet that justifies it. */
+  results: ReaderSearchResult[];
 }
 
 export interface ArticleNeighbours {
@@ -190,8 +202,8 @@ function loadTagLinks(
   return links;
 }
 
-/** Every Article a Reader can see in this Locale, newest Publish Time first. */
-async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArticleCard[]> {
+/** The card query, narrowed by whichever publication predicate the surface needs. */
+function queryCards(ctx: ReadingContext, locale: Locale, filter: SQL): ReaderArticleCard[] {
   const db = ctx.database.db;
   const rows = db
     .select({ article, translation: articleTranslation, slug: articleSlug.slug })
@@ -204,7 +216,7 @@ async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArt
       ),
     )
     .innerJoin(articleSlug, eq(articleSlug.articleId, article.id))
-    .where(publishedFilter(ctx.clock.now().toISOString()))
+    .where(filter)
     .orderBy(desc(article.publishTime), desc(article.id))
     .all();
 
@@ -214,6 +226,11 @@ async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArt
   );
 
   return rows.map((row) => toCard(ctx, locale, row, tagLinks.get(row.article.id) ?? []));
+}
+
+/** Every Article a Reader can see in this Locale, newest Publish Time first. */
+async function loadCards(ctx: ReadingContext, locale: Locale): Promise<ReaderArticleCard[]> {
+  return queryCards(ctx, locale, publishedFilter(ctx.clock.now().toISOString()));
 }
 
 export async function listRecentArticles(
@@ -257,16 +274,12 @@ export async function listReaderCategories(
   return toReaderTree(ctx, input.locale, tree, cards);
 }
 
-function flattenTree(nodes: readonly ReaderCategoryNode[]): ReaderCategoryNode[] {
-  return nodes.flatMap((node) => [node, ...flattenTree(node.children)]);
-}
-
 export async function findReaderCategory(
   ctx: ReadingContext,
   input: { locale: Locale; categoryPath: string },
 ): Promise<ReaderCategoryPage | null> {
   const tree = await listReaderCategories(ctx, { locale: input.locale });
-  const flat = flattenTree(tree);
+  const flat = flattenTree(tree).map((entry) => entry.node);
   const category = flat.find((node) => node.path === input.categoryPath);
   if (category === undefined) {
     return null;
@@ -375,7 +388,12 @@ export async function searchArticles(
     rows.map((row) => row.article.id),
   );
   const lower = terms.map((term) => term.toLowerCase());
-  const cards = rows.map((row) => toCard(ctx, input.locale, row, tagLinks.get(row.article.id) ?? []));
+  const cards = rows.map(
+    (row): ReaderSearchResult => ({
+      ...toCard(ctx, input.locale, row, tagLinks.get(row.article.id) ?? []),
+      snippet: matchSnippet(row.translation.bodyMarkdown, terms),
+    }),
+  );
 
   // A title hit is what the Reader was probably looking for; the publish order
   // is the tie-break, and Array.prototype.sort is stable to preserve it.
@@ -390,11 +408,23 @@ export async function searchArticles(
   return { terms, results: ordered };
 }
 
+/**
+ * The previous/next chain of one URL.
+ *
+ * It is built from the Articles that answer by URL — visible **and** archived —
+ * not from a list: an archived Article has no list to appear in, but its page
+ * still exists, so without this it would be the one page with no navigation.
+ */
 export async function findArticleNeighbours(
   ctx: ReadingContext,
   input: { locale: Locale; articleId: string },
 ): Promise<ArticleNeighbours | null> {
-  const cards = await loadCards(ctx, input.locale);
+  const nowIso = ctx.clock.now().toISOString();
+  const cards = await queryCards(
+    ctx,
+    input.locale,
+    readableByUrl(article.publicationState, article.publishTime, nowIso),
+  );
   const index = cards.findIndex((card) => card.id === input.articleId);
   if (index === -1) {
     return null;

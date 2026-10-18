@@ -459,7 +459,8 @@
       "categories": "Categories",
       "archive": "Archive",
       "search": "Search",
-      "feed": "Feed"
+      "feed": "Feed",
+      "label": "Site navigation"
     },
     "home": {
       "title": "Recent articles",

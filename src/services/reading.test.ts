@@ -91,9 +91,13 @@ async function seedPublished(fixture: Fixture, input: SeedInput): Promise<Seeded
     locale,
     bodyJson: JSON.stringify({
       type: "doc",
-      content: [{ type: "paragraph", text: "body" }],
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: input.markdown ?? "body" }],
+        },
+      ],
     }),
-    bodyMarkdown: input.markdown ?? "body",
   });
 
   for (const extra of input.alsoIn ?? []) {
@@ -427,6 +431,40 @@ describe("search", () => {
     expect(titles(byCategory.results)).toEqual(["Filed"]);
   });
 
+  it("gives a result the body prose around the match, and null when only the title matched", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, {
+      title: "Highlighting in the title only",
+      publishTime: "2025-06-01T00:00:00.000Z",
+    });
+    await seedPublished(fixture, {
+      title: "Plain",
+      publishTime: "2025-06-02T00:00:00.000Z",
+      markdown: "a body that mentions highlighting somewhere",
+    });
+
+    const found = await searchArticles(fixture.reading, { locale: "zh", query: "highlighting" });
+
+    expect(found.results[0]).toMatchObject({
+      title: "Highlighting in the title only",
+      snippet: null,
+    });
+    expect(found.results[1]?.title).toBe("Plain");
+    expect(found.results[1]?.snippet).toContain("mentions highlighting somewhere");
+  });
+
+  it("finds a body word that was only ever saved as ProseMirror JSON", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, {
+      title: "Saved as JSON only",
+      publishTime: "2025-06-01T00:00:00.000Z",
+      markdown: "the searchable phrase",
+    });
+
+    const found = await searchArticles(fixture.reading, { locale: "zh", query: "searchable" });
+    expect(titles(found.results)).toEqual(["Saved as JSON only"]);
+  });
+
   it("only searches the current Locale", async () => {
     const fixture = await createFixture();
     await seedPublished(fixture, {
@@ -499,6 +537,45 @@ describe("previous and next Article", () => {
 
     expect(neighbours?.older).toMatchObject({ id: older.id, title: "Older" });
     expect(neighbours?.newer).toMatchObject({ id: newer.id, title: "Newer" });
+  });
+
+  it("keeps an archived Article in the chain, so an archived page still ends with navigation", async () => {
+    const fixture = await createFixture();
+    const older = await seedPublished(fixture, {
+      title: "Older",
+      publishTime: "2025-06-01T00:00:00.000Z",
+    });
+    const archived = await seedPublished(fixture, {
+      title: "Archived",
+      publishTime: "2025-06-02T00:00:00.000Z",
+    });
+    const newer = await seedPublished(fixture, {
+      title: "Newer",
+      publishTime: "2025-06-03T00:00:00.000Z",
+    });
+    await archiveArticle(fixture.articles, { articleId: archived.id });
+
+    const neighbours = await findArticleNeighbours(fixture.reading, {
+      locale: "zh",
+      articleId: archived.id,
+    });
+
+    expect(neighbours?.older).toMatchObject({ id: older.id });
+    expect(neighbours?.newer).toMatchObject({ id: newer.id });
+  });
+
+  it("leaves archived Articles out of the lists that are not a URL chain", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, { title: "Visible", publishTime: "2025-06-01T00:00:00.000Z" });
+    const archived = await seedPublished(fixture, {
+      title: "Archived",
+      publishTime: "2025-06-02T00:00:00.000Z",
+    });
+    await archiveArticle(fixture.articles, { articleId: archived.id });
+
+    expect(titles(await listRecentArticles(fixture.reading, { locale: "zh" }))).toEqual([
+      "Visible",
+    ]);
   });
 
   it("has no neighbour at either end", async () => {

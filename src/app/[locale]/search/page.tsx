@@ -7,7 +7,7 @@ import { isLocale } from "@/config/site";
 import { buildSearchPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { createReadingContext, searchArticles } from "@/services/reading";
+import { searchArticles } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -48,7 +48,7 @@ export default async function SearchPage({
   const t = messages[locale];
   const query = readQuery(await searchParams);
   const context = getAppContext();
-  const search = await searchArticles(createReadingContext(context.database, context.clock), {
+  const search = await searchArticles(context.reading, {
     locale,
     query,
   });

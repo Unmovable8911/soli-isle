@@ -23,8 +23,16 @@ import {
 } from "@/domain/publication";
 import { EMPTY_DOCUMENT, isRichTextDocument } from "@/domain/rich-text";
 import { generateUlid } from "@/domain/ulid";
-import { syncAssetReferences, type AssetContext } from "./assets";
-import { loadTagViews, type TagContext, type TagView } from "./tags";
+import { deriveMarkdown } from "@/editor/markdown";
+import type { AssetContext } from "./assets";
+import {
+  finishMutation,
+  groupBy,
+  InvalidPostBodyError,
+  localeOrder,
+  syncTranslationAssets,
+} from "./content";
+import { findTagViewBySlug, loadTagViews, type TagContext, type TagView } from "./tags";
 import { visibleToReader } from "./visibility";
 
 /**
@@ -52,12 +60,7 @@ export function createPostContext(
   return { database, clock, assets };
 }
 
-export class InvalidPostBodyError extends Error {
-  constructor() {
-    super("The post body must be a ProseMirror document");
-    this.name = "InvalidPostBodyError";
-  }
-}
+export { InvalidPostBodyError } from "./content";
 
 export interface PostTranslationSummary {
   locale: Locale;
@@ -68,6 +71,7 @@ export interface PostTranslationSummary {
 
 export interface PostTranslationView extends PostTranslationSummary {
   bodyJson: string;
+  /** Derived from `bodyJson` when this service writes the row; never an input. */
   bodyMarkdown: string;
   createdAt: string;
 }
@@ -165,25 +169,6 @@ function toTranslationView(row: PostTranslationRow): PostTranslationView {
     bodyMarkdown: row.bodyMarkdown,
     createdAt: row.createdAt,
   };
-}
-
-function groupBy<T>(rows: readonly T[], key: (row: T) => string): Map<string, T[]> {
-  const grouped = new Map<string, T[]>();
-  for (const row of rows) {
-    const groupKey = key(row);
-    const group = grouped.get(groupKey);
-    if (group === undefined) {
-      grouped.set(groupKey, [row]);
-    } else {
-      group.push(row);
-    }
-  }
-  return grouped;
-}
-
-function localeOrder(locale: Locale): number {
-  const index = siteConfig.locales.indexOf(locale);
-  return index === -1 ? siteConfig.locales.length : index;
 }
 
 function loadRecords<TTranslation extends PostTranslationSummary>(
@@ -288,21 +273,19 @@ async function syncPostAssets(ctx: PostContext, postId: string): Promise<void> {
     .where(eq(postImage.postId, postId))
     .all();
 
-  const body = [
-    ...translations.map((row) => `${row.bodyJson}\n${row.bodyMarkdown}`),
-    ...images.map((row) => buildAssetAddress({ assetId: row.assetId, variant: "display", format: "webp" })),
-  ].join("\n");
-
-  await syncAssetReferences(ctx.assets, {
+  await syncTranslationAssets(ctx, {
     contentKind: POST_CONTENT_KIND,
     contentId: postId,
-    body,
+    translations,
+    extra: images.map((row) =>
+      buildAssetAddress({ assetId: row.assetId, variant: "display", format: "webp" }),
+    ),
   });
 }
 
 export async function createPostDraft(
   ctx: PostContext,
-  input: { locale?: Locale; defaultLocale?: Locale; bodyJson?: string; bodyMarkdown?: string },
+  input: { locale?: Locale; defaultLocale?: Locale; bodyJson?: string },
 ): Promise<PostDetail> {
   const locale = input.locale ?? siteConfig.defaultLocale;
   const defaultLocale = input.defaultLocale ?? locale;
@@ -331,7 +314,7 @@ export async function createPostDraft(
         postId,
         locale,
         bodyJson,
-        bodyMarkdown: input.bodyMarkdown ?? "",
+        bodyMarkdown: deriveMarkdown(bodyJson),
         version: 1,
         createdAt,
         updatedAt: createdAt,
@@ -354,7 +337,7 @@ export async function getPost(ctx: PostContext, postId: string): Promise<PostDet
 
 export async function addPostTranslation(
   ctx: PostContext,
-  input: { postId: string; locale: Locale; bodyJson?: string; bodyMarkdown?: string },
+  input: { postId: string; locale: Locale; bodyJson?: string },
 ): Promise<PostMutation> {
   const db = ctx.database.db;
   const existing = db.select().from(post).where(eq(post.id, input.postId)).get();
@@ -385,7 +368,7 @@ export async function addPostTranslation(
         postId: input.postId,
         locale: input.locale,
         bodyJson,
-        bodyMarkdown: input.bodyMarkdown ?? "",
+        bodyMarkdown: deriveMarkdown(bodyJson),
         version: 1,
         createdAt: now,
         updatedAt: now,
@@ -395,7 +378,7 @@ export async function addPostTranslation(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 export async function savePostTranslation(
@@ -406,7 +389,6 @@ export async function savePostTranslation(
     /** The version this save was derived from; a different stored version refuses the write. */
     baseVersion: number;
     bodyJson?: string;
-    bodyMarkdown?: string;
   },
 ): Promise<PostMutation> {
   const db = ctx.database.db;
@@ -433,7 +415,9 @@ export async function savePostTranslation(
       .set({
         bodyJson: input.bodyJson ?? existing.bodyJson,
         bodyMarkdown:
-          input.bodyMarkdown ?? (input.bodyJson === undefined ? existing.bodyMarkdown : ""),
+          input.bodyJson === undefined
+            ? existing.bodyMarkdown
+            : deriveMarkdown(input.bodyJson),
         version: existing.version + 1,
         updatedAt: now,
       })
@@ -445,7 +429,7 @@ export async function savePostTranslation(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -487,7 +471,7 @@ export async function removePostTranslation(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /** The version Content Fallback shows; it must be one the Post really has. */
@@ -515,7 +499,7 @@ export async function setPostDefaultLocale(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -557,7 +541,7 @@ export async function setPostImages(
   });
 
   await syncPostAssets(ctx, input.postId);
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -617,7 +601,7 @@ export async function setPostTags(
     tx.update(post).set({ updatedAt: now }).where(eq(post.id, input.postId)).run();
   });
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 /**
@@ -657,7 +641,7 @@ export async function publishPost(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 export async function archivePost(
@@ -678,7 +662,7 @@ export async function archivePost(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
 }
 
 export async function unarchivePost(
@@ -699,7 +683,41 @@ export async function unarchivePost(
     .where(eq(post.id, input.postId))
     .run();
 
-  return finish(ctx, input.postId);
+  return finishMutation("post", () => loadPost(ctx, input.postId));
+}
+
+/**
+ * What a Tag-filtered Feed does with the Slug it was asked for — the service's
+ * judgement, not the adapter's.
+ *
+ * Three outcomes, and the third is the point: a Slug that no Tag answers to is
+ * **unknown**, not "no filter". Answering with the unfiltered Feed would show
+ * the Reader unrelated Posts under a URL that claims a filter, and a typo'd or
+ * deleted Tag URL would be indistinguishable from the ordinary Feed. Every
+ * other unknown resource on this site answers 404, so this one does too; the
+ * adapters map `unknown` to a 404 and the Feed itself never guesses.
+ */
+export type FeedTagFilter =
+  | { kind: "all" }
+  | { kind: "tag"; tag: FeedTagRef }
+  | { kind: "unknown"; slug: string };
+
+export function resolveFeedTag(
+  ctx: PostContext,
+  input: { locale: Locale; tagSlug?: string | null },
+): FeedTagFilter {
+  const slug = input.tagSlug;
+  if (slug === undefined || slug === null || slug.length === 0) {
+    return { kind: "all" };
+  }
+  const found = findTagViewBySlug(ctx, slug);
+  if (found === null) {
+    return { kind: "unknown", slug };
+  }
+  return {
+    kind: "tag",
+    tag: { slug: found.slug, name: pickLocalised(found.names, input.locale, found.slug) },
+  };
 }
 
 /**
@@ -729,8 +747,11 @@ export async function readFeedPage(
     visibleToReader(post.publicationState, post.publishTime, nowIso),
     isNotNull(post.publishTime),
   ];
-  if (input.tagSlug !== undefined && input.tagSlug !== null && input.tagSlug.length > 0) {
-    const tagSlug = input.tagSlug;
+  // `unknown` never narrows this query: both public callers refuse it with a
+  // 404 before asking for a page.
+  const tagFilter = resolveFeedTag(ctx, { locale: input.locale, tagSlug: input.tagSlug ?? null });
+  if (tagFilter.kind === "tag") {
+    const tagSlug = tagFilter.tag.slug;
     conditions.push(
       exists(
         db
@@ -885,14 +906,6 @@ export async function readFeedPage(
         ? { publishTime: last.publishTime, id: last.id }
         : null,
   };
-}
-
-function finish(ctx: PostContext, postId: string): PostMutation {
-  const detail = loadPost(ctx, postId);
-  if (detail === null) {
-    return { ok: false, reason: "not-found" };
-  }
-  return { ok: true, post: detail };
 }
 
 /** The Author console list: every Post, whatever its state, newest edit first. */

@@ -86,6 +86,31 @@ describe("article write API", () => {
     await expect(create.json()).resolves.toEqual({ error: "unauthorized" });
   });
 
+  it("derives the Markdown column and ignores a client-supplied one", async () => {
+    const { articles, auth, cookie } = await createHttpFixture();
+
+    const response = await createArticleResponse(
+      articles,
+      auth,
+      adminRequest("/api/admin/articles", {
+        method: "POST",
+        cookie,
+        body: JSON.stringify({
+          title: "Derived",
+          locale: "zh",
+          bodyJson:
+            '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hello"}]}]}',
+          bodyMarkdown: "client supplied lies",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toMatchObject({
+      article: { translations: [expect.objectContaining({ bodyMarkdown: "hello" })] },
+    });
+  });
+
   it("creates a draft and returns it with 201", async () => {
     const { articles, auth, cookie } = await createHttpFixture();
 

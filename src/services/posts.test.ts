@@ -19,6 +19,7 @@ import {
   publishPost,
   readFeedPage,
   removePostTranslation,
+  resolveFeedTag,
   setPostDefaultLocale,
   savePostTranslation,
   setPostImages,
@@ -105,7 +106,6 @@ describe("post drafts", () => {
     const draft = await createPostDraft(posts, {
       locale: "zh",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     expect(isUlid(draft.id)).toBe(true);
@@ -176,7 +176,6 @@ describe("post translations", () => {
       locale: "zh",
       baseVersion: 1,
       bodyJson: EDITED,
-      bodyMarkdown: "edited",
     });
 
     expect(saved.ok).toBe(true);
@@ -224,7 +223,6 @@ describe("post translations", () => {
       postId: draft.id,
       locale: "en",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     expect(added.ok).toBe(true);
@@ -497,7 +495,6 @@ async function seedFeedPost(fixture: Fixture, input: SeedPostInput): Promise<str
   const draft = await createPostDraft(fixture.posts, {
     locale,
     bodyJson: input.body ?? DOC,
-    bodyMarkdown: "hello",
   });
 
   for (const extra of input.alsoIn ?? []) {
@@ -779,9 +776,27 @@ describe("the feed read", () => {
         (post) => post.id,
       ),
     ).toEqual([withTag]);
-    await expect(
-      readFeedPage(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" }),
-    ).resolves.toEqual({ posts: [], nextCursor: null });
+  });
+
+  it("reports a Slug no Tag answers to as unknown, and filters nothing by it", async () => {
+    const fixture = await createFixture();
+    await createNamedTag(fixture, "旅行", "travel");
+
+    expect(resolveFeedTag(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" })).toEqual({
+      kind: "unknown",
+      slug: "no-such-tag",
+    });
+  });
+
+  it("names the Tag a filtered Feed is showing, in the Reader's Locale", async () => {
+    const fixture = await createFixture();
+    await createNamedTag(fixture, "旅行", "travel");
+
+    expect(resolveFeedTag(fixture.posts, { locale: "zh", tagSlug: "travel" })).toEqual({
+      kind: "tag",
+      tag: { slug: "travel", name: "旅行" },
+    });
+    expect(resolveFeedTag(fixture.posts, { locale: "zh", tagSlug: null })).toEqual({ kind: "all" });
   });
 
   it("carries the body, the ordered image set and the Tag names a card needs", async () => {

@@ -1,8 +1,19 @@
+/**
+ * Which **Locale versions** of a work exist, and what a page must declare about
+ * them: the canonical URL of the version it shows, the `hreflang` alternates for
+ * the Locales that really have one, and the versions a switcher may offer.
+ *
+ * This is Locale coverage, not machine translation. Nothing here translates
+ * anything: the `hreflang` / `alternates.languages` names are the platform's
+ * vocabulary for "a version in this Locale exists", and the Chinese prose names
+ * live only in the `reader.languages` message namespace.
+ */
 import type { Locale } from "@/config/site";
 import { buildArticlePath } from "./article-url";
 import { localeCoverage, type LocaleVersion } from "./translation-coverage";
 import { requestUrl, type HeaderSource } from "./urls";
 
+/** One Locale's version of a work, as a switcher link. A Locale coverage fact. */
 export interface LanguageVersionLink {
   locale: Locale;
   /** Absolute whenever the request carried a usable Host; a path otherwise. */

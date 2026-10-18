@@ -55,7 +55,13 @@ export default async function FeedPage({
     typeof requestedTag === "string" && requestedTag.length > 0 ? requestedTag : null;
 
   const context = getAppContext();
-  const view = await feedView(context.posts, { locale, tagSlug });
+  const outcome = await feedView(context.posts, { locale, tagSlug });
+  if (!outcome.ok) {
+    // A Slug no Tag answers to is an unknown resource, exactly like an unknown
+    // Article Slug: 404, never the unfiltered Feed under a filtered URL.
+    notFound();
+  }
+  const view = outcome.view;
   const t = messages[locale];
 
   return (

@@ -1,5 +1,5 @@
 import { getAppContext } from "@/server/app-context";
-import { createReadingContext, listTombstonedSlugs } from "@/services/reading";
+import { listTombstonedSlugs } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,9 +10,7 @@ export const runtime = "nodejs";
  */
 export async function GET(): Promise<Response> {
   const context = getAppContext();
-  const slugs = await listTombstonedSlugs(
-    createReadingContext(context.database, context.clock),
-  );
+  const slugs = await listTombstonedSlugs(context.reading);
 
   return Response.json({ slugs }, { headers: { "cache-control": "no-store" } });
 }

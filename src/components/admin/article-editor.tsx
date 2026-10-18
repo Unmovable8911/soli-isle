@@ -14,6 +14,7 @@ import { systemClock } from "@/domain/clock";
 import { pickLocalised } from "@/domain/localised";
 import { EMPTY_DOCUMENT } from "@/domain/rich-text";
 import { instantToSiteLocal } from "@/domain/site-time";
+import { flattenTree } from "@/domain/tree";
 import { articleExtensions } from "@/editor/extensions";
 import { looksLikeMarkdown, parseMarkdown } from "@/editor/markdown";
 import { CALLOUT_TONES } from "@/editor/nodes/callout";
@@ -92,13 +93,6 @@ interface LatestSnapshot {
   title: string;
   summary: string;
   bodyJson: string;
-}
-
-function flattenTree(nodes: CategoryNode[], depth = 0): Array<{ node: CategoryNode; depth: number }> {
-  return nodes.flatMap((node) => [
-    { node, depth },
-    ...flattenTree(node.children, depth + 1),
-  ]);
 }
 
 function toPublishTimeInput(publishTime: string | null): string {

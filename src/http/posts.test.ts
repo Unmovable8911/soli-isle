@@ -22,6 +22,7 @@ import {
   createPostResponse,
   deletePostResponse,
   feedResponse,
+  feedView,
   getPostResponse,
   listPostsResponse,
   publicationResponse,
@@ -116,7 +117,6 @@ async function seedPublished(
   const draft = await createPostDraft(fixture.posts, {
     locale: input.locale ?? "zh",
     bodyJson: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hello"}]}]}',
-    bodyMarkdown: "hello",
   });
   if (input.tagIds !== undefined) {
     await setPostTags(fixture.posts, { postId: draft.id, tagIds: input.tagIds });
@@ -368,6 +368,31 @@ describe("the feed endpoint", () => {
     ).json()) as { posts: { id: string }[] };
 
     expect(page.posts.map((post) => post.id)).toEqual([tagged]);
+  });
+
+  it("answers 404 for a Tag Slug that names no Tag, like any unknown resource", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, { publishTime: "2025-06-01T00:00:00.000Z" });
+
+    const response = await feedResponse(
+      fixture.posts,
+      new Request("http://localhost/api/public/feed?locale=zh&tag=no-such-tag"),
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "unknown-tag" });
+  });
+
+  it("refuses the Feed view for a Tag Slug that names no Tag, which is what the page 404s on", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, { publishTime: "2025-06-01T00:00:00.000Z" });
+
+    await expect(
+      feedView(fixture.posts, { locale: "zh", tagSlug: "no-such-tag" }),
+    ).resolves.toEqual({ ok: false, reason: "unknown-tag" });
+    await expect(feedView(fixture.posts, { locale: "zh", tagSlug: null })).resolves.toMatchObject({
+      ok: true,
+    });
   });
 
   it("refuses a cursor it did not issue and a Locale it does not serve", async () => {

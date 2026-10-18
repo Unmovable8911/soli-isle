@@ -25,22 +25,20 @@ export interface TranslationSelection<T extends LocaleVersion> {
   fellBack: boolean;
 }
 
-/** True when this Locale really has a version of the work. */
-function hasVersionIn(translations: readonly LocaleVersion[], locale: Locale): boolean {
-  return translations.some((translation) => translation.locale === locale);
-}
-
-/** Every Site Locale, in the configured order, with whether a version exists. */
-export function localeCoverage(translations: readonly LocaleVersion[]): LocaleCoverage[] {
-  return siteConfig.locales.map((locale) => ({
-    locale,
-    hasVersion: hasVersionIn(translations, locale),
-  }));
-}
-
 /** Only the Locales with a real version — the ones a declaration may name. */
 export function coveredLocales(translations: readonly LocaleVersion[]): Locale[] {
-  return siteConfig.locales.filter((locale) => hasVersionIn(translations, locale));
+  return siteConfig.locales.filter((locale) =>
+    translations.some((translation) => translation.locale === locale),
+  );
+}
+
+/**
+ * Every Site Locale, in the configured order, with whether a version exists —
+ * the covered set, widened to the ones that do not have one yet.
+ */
+export function localeCoverage(translations: readonly LocaleVersion[]): LocaleCoverage[] {
+  const covered = new Set(coveredLocales(translations));
+  return siteConfig.locales.map((locale) => ({ locale, hasVersion: covered.has(locale) }));
 }
 
 /**

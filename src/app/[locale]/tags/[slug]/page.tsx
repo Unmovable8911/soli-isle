@@ -7,7 +7,7 @@ import { isLocale } from "@/config/site";
 import { buildTagPath } from "@/domain/public-paths";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { createReadingContext, findReaderTag } from "@/services/reading";
+import { findReaderTag } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ export async function generateMetadata({
   }
   const t = messages[locale];
   const context = getAppContext();
-  const found = await findReaderTag(createReadingContext(context.database, context.clock), {
+  const found = await findReaderTag(context.reading, {
     locale,
     slug: decodeURIComponent(slug),
   });
@@ -46,7 +46,7 @@ export default async function TagPage({ params }: { params: Promise<TagParams> }
 
   const t = messages[locale];
   const context = getAppContext();
-  const found = await findReaderTag(createReadingContext(context.database, context.clock), {
+  const found = await findReaderTag(context.reading, {
     locale,
     slug: decodeURIComponent(slug),
   });

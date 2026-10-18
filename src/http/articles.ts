@@ -1,6 +1,5 @@
 import { isLocale, siteConfig } from "@/config/site";
 import { isRichTextDocument } from "@/domain/rich-text";
-import { deriveMarkdown } from "@/editor/markdown";
 import { messages } from "@/messages";
 import { renderArticleBody } from "@/editor/render/render-article";
 import type { AuthorAuthContext } from "@/services/auth";
@@ -71,19 +70,17 @@ function unauthorized(auth: AuthorAuthContext, request: Request): Response | nul
 }
 
 /**
- * The derived Markdown is always computed here from the ProseMirror JSON — a
- * client-supplied Markdown column is never trusted or accepted.
+ * The body of a translation, as the request carries it. There is no Markdown
+ * field: the derived column is the server's, computed from this JSON when the
+ * services write it, so a client-supplied Markdown value is never accepted.
  */
 function translationInput(
   body: Record<string, unknown>,
-): { title?: string; summary?: string; bodyJson?: string; bodyMarkdown?: string } {
-  const bodyJson = readOptionalString(body, "bodyJson");
-
+): { title?: string; summary?: string; bodyJson?: string } {
   return {
     title: readOptionalString(body, "title"),
     summary: readOptionalString(body, "summary"),
-    bodyJson,
-    bodyMarkdown: bodyJson === undefined ? undefined : deriveMarkdown(bodyJson),
+    bodyJson: readOptionalString(body, "bodyJson"),
   };
 }
 
@@ -134,7 +131,6 @@ export async function createArticleResponse(
       slug: readOptionalString(body, "slug"),
       summary: readOptionalString(body, "summary"),
       bodyJson: readOptionalString(body, "bodyJson"),
-      bodyMarkdown: readOptionalString(body, "bodyMarkdown"),
     }),
   );
 

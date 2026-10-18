@@ -459,7 +459,8 @@
       "categories": "分类",
       "archive": "归档",
       "search": "搜索",
-      "feed": "推文"
+      "feed": "推文",
+      "label": "站点导航"
     },
     "home": {
       "title": "最近的长文",

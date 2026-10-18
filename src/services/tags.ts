@@ -138,6 +138,15 @@ export async function createTag(
   return { ok: true, tag: { id: tagId, slug, names: { [input.locale]: name } } };
 }
 
+/** One Tag by the Slug a URL carries; null when no Tag answers to it. */
+export function findTagViewBySlug(ctx: TagContext, slug: string): TagView | null {
+  const row = ctx.database.db.select({ id: tag.id }).from(tag).where(eq(tag.slug, slug)).get();
+  if (row === undefined) {
+    return null;
+  }
+  return loadTagViews(ctx, [row.id]).get(row.id) ?? null;
+}
+
 export async function listTags(ctx: TagContext): Promise<TagView[]> {
   const db = ctx.database.db;
   const rows = db.select().from(tag).orderBy(asc(tag.slug)).all();
