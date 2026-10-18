@@ -1,11 +1,20 @@
+import { cookies, headers } from "next/headers";
+
+import { LifecycleActions } from "@/components/admin/dashboard-actions";
+import { DashboardTable } from "@/components/admin/dashboard-table";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
-import { cookies, headers } from "next/headers";
-import Link from "next/link";
+import { getAppContext } from "@/server/app-context";
+import { listArticles } from "@/services/articles";
+import { listPosts } from "@/services/posts";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+/**
+ * The Author's dashboard. Both lists arrive from the services, which is where a
+ * work's Publication State is derived; this page only picks a label for it.
+ */
 export default async function AdminHomePage() {
   const cookieStore = await cookies();
   const locale = negotiateLocale(
@@ -13,21 +22,29 @@ export default async function AdminHomePage() {
     cookieStore.get("soli-locale")?.value ?? null,
   );
   const t = messages[locale];
+  const context = getAppContext();
+  const [articles, posts] = await Promise.all([
+    listArticles(context.articles),
+    listPosts(context.posts),
+  ]);
 
   return (
     <>
-      <h1>{t.admin.home.title}</h1>
-      <p>{t.admin.home.tagline}</p>
-      <p>{t.admin.home.hint}</p>
-      <p className="admin-home-entry">
-        <Link href="/admin/articles">{t.admin.articles.title}</Link>
-      </p>
-      <p className="admin-home-entry">
-        <Link href="/admin/posts">{t.admin.posts.title}</Link>
-      </p>
-      <p className="admin-home-entry">
-        <Link href="/admin/assets">{t.admin.assets.title}</Link>
-      </p>
+      <h1>{t.admin.dashboard.title}</h1>
+      <p>{t.admin.dashboard.tagline}</p>
+      <DashboardTable
+        articles={articles}
+        posts={posts}
+        labels={t.admin.dashboard}
+        renderActions={(row) => (
+          <LifecycleActions
+            kind={row.kind}
+            targetId={row.id}
+            visibility={row.visibility}
+            labels={t.admin.dashboard}
+          />
+        )}
+      />
     </>
   );
 }

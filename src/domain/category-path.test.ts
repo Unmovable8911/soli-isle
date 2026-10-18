@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   categoryAncestorPaths,
   categoryPathSegments,
+  rebaseCategoryPath,
   isWithinCategoryPath,
 } from "./category-path";
 
@@ -38,5 +39,20 @@ describe("category containment", () => {
   it("does not treat a shared prefix as a child", () => {
     expect(isWithinCategoryPath("notes-tools", "notes")).toBe(false);
     expect(isWithinCategoryPath("notes", "notes/tools")).toBe(false);
+  });
+});
+
+describe("category path rebasing", () => {
+  it("rebases the moved category and everything under it", () => {
+    expect(rebaseCategoryPath("notes", "notes", "essays/notes")).toBe("essays/notes");
+    expect(rebaseCategoryPath("notes/tools", "notes", "essays/notes")).toBe("essays/notes/tools");
+    expect(rebaseCategoryPath("notes/tools/editor", "notes", "essays/notes")).toBe(
+      "essays/notes/tools/editor",
+    );
+  });
+
+  it("leaves a category the move does not touch exactly as it was", () => {
+    expect(rebaseCategoryPath("notes", "notes-old", "essays")).toBe("notes");
+    expect(rebaseCategoryPath("notes-tools/tools", "notes", "essays")).toBe("notes-tools/tools");
   });
 });

@@ -89,7 +89,7 @@ export function ArticleList({ articles, locale, labels }: ArticleListProps) {
                   </td>
                   <td>
                     <span className={`article-state article-state-${article.visibility}`}>
-                      {labels.state[article.publicationState]}
+                      {labels.visibility[article.visibility]}
                     </span>
                   </td>
                   <td>{article.translations.map((translation) => translation.locale).join(" ")}</td>

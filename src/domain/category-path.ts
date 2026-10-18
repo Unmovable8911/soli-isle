@@ -33,3 +33,18 @@ export function isWithinCategoryPath(candidate: string, ancestor: string): boole
   }
   return candidate.startsWith(`${ancestor}/`);
 }
+
+/**
+ * The new path of `path` once the subtree rooted at `from` is moved to `to`.
+ * A Category's path is its Slug chain, so moving one rewrites its own path and
+ * every descendant's, and nothing else in the tree.
+ */
+export function rebaseCategoryPath(path: string, from: string, to: string): string {
+  if (path === from) {
+    return to;
+  }
+  if (path.startsWith(`${from}/`)) {
+    return `${to}${path.slice(from.length)}`;
+  }
+  return path;
+}

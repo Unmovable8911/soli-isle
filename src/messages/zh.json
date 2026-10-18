@@ -30,12 +30,69 @@
     },
     "shell": {
       "logout": "退出登录",
-      "badge": "后台"
+      "badge": "后台",
+      "navLabel": "后台导航",
+      "nav": {
+        "dashboard": "总览",
+        "articles": "长文",
+        "posts": "推文",
+        "categories": "分类",
+        "tags": "标签",
+        "assets": "资源库"
+      }
     },
-    "home": {
+    "dashboard": {
       "title": "管理后台",
-      "tagline": "作者工作台。",
-      "hint": "内容管理入口将在后续任务中加入。"
+      "tagline": "全部长文与推文，以及它们的发布状态。",
+      "state": {
+        "visible": "读者可见",
+        "scheduled": "等待发布时刻",
+        "draft": "草稿",
+        "archived": "已归档"
+      },
+      "neverPublished": "尚未发布",
+      "untitled": "（无标题）",
+      "articles": {
+        "title": "长文",
+        "empty": "还没有长文。",
+        "newArticle": "新建长文",
+        "columns": {
+          "title": "标题",
+          "slug": "URL 标识",
+          "state": "状态",
+          "publishTime": "发布时刻",
+          "actions": "操作"
+        }
+      },
+      "posts": {
+        "title": "推文",
+        "empty": "还没有推文。",
+        "newPost": "新建推文",
+        "columns": {
+          "open": "推文",
+          "state": "状态",
+          "publishTime": "发布时刻",
+          "actions": "操作"
+        }
+      },
+      "actions": {
+        "open": "编辑",
+        "publishNow": "立即发布",
+        "scheduleLabel": "发布时刻（站点时区）",
+        "schedule": "定时发布",
+        "archive": "归档",
+        "unarchive": "取消归档",
+        "delete": "永久删除",
+        "confirmDeleteTitle": "永久删除？",
+        "confirmDeleteBody": "它会从站点上彻底消失，无法恢复。",
+        "confirmDelete": "确认永久删除",
+        "cancel": "取消",
+        "publishFailed": "发布失败，请重试。",
+        "scheduleFailed": "定时发布失败，请检查发布时刻。",
+        "archiveFailed": "操作失败，请重试。",
+        "unarchiveFailed": "操作失败，请重试。",
+        "deleteFailed": "删除失败，请重试。"
+      }
     },
     "assets": {
       "title": "资源库",
@@ -322,6 +379,79 @@
         "deleteFailed": "删除失败。",
         "hintScheduled": "到达发布时刻后读者才能在信息流里看到它。"
       }
+    },
+    "categories": {
+      "title": "分类",
+      "description": "分类是一棵树：每个分类有唯一的 URL 路径、可选的上级分类，以及每种语言一份显示名。",
+      "empty": "还没有分类。",
+      "path": "路径",
+      "create": {
+        "title": "新建分类",
+        "name": "名称",
+        "nameHint": "URL 路径由名称生成，创建后不再改变。",
+        "slug": "URL 标识（可选）",
+        "parent": "上级分类",
+        "root": "无（顶层）",
+        "submit": "创建",
+        "creating": "创建中…",
+        "failed": "创建失败：同级已有相同的 URL 路径。"
+      },
+      "node": {
+        "edit": "编辑",
+        "parent": "上级分类",
+        "root": "无（顶层）",
+        "move": "移动",
+        "moveFailed": "移动失败：同级已有相同的 URL 路径，或不能移动到自己的子分类下。",
+        "names": "显示名",
+        "save": "保存",
+        "saving": "保存中…",
+        "saved": "已保存",
+        "renameFailed": "保存失败，请重试。",
+        "up": "上移",
+        "down": "下移",
+        "reorderFailed": "无法移动：它已经是这一层的第一个或最后一个。",
+        "delete": "删除分类"
+      },
+      "delete": {
+        "title": "删除分类？",
+        "body": "删除后不可恢复。",
+        "confirm": "确认删除",
+        "cancel": "取消",
+        "failed": "删除失败，请重试。",
+        "hasChildren": "它下面还有 {count} 个子分类，请先把它们移走或删除。",
+        "inUse": "有 {count} 篇长文属于它。请先选择要把这些长文移到哪个分类。",
+        "articlesTo": "把这些长文移到",
+        "choose": "请选择"
+      }
+    },
+    "tags": {
+      "title": "标签",
+      "description": "标签是跨长文与推文的话题：URL 标识是它的身份，显示名每种语言一份。",
+      "empty": "还没有标签。",
+      "columns": {
+        "slug": "URL 标识",
+        "names": "显示名",
+        "actions": "操作"
+      },
+      "create": {
+        "title": "新建标签",
+        "name": "名称",
+        "slug": "URL 标识（可选）",
+        "submit": "创建",
+        "creating": "创建中…",
+        "failed": "创建失败，请重试。"
+      },
+      "save": "保存",
+      "saving": "保存中…",
+      "saved": "已保存",
+      "renameFailed": "保存失败，请重试。",
+      "delete": "删除",
+      "deleteTitle": "删除标签？",
+      "deleteBody": "删除后不可恢复。",
+      "confirmDelete": "确认删除",
+      "cancel": "取消",
+      "deleteFailed": "删除失败，请重试。",
+      "inUse": "有 {articleCount} 篇长文和 {postCount} 篇推文在用这个标签，请先在这些内容里取消关联。"
     }
   },
   "reader": {
