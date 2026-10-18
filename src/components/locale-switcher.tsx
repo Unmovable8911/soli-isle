@@ -25,7 +25,7 @@ export default function LocaleSwitcher({ current, names, label }: LocaleSwitcher
   }
 
   return (
-    <nav aria-label={label}>
+    <nav className="site-locale" aria-label={label}>
       <ul>
         {siteConfig.locales.map((locale) => {
           const href = `${swapLocalePathname(pathname, locale)}${query ? `?${query}` : ""}`;

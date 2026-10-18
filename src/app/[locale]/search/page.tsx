@@ -61,11 +61,7 @@ export default async function SearchPage({
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <ReaderPageHead
-        locale={locale}
-        title={t.reader.search.title}
-        count={query.length === 0 ? undefined : search.results.length}
-      >
+      <ReaderPageHead locale={locale} title={t.reader.search.title}>
         <form
           className="reader-search-form"
           action={buildSearchPath({ locale })}
@@ -83,7 +79,7 @@ export default async function SearchPage({
           <button type="submit">{t.reader.search.submit}</button>
         </form>
         <p className="reader-hint">{t.reader.search.hint}</p>
-        {query.length > 0 && search.results.length > 0 && (
+        {query.length > 0 && (
           <p className="reader-page-count reader-search-summary" role="status">
             {summary}
           </p>

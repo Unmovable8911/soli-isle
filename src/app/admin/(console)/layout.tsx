@@ -1,4 +1,5 @@
 import { AdminNav } from "@/components/admin/admin-nav";
+import { BrandMark } from "@/components/icons";
 import { SESSION_COOKIE_NAME } from "@/config/auth";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
@@ -42,6 +43,7 @@ export default async function AdminConsoleLayout({
     <AdminDocument locale={locale}>
       <header className="admin-topbar">
         <Link href="/admin" className="site-name">
+          <BrandMark size={20} />
           {t.chrome.siteName}
         </Link>
         <span className="admin-badge">{t.admin.shell.badge}</span>

@@ -71,6 +71,6 @@ describe("the Article card", () => {
     expect(html).not.toContain("<img");
     // Not a grey box, not an empty frame: the card simply starts at its title.
     expect(html).not.toContain("article-card-cover");
-    expect(html).toBe('<article class="article-card"><h2 class="article-card-title"><a href="/en/articles/hello-world">Hello, World</a></h2><p class="article-card-summary">A piece</p></article>');
+    expect(html).toBe('<article class="article-card"><div class="article-card-body"><h2 class="article-card-title"><a href="/en/articles/hello-world">Hello, World</a></h2><p class="article-card-summary">A piece</p></div></article>');
   });
 });

@@ -122,11 +122,17 @@ async function CategoryIndex({ locale }: { locale: "zh" | "en" }) {
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <ReaderPageHead locale={locale} title={t.reader.category.heading} />
+      <ReaderPageHead
+        locale={locale}
+        title={t.reader.category.heading}
+        lead={t.reader.category.lead}
+      />
       {tree.length === 0 ? (
         <EmptyState title={t.reader.category.emptyTitle} body={t.reader.category.emptyIndex} />
       ) : (
-        <CategoryPills categories={tree} locale={locale} />
+        <div className="reader-category-index">
+          <CategoryPills categories={tree} locale={locale} />
+        </div>
       )}
     </main>
   );

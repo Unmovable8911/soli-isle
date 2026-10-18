@@ -44,11 +44,21 @@ export function ReaderHome({
         <EmptyState title={t.reader.home.emptyTitle} body={t.reader.home.empty} />
       ) : (
         <>
+          <p className="home-section-label">
+            <span>{t.reader.home.latest}</span>
+          </p>
           <ArticleCard
             {...articleCardProps(lead, locale)}
             className={hasCover(lead.cover) ? "article-lead article-lead--split" : "article-lead"}
           />
-          <ArticleGrid articles={rest} locale={locale} />
+          {rest.length > 0 && (
+            <>
+              <p className="home-section-label">
+                <span>{t.reader.home.more}</span>
+              </p>
+              <ArticleGrid articles={rest} locale={locale} />
+            </>
+          )}
         </>
       )}
     </>

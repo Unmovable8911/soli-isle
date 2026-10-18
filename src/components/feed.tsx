@@ -110,11 +110,14 @@ export function FeedHeading({
   tag,
   labels,
   title,
+  lead,
 }: {
   locale: Locale;
   tag: { slug: string; name: string } | null;
   labels: FeedLabels;
   title: string;
+  /** One sentence under the title, when the surface wants to introduce itself. */
+  lead?: string;
 }) {
   return (
     <header className="feed-heading">
@@ -127,6 +130,7 @@ export function FeedHeading({
         </p>
       )}
       <h1 className="feed-title">{title}</h1>
+      {lead !== undefined && <p className="feed-lead">{lead}</p>}
     </header>
   );
 }

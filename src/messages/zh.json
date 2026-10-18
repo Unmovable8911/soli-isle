@@ -17,7 +17,14 @@
     "skipToContent": "跳到正文",
     "menuLabel": "菜单",
     "searchLabel": "站内搜索",
-    "railLabel": "站点栏"
+    "railLabel": "站点栏",
+    "browseLabel": "浏览",
+    "footer": {
+      "navLabel": "页脚导航",
+      "tagline": "一个人的多语言博客，容纳长文与推文。",
+      "rights": "© {year} Soli Isle",
+      "backToTop": "回到顶部"
+    }
   },
   "home": {
     "title": "Soli Isle",
@@ -198,7 +205,7 @@
           "taskList": "任务列表",
           "blockquote": "引用",
           "codeBlock": "代码块",
-        "codeLanguage": "代码语言",
+          "codeLanguage": "代码语言",
           "link": "链接",
           "image": "插入图片",
           "horizontalRule": "分隔线",
@@ -478,7 +485,9 @@
       "title": "最近的长文",
       "lead": "按发布时间倒序，读最近写下的东西。",
       "emptyTitle": "这里还没有内容",
-      "empty": "还没有发布任何长文。"
+      "empty": "还没有发布任何长文。",
+      "latest": "最新长文",
+      "more": "更多长文"
     },
     "list": {
       "emptyTitle": "这里还是空的",
@@ -490,7 +499,8 @@
       "emptyTitle": "还没有分类",
       "emptyIndex": "站点还没有建立分类。",
       "empty": "这个分类下还没有长文。",
-      "children": "子分类"
+      "children": "子分类",
+      "lead": "按主题进入。"
     },
     "tag": {
       "heading": "标签",
@@ -499,17 +509,18 @@
     "archive": {
       "title": "归档",
       "emptyTitle": "归档还是空的",
-      "empty": "还没有发布任何长文。"
+      "empty": "还没有发布任何长文。",
+      "lead": "全部长文，按月编排。"
     },
     "search": {
       "title": "搜索",
       "label": "在长文中搜索",
-      "placeholder": "关键词",
+      "placeholder": "搜索长文…",
       "submit": "搜索",
       "hint": "匹配标题、正文、标签与分类。",
       "summary": "找到 {count} 篇与“{query}”相关的长文。",
       "emptyTitle": "没有找到",
-      "empty": "没有找到匹配的长文。"
+      "empty": "没有找到匹配的长文。试试更短、更常见的关键词，或者换个说法。"
     },
     "article": {
       "publishedOn": "发布于",
@@ -566,7 +577,8 @@
         "counter": "第 {current} 张，共 {total} 张"
       },
       "tagFiltered": "标签：{name}",
-      "clearTag": "查看全部推文"
+      "clearTag": "查看全部推文",
+      "lead": "短一些的想法，按时间倒序。"
     }
   }
 }

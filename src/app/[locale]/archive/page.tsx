@@ -42,7 +42,12 @@ export default async function ArchivePage({ params }: { params: Promise<{ locale
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <ReaderPageHead locale={locale} title={t.reader.archive.title} />
+      <ReaderPageHead
+        locale={locale}
+        title={t.reader.archive.title}
+        lead={t.reader.archive.lead}
+        count={articles.length}
+      />
       {months.length === 0 ? (
         <EmptyState title={t.reader.archive.emptyTitle} body={t.reader.archive.empty} />
       ) : (

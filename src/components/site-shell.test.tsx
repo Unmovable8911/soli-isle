@@ -115,11 +115,18 @@ describe("the public shell", () => {
     expect(rail).toBeLessThan(body);
   });
 
-  it("word-marks the rail back to the Locale home", () => {
+  it("word-marks the bar and the footer back to the Locale home", () => {
     const html = render("zh");
-    const rail = html.match(/<aside[^>]*>[\s\S]*?<\/aside>/)?.[0] ?? "";
+    const bar = html.match(/<header class="site-topbar"[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
+    const footer = html.match(/<footer[^>]*>[\s\S]*?<\/footer>/)?.[0] ?? "";
 
-    expect(rail).toContain(`href="/zh"`);
-    expect(rail).toContain(messages.zh.chrome.siteName);
+    // The wordmark moved from the rail into the bar in the editorial refresh;
+    // the footer repeats it as the page's sign-off.
+    expect(bar).toContain('class="site-brand"');
+    expect(bar).toContain(`href="/zh"`);
+    expect(bar).toContain(messages.zh.chrome.siteName);
+    expect(footer).toContain('class="site-footer-brand"');
+    expect(footer).toContain(`href="/zh"`);
+    expect(footer).toContain(messages.zh.chrome.footer.tagline);
   });
 });

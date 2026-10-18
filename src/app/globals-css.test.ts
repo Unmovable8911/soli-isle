@@ -370,7 +370,6 @@ const CONTROL_BORDERS = [
   ".admin-page-action",
   ".site-search input",
   ".site-menu summary",
-  ".site-rail button",
   ".feed-more-button",
   ".empty-state-action a",
   ".empty-state-action button",
@@ -382,7 +381,7 @@ const CONTROL_BORDERS = [
  * --border-strong would shout every box on the page.
  */
 const DECORATIVE_BORDERS = [
-  ".article-card",
+  ".article-card:not(:has(.article-card-cover))",
   ".reader-page-head",
   ".reader-pill",
   ".archive-month-head",
@@ -576,8 +575,11 @@ const READER_CONTROLS = [
   ".admin-topbar a",
   ".admin-topbar button",
   ".site-rail a",
-  ".site-rail button",
   ".site-menu summary",
+  ".theme-switch button",
+  ".site-search-submit",
+  ".site-footer-nav a",
+  ".site-footer-top-link",
   ".post-expand",
   ".feed-more-button",
   ".post-tag",
@@ -835,7 +837,7 @@ describe("the Feed's page head", () => {
     expect(drawnBorder(blockBody(".feed-heading"))).toBe("1px solid var(--border)");
     // The bare header rule carries the console's side padding; the head undoes
     // it so the title sits on the same 42rem edge as the Posts below it.
-    expect(declarations(blockBody(".feed-heading")).get("padding")).toBe("0 0 1.25rem");
+    expect(declarations(blockBody(".feed-heading")).get("padding")).toBe("0 0 1.5rem");
   });
 });
 
@@ -943,7 +945,7 @@ describe("the Article page", () => {
 
   it("sets the kicker as a micro-label rather than a sentence", () => {
     const kicker = declarations(blockBody(".article-kicker"));
-    expect(kicker.get("font-size")).toBe("0.625rem");
+    expect(kicker.get("font-size")).toBe("0.6875rem");
     expect(kicker.get("text-transform")).toBe("uppercase");
     expect(kicker.get("letter-spacing")).toBe("0.1em");
   });
@@ -1052,7 +1054,7 @@ function phoneValue(selector: string, property: string): string | undefined {
 }
 
 const WIDE = "@media (min-width: 64rem)";
-const WIDER = "@media (min-width: 80rem)";
+const WIDER = "@media (min-width: 90rem)";
 
 /**
  * The front page is the first thing every Reader sees, and its three moves are
@@ -1061,11 +1063,11 @@ const WIDER = "@media (min-width: 80rem)";
  * The card is also where "no cover" has to be a designed state, not a gap.
  */
 describe("the front page", () => {
-  it("sets the masthead at 40, 48 and 56px, tracked like a wordmark", () => {
-    expect(phoneValue(".home-masthead h1", "font-size")).toBe("2.5rem");
-    expect(inAtRule(WIDE, ".home-masthead h1")).toContain("font-size: 3rem");
-    expect(inAtRule(WIDER, ".home-masthead h1")).toContain("font-size: 3.5rem");
-    expect(declarations(blockBody(".home-masthead h1")).get("letter-spacing")).toBe("-0.02em");
+  it("sets the masthead at 48, 64 and 72px, tracked like a wordmark", () => {
+    expect(phoneValue(".home-masthead h1", "font-size")).toBe("3rem");
+    expect(inAtRule(WIDE, ".home-masthead h1")).toContain("font-size: 4rem");
+    expect(inAtRule(WIDER, ".home-masthead h1")).toContain("font-size: 4.5rem");
+    expect(declarations(blockBody(".home-masthead h1")).get("letter-spacing")).toBe("-0.03em");
   });
 
   it("stacks the lead until 64rem, then splits five parts text to seven of cover", () => {
@@ -1077,16 +1079,16 @@ describe("the front page", () => {
     expect(inAtRule(WIDE, ".article-lead--split .article-card-cover")).toContain("grid-column: 2");
   });
 
-  it("lays the grid out as one column, two at 64rem and three at 80rem", () => {
+  it("lays the grid out as one column, two at 64rem and three at 90rem", () => {
     expect(phoneValue(".article-grid", "grid-template-columns")).toBe("minmax(0, 1fr)");
     expect(inAtRule(WIDE, ".article-grid")).toContain("repeat(2, minmax(0, 1fr))");
     expect(inAtRule(WIDER, ".article-grid")).toContain("repeat(3, minmax(0, 1fr))");
   });
 
-  it("crops every cover to the same 16:10 frame with an 8px radius", () => {
+  it("crops every cover to the same 3:2 frame with a 12px radius", () => {
     const cover = declarations(blockBody(".article-card-cover"));
-    expect(cover.get("aspect-ratio")).toBe("16 / 10");
-    expect(cover.get("border-radius")).toBe("0.5rem");
+    expect(cover.get("aspect-ratio")).toBe("3 / 2");
+    expect(cover.get("border-radius")).toBe("0.75rem");
     expect(cover.get("overflow")).toBe("hidden");
     expect(declarations(blockBody(".article-card-cover img")).get("object-fit")).toBe("cover");
   });
@@ -1104,19 +1106,30 @@ describe("the front page", () => {
     expect(declarations(blockBody(".article-card-summary")).get("-webkit-line-clamp")).toBe("3");
   });
 
-  it("rests on the hairline alone, keeping the lift and its shadow for hover", () => {
-    const card = declarations(blockBody(".article-card"));
-    expect(card.get("border")).toBe("1px solid var(--border)");
-    expect(card.get("box-shadow")).toBeUndefined();
-    expect(
-      declarations(inAtRule(NO_PREFERENCE, ".article-card:hover")).get("box-shadow"),
-    ).toBeDefined();
+  it("frames a covered card with its picture alone, and a bare one with a plate", () => {
+    const covered = declarations(blockBody(".article-card"));
+    expect(covered.get("border")).toBeUndefined();
+    expect(covered.get("box-shadow")).toBeUndefined();
+    expect(covered.get("background")).toBeUndefined();
+
+    // No cover is a designed state: the text becomes a bordered card of its own.
+    const bare = declarations(blockBody(".article-card:not(:has(.article-card-cover))"));
+    expect(bare.get("border")).toBe("1px solid var(--border)");
+    expect(bare.get("background")).toBe("var(--surface)");
   });
 
-  it("lifts a hovered card 4px, but only when motion is welcome", () => {
-    const hover = declarations(inAtRule(NO_PREFERENCE, ".article-card:hover"));
-    expect(hover.get("transform")).toBe("translateY(-4px)");
-    expect(hover.get("box-shadow")).toBeDefined();
+  it("zooms the cover and inks the title on hover instead of moving the card", () => {
+    const hover = inAtRule(NO_PREFERENCE, ".article-card:hover .article-card-cover img");
+    expect(declarations(hover).get("transform")).toBe("scale(1.04)");
+
+    const displacement = rules()
+      .filter((rule) => rule.prelude === ".article-card:hover")
+      .flatMap((rule) =>
+        ["transform", "translate", "scale", "box-shadow"].filter((property) =>
+          declarations(rule.body).has(property),
+        ),
+      );
+    expect(displacement).toEqual([]);
   });
 
   it("cannot push the page sideways on a phone", () => {
@@ -1136,9 +1149,9 @@ describe("the front page", () => {
  * here rather than left to a screenshot.
  */
 describe("the browse surfaces", () => {
-  it("sets the page head at 36, then 48px", () => {
-    expect(phoneValue(".reader-page-head h1", "font-size")).toBe("2.25rem");
-    expect(inAtRule(WIDE, ".reader-page-head h1")).toContain("font-size: 3rem");
+  it("sets the page head at 40, then 52px", () => {
+    expect(phoneValue(".reader-page-head h1", "font-size")).toBe("2.5rem");
+    expect(inAtRule(WIDE, ".reader-page-head h1")).toContain("font-size: 3.25rem");
   });
 
   it("counts under the title as a micro-label rather than a sentence", () => {
@@ -1155,7 +1168,7 @@ describe("the browse surfaces", () => {
     // the hairline it already draws is the only edge it wants.
     const head = declarations(blockBody(".reader-page-head"));
     expect(head.get("display")).toBe("block");
-    expect(head.get("padding")).toBe("0 0 1.5rem");
+    expect(head.get("padding")).toBe("0 0 2rem");
   });
 
   it("marks a search hit in the accent, not in the browser's yellow", () => {
@@ -1256,15 +1269,25 @@ describe("the Archive index", () => {
  * finish, and it is the first thing a Reader sees.
  */
 describe("the wordmark", () => {
-  it("sets the rail's wordmark in the site's ink rather than the browser's blue", () => {
-    const wordmark = declarations(blockBody(".site-rail-wordmark"));
+  it("sets the bar's wordmark in the site's ink rather than the browser's blue", () => {
+    const wordmark = declarations(blockBody(".site-brand"));
+    expect(wordmark.get("color")).toBe("var(--fg)");
+    expect(wordmark.get("text-decoration")).toBe("none");
+
+    // The wordmark's face and weight live on the name inside the link.
+    const name = declarations(blockBody(".site-brand .site-name"));
+    expect(name.get("font-family")).toContain('"Lora"');
+    expect(name.get("font-weight")).toBe("600");
+  });
+
+  it("sets the footer's wordmark in the same ink and face", () => {
+    const wordmark = declarations(blockBody(".site-footer-brand"));
     expect(wordmark.get("color")).toBe("var(--fg)");
     expect(wordmark.get("text-decoration")).toBe("none");
     expect(wordmark.get("font-family")).toContain('"Lora"');
-    expect(wordmark.get("font-weight")).toBe("700");
   });
 
-  it("keeps the top bar's name and the rail's name in the same ink", () => {
+  it("keeps the bar's name in the ink it inherits", () => {
     const name = declarations(blockBody(".site-name"));
     expect(name.get("color")).toBe("inherit");
     expect(name.get("text-decoration")).toBe("none");
@@ -1298,23 +1321,37 @@ describe("the Article header", () => {
   });
 });
 /**
- * The page is set on one measure. 65ch is measured in the element's own type,
- * so a header, a contents box or a pager that names 65ch while inheriting 14px
- * lands on a narrower column than the prose and the page reads ragged.
+ * The page is set on one measure, and the article's furniture shares the prose's
+ * left edge. 65ch is measured in the element's own type, so a tags row or a
+ * pager that names 65ch while inheriting 14px lands on a narrower column than
+ * the prose and the page reads ragged.
  */
 describe("the Article page's measure", () => {
   const MEASURE_BLOCKS = [
-    [".reader-article-header", ".reader-article-header"],
-    [".article-toc", ".article-toc"],
-    [".reader-article > .reader-tags", ".reader-tags"],
+    [".reader-article-tags", ".reader-article-tags"],
     [".reader-article-nav", ".reader-article-nav"],
+    [".article-toc", ".article-toc"],
   ] as const;
 
   it.each(MEASURE_BLOCKS)("%s sits on the prose measure", (selector, fontSizeOwner) => {
     expect(declarations(blockBody(selector)).get("max-width")).toBe("65ch");
-    // The prose declares 1.125rem; a block that measures its ch in smaller type
-    // is a narrower column, which is what "aligned" must not mean.
     expect(declarations(blockBody(fontSizeOwner)).get("font-size")).toBe("1.125rem");
+  });
+
+  it("starts the header on the same edge as the prose below it", () => {
+    // The header takes the whole column and names no measure of its own; the
+    // prose is the only 65ch block, so the two share the left edge.
+    const header = declarations(blockBody(".reader-article-header"));
+    expect(header.get("max-width")).toBeUndefined();
+    expect(header.get("margin")).toBe("0 0 2rem");
+    expect(declarations(blockBody(".article-body")).get("margin")).toBe("0");
+  });
+
+  it("gives the contents a margin rail instead of a box at 80rem", () => {
+    const toc = inAtRule("@media (min-width: 80rem)", ".article-toc");
+    expect(toc).toContain("position: sticky");
+    expect(toc).toContain("grid-column: 2");
+    expect(toc).toContain("border-width: 0");
   });
 
   it("turns the shell's bar header back into a page header", () => {

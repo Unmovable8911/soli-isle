@@ -18,10 +18,17 @@
 /* The wordmark stays a wordmark: the bar is the console's own document, and the
    serif is what ties it to the site it edits. */
 .admin-topbar .site-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-right: 0;
   font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
   font-size: 1.0625rem;
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.admin-topbar .site-name svg {
+  color: var(--accent);
 }
 
 .admin-nav ul {
@@ -124,23 +131,32 @@
 .admin-login-card {
   width: 100%;
   max-width: 24rem;
-  padding: 2rem;
+  padding: 2.25rem;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background: var(--surface);
+  box-shadow: 0 40px 80px -48px color-mix(in srgb, var(--fg) 34%, transparent);
 }
 
 .admin-login-wordmark {
-  display: block;
-  margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 2rem;
   font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.admin-login-wordmark svg {
+  color: var(--accent);
 }
 
 .admin-login-card h1 {
-  margin: 0 0 1rem;
-  font-size: 1.25rem;
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
 }
 
 .admin-login-form {
@@ -156,9 +172,10 @@
 
 .admin-login-form input,
 .admin-login-form button {
-  padding: 0.5rem 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
   border: 1px solid var(--border-strong);
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   background: var(--bg);
   color: var(--fg);
   font: inherit;

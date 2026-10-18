@@ -165,49 +165,56 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <Breadcrumbs label={t.reader.breadcrumb.label} items={breadcrumbs} />
-      <ArticleView
-        title={translation.title}
-        summary={translation.summary}
-        publishTime={article.publishTime}
-        publishedOn={article.publishTime === null ? "" : formatPublishDate(article.publishTime, locale)}
-        category={category}
-        cover={cover}
-        bodyHtml={html}
-        toc={toc}
-        versions={{ current: locale, links: links.versions, names: t.chrome.localeNames }}
-        fallback={
-          fellBack
-            ? { requested: t.chrome.localeNames[locale], shown: t.chrome.localeNames[translation.locale] }
-            : null
-        }
-        tags={article.tags.map((tag) => ({
-          name: pickLocalised(tag.names, locale, tag.slug),
-          href: buildTagPath({ locale, slug: tag.slug }),
-        }))}
-        neighbours={{
-          previous:
-            neighbours?.older == null
-              ? null
-              : {
-                  title: neighbours.older.title,
-                  href: buildArticlePath({ locale, slug: neighbours.older.slug }),
-                },
-          next:
-            neighbours?.newer == null
-              ? null
-              : {
-                  title: neighbours.newer.title,
-                  href: buildArticlePath({ locale, slug: neighbours.newer.slug }),
-                },
-        }}
-        labels={{
-          article: t.reader.article,
-          languages: t.reader.languages,
-          fallback: t.reader.fallback,
-          lightbox: t.reader.lightbox,
-        }}
-      />
+      <div className="reader-article-page">
+        <Breadcrumbs label={t.reader.breadcrumb.label} items={breadcrumbs} />
+        <ArticleView
+          title={translation.title}
+          summary={translation.summary}
+          publishTime={article.publishTime}
+          publishedOn={
+            article.publishTime === null ? "" : formatPublishDate(article.publishTime, locale)
+          }
+          category={category}
+          cover={cover}
+          bodyHtml={html}
+          toc={toc}
+          versions={{ current: locale, links: links.versions, names: t.chrome.localeNames }}
+          fallback={
+            fellBack
+              ? {
+                  requested: t.chrome.localeNames[locale],
+                  shown: t.chrome.localeNames[translation.locale],
+                }
+              : null
+          }
+          tags={article.tags.map((tag) => ({
+            name: pickLocalised(tag.names, locale, tag.slug),
+            href: buildTagPath({ locale, slug: tag.slug }),
+          }))}
+          neighbours={{
+            previous:
+              neighbours?.older == null
+                ? null
+                : {
+                    title: neighbours.older.title,
+                    href: buildArticlePath({ locale, slug: neighbours.older.slug }),
+                  },
+            next:
+              neighbours?.newer == null
+                ? null
+                : {
+                    title: neighbours.newer.title,
+                    href: buildArticlePath({ locale, slug: neighbours.newer.slug }),
+                  },
+          }}
+          labels={{
+            article: t.reader.article,
+            languages: t.reader.languages,
+            fallback: t.reader.fallback,
+            lightbox: t.reader.lightbox,
+          }}
+        />
+      </div>
     </main>
   );
 }

@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+
+import { MoonIcon, SunIcon, SystemIcon } from "./icons";
 
 const STORAGE_KEY = "soli-theme";
+/** The same switch is mounted in the bar and in the drawer; one event syncs them. */
+const CHANGE_EVENT = "soli-theme-change";
 
 type ThemePreference = "system" | "light" | "dark";
 type ResolvedTheme = "light" | "dark";
@@ -21,10 +25,14 @@ interface ThemeToggleProps {
   ariaLabel: string;
 }
 
-const OPTIONS: { value: ThemePreference; labelKey: keyof ThemeToggleProps["labels"] }[] = [
-  { value: "system", labelKey: "system" },
-  { value: "light", labelKey: "light" },
-  { value: "dark", labelKey: "dark" },
+const OPTIONS: {
+  value: ThemePreference;
+  labelKey: keyof ThemeToggleProps["labels"];
+  icon: ReactNode;
+}[] = [
+  { value: "system", labelKey: "system", icon: <SystemIcon /> },
+  { value: "light", labelKey: "light", icon: <SunIcon /> },
+  { value: "dark", labelKey: "dark", icon: <MoonIcon /> },
 ];
 
 export default function ThemeToggle({ labels, ariaLabel }: ThemeToggleProps) {
@@ -45,6 +53,21 @@ export default function ThemeToggle({ labels, ariaLabel }: ThemeToggleProps) {
       // localStorage access can throw in private browsing.
     }
     setPreference(stored);
+  }, []);
+
+  // The bar's switch and the drawer's switch are two instances of the same
+  // control, and only one of them is ever visible. Without this, the hidden one
+  // would keep the preference it mounted with and show the wrong segment after
+  // a resize.
+  useEffect(() => {
+    function handleChange(event: Event) {
+      const detail = (event as CustomEvent<string>).detail;
+      if (detail === "system" || detail === "light" || detail === "dark") {
+        setPreference(detail);
+      }
+    }
+    window.addEventListener(CHANGE_EVENT, handleChange);
+    return () => window.removeEventListener(CHANGE_EVENT, handleChange);
   }, []);
 
   useEffect(() => {
@@ -75,18 +98,21 @@ export default function ThemeToggle({ labels, ariaLabel }: ThemeToggleProps) {
     }
     setPreference(value);
     applyTheme(value === "system" ? systemTheme() : value);
+    window.dispatchEvent(new CustomEvent<string>(CHANGE_EVENT, { detail: value }));
   }
 
   return (
-    <div role="group" aria-label={ariaLabel}>
+    <div className="theme-switch" role="group" aria-label={ariaLabel}>
       {OPTIONS.map((option) => (
         <button
           key={option.value}
           type="button"
           aria-pressed={preference === option.value}
+          aria-label={labels[option.labelKey]}
+          title={labels[option.labelKey]}
           onClick={() => select(option.value)}
         >
-          {labels[option.labelKey]}
+          {option.icon}
         </button>
       ))}
     </div>

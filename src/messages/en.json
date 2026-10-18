@@ -17,7 +17,14 @@
     "skipToContent": "Skip to content",
     "menuLabel": "Menu",
     "searchLabel": "Search the site",
-    "railLabel": "Site rail"
+    "railLabel": "Site rail",
+    "browseLabel": "Browse",
+    "footer": {
+      "navLabel": "Footer navigation",
+      "tagline": "A multilingual blog by one hand, for long essays and short notes.",
+      "rights": "© {year} Soli Isle",
+      "backToTop": "Back to top"
+    }
   },
   "home": {
     "title": "Soli Isle",
@@ -198,7 +205,7 @@
           "taskList": "Task list",
           "blockquote": "Quote",
           "codeBlock": "Code block",
-        "codeLanguage": "Code language",
+          "codeLanguage": "Code language",
           "link": "Link",
           "image": "Insert image",
           "horizontalRule": "Divider",
@@ -478,7 +485,9 @@
       "title": "Recent articles",
       "lead": "Newest first, the things most recently written.",
       "emptyTitle": "Nothing here yet",
-      "empty": "No article has been published yet."
+      "empty": "No article has been published yet.",
+      "latest": "Latest essay",
+      "more": "More essays"
     },
     "list": {
       "emptyTitle": "Nothing here yet",
@@ -490,7 +499,8 @@
       "emptyTitle": "No Categories yet",
       "emptyIndex": "No Category has been created yet.",
       "empty": "No article in this category yet.",
-      "children": "Subcategories"
+      "children": "Subcategories",
+      "lead": "Browse by subject."
     },
     "tag": {
       "heading": "Tag",
@@ -499,17 +509,18 @@
     "archive": {
       "title": "Archive",
       "emptyTitle": "The archive is empty",
-      "empty": "No article has been published yet."
+      "empty": "No article has been published yet.",
+      "lead": "Every essay, arranged by month."
     },
     "search": {
       "title": "Search",
       "label": "Search the articles",
-      "placeholder": "Keywords",
+      "placeholder": "Search essays…",
       "submit": "Search",
       "hint": "Matches titles, bodies, tags and categories.",
       "summary": "Found {count} article(s) matching “{query}”.",
       "emptyTitle": "No results",
-      "empty": "No article matched."
+      "empty": "No article matched. Try a shorter or more common keyword, or another phrasing."
     },
     "article": {
       "publishedOn": "Published",
@@ -566,7 +577,8 @@
         "counter": "Image {current} of {total}"
       },
       "tagFiltered": "Tag: {name}",
-      "clearTag": "Show every post"
+      "clearTag": "Show every post",
+      "lead": "Shorter thoughts, newest first."
     }
   }
 }

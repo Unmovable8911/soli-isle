@@ -57,18 +57,20 @@ export function ArticleCard({
           />
         </div>
       )}
-      {kicker !== undefined && (
-        <p className="article-card-kicker">
-          {kickerHref === undefined ? kicker : <Link href={kickerHref}>{kicker}</Link>}
-        </p>
-      )}
-      <h2 className="article-card-title">
-        <Link href={href}>{title}</Link>
-      </h2>
-      {(snippet ?? summary) !== undefined && (
-        <p className="article-card-summary">{snippet ?? summary}</p>
-      )}
-      {meta !== undefined && <p className="article-card-meta">{meta}</p>}
+      <div className="article-card-body">
+        {kicker !== undefined && (
+          <p className="article-card-kicker">
+            {kickerHref === undefined ? kicker : <Link href={kickerHref}>{kicker}</Link>}
+          </p>
+        )}
+        <h2 className="article-card-title">
+          <Link href={href}>{title}</Link>
+        </h2>
+        {(snippet ?? summary) !== undefined && (
+          <p className="article-card-summary">{snippet ?? summary}</p>
+        )}
+        {meta !== undefined && <p className="article-card-meta">{meta}</p>}
+      </div>
     </article>
   );
 }

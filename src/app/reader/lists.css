@@ -1,10 +1,10 @@
 /* The browse surfaces and the Archive.
 
    A browse surface — a Category, a Tag, the search results — is the front page's
-   arrangement with a different head: the card grid, its 16:10 crops and its
-   3/2/1 density all come from home.css, because a listing that drew its own
-   second grid would be a second listing to maintain. What this layer adds is the
-   head above the grid, the row of child-Category pills, and the Archive.
+   arrangement with a different head: the card grid, its covers and its 3/2/1
+   density all come from home.css, because a listing that drew its own second
+   grid would be a second listing to maintain. What this layer adds is the head
+   above the grid, the row of child-Category cards, and the Archive.
 
    The Archive is deliberately not a grid. A Reader opens it to find "what did I
    write in that month", so it is an index: a month label with the count of what
@@ -16,41 +16,50 @@
    head is a different thing: one column, and the hairline closes it. */
 .reader-page-head {
   display: block;
-  margin: 0 0 2rem;
-  padding: 0 0 1.5rem;
+  margin: 0 0 2.5rem;
+  padding: 0 0 2rem;
   border-bottom: 1px solid var(--border);
 }
 
 .reader-page-head h1 {
   margin: 0;
   overflow-wrap: anywhere;
-  font-size: 2.25rem;
-  font-weight: 700;
-  line-height: 1.1;
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.reader-page-lead {
+  max-width: 44ch;
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-size: 1.0625rem;
+  line-height: 1.6;
 }
 
 .reader-page-count {
-  margin: 0.5rem 0 0;
+  margin: 1rem 0 0;
+  color: var(--muted);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
 }
 
-/* The child Categories of the one being read: a row of pills, each linking
-   where it names and carrying its own count. */
+/* The child Categories of the one being read, and the whole index on the
+   Category page: cards of type, each carrying its own count. */
 .reader-subcategories {
-  margin: 0 0 2rem;
+  margin: 0 0 2.5rem;
 }
 
 .reader-subcategories-heading {
   margin: 0 0 0.75rem;
+  color: var(--muted);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
 }
 
 .reader-pills {
@@ -65,13 +74,18 @@
 .reader-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   min-height: 2.75rem;
   max-width: 100%;
-  padding: 0 0.9rem;
+  padding: 0 0.95rem;
   border: 1px solid var(--border);
   border-radius: 999px;
+  background: var(--surface);
   font-size: 0.875rem;
+}
+
+.reader-pill:hover {
+  border-color: var(--accent);
 }
 
 /* The link fills the pill, so the whole pill is the target a thumb hits. */
@@ -86,9 +100,35 @@
 }
 
 .reader-count {
-  font-size: 0.75rem;
   color: var(--muted);
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
+}
+
+/* The Category index is a directory, not a row of pills: each Category gets a
+   card of its own name, so the way into the site reads as a table of contents. */
+.reader-category-index .reader-pills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.reader-category-index .reader-pill {
+  justify-content: space-between;
+  min-height: 4.5rem;
+  padding: 0 1.25rem;
+  border-radius: 0.75rem;
+}
+
+.reader-category-index .reader-pill a {
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.reader-category-index .reader-count {
+  font-size: 0.8125rem;
 }
 
 /* A keyword a search matched, inside a card: the accent thinned out, so the
@@ -97,13 +137,13 @@
 .article-card mark {
   padding: 0 0.1em;
   border-radius: 0.125rem;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--fg);
 }
 
 /* The Archive: one block per month. */
 .archive-month {
-  margin: 0 0 2.5rem;
+  margin: 0 0 3rem;
 }
 
 .archive-month-head {
@@ -112,13 +152,13 @@
   align-items: baseline;
   gap: 1rem;
   margin: 0;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);
+  color: var(--muted);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
 }
 
 .archive-month-count {
@@ -137,9 +177,9 @@
 .archive-row {
   display: grid;
   grid-template-columns: 2.5rem minmax(0, 1fr);
-  gap: 0.2rem 0.75rem;
+  gap: 0.2rem 0.9rem;
   align-items: baseline;
-  padding: 0.65rem 0;
+  padding: 0.9rem 0;
 }
 
 .archive-row + .archive-row {
@@ -149,8 +189,8 @@
 .archive-row-date {
   grid-column: 1;
   grid-row: 1;
-  font-size: 0.75rem;
   color: var(--muted);
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -160,22 +200,24 @@
   min-width: 0;
   overflow-wrap: anywhere;
   color: var(--fg);
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.45;
   text-decoration: none;
-  font-size: 1rem;
-  line-height: 1.5;
 }
 
 .archive-row-category {
   grid-column: 2;
   grid-row: 2;
-  font-size: 0.75rem;
   color: var(--muted);
+  font-size: 0.8125rem;
   text-decoration: none;
 }
 
 @media (min-width: 64rem) {
   .reader-page-head h1 {
-    font-size: 3rem;
+    font-size: 3.25rem;
   }
 
   .archive-row {
@@ -189,10 +231,11 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .reader-pill,
   .reader-pill a,
   .archive-row-title,
   .archive-row-category {
-    transition: color 200ms ease;
+    transition: color 200ms ease, border-color 200ms ease;
   }
 
   .reader-pill a:hover,

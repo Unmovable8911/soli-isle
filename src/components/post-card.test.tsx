@@ -16,6 +16,7 @@ const LABELS = {
   gallery: { label: "Image gallery", counter: "Image {current} of {total}" },
   tagFiltered: "Tag: {name}",
   clearTag: "Show every post",
+  lead: "Shorter thoughts, newest first.",
 };
 
 const LIGHTBOX_LABELS = {

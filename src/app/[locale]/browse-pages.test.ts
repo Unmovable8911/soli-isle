@@ -39,9 +39,12 @@ describe("the browse surfaces", () => {
 
   it("counts the search results in the page head, even when the count is zero", () => {
     const text = source(BROWSE.search);
-    // The head counts what is below it on every browse surface, Search
-    // included: a zero is a result, not a reason to say nothing.
-    expect(text).toMatch(/<ReaderPageHead[\s\S]*?count=\{/);
+    // Search states its count in the query summary rather than in the plain
+    // "N articles" line, because the number is the result of the form. The
+    // summary renders for every query, so a search with no hit still says how
+    // many hits there were.
+    expect(text).toContain("t.reader.search.summary");
+    expect(text).toMatch(/\{query\.length > 0 && \(/);
   });
 
   it("gives the Category page its child-Category pills", () => {

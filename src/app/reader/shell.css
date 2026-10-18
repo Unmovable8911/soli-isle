@@ -1,54 +1,182 @@
-/* The public shell: a 64px sticky top bar whose only wide-screen content is
-   the search form, a 256px sticky rail, and a native <details> drawer below
-   64rem. Both copies of the rail's sections are in the DOM and the breakpoint
-   decides which one a pointer and a Tab can reach, so the shell needs no client
-   state to open the menu.
+/* The public shell: a 64px sticky top bar that carries the wordmark, the search
+   field and the theme switch; a 256px sticky rail below it that carries the
+   sections and the whole Category tree; a native <details> drawer below 64rem
+   that carries the same things; and the footer every page closes on.
 
-   The bare header, main, header nav and .site-name rules in base.css are the
-   console's too, so every override below is scoped to a shell class rather
-   than negotiated in the shared block. */
+   The rail exists because the Category tree is a tree (ADR-0001). The wordmark
+   moved up into the bar in the editorial refresh (ADR-0004), so the first thing
+   a Reader sees is the masthead and the rail starts with navigation instead of
+   repeating the name two centimetres lower.
+
+   Both copies of the rail's sections are in the DOM and the breakpoint decides
+   which one a pointer and a Tab can reach, so the shell needs no client state
+   to open the menu. */
 
 .site-topbar {
   position: sticky;
   top: 0;
   z-index: 30;
   flex-wrap: nowrap;
-  gap: 1rem;
+  gap: 0.75rem;
   height: 4rem;
   padding: 0 1.25rem;
-  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.15);
 }
 
+/* The wordmark: a small drawn island beside the name. The mark is the accent's
+   only appearance in the bar, which is what makes the name read as a masthead
+   rather than as another link. */
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-right: auto;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.site-brand-mark {
+  flex: none;
+  color: var(--accent);
+}
+
+.site-brand .site-name {
+  margin-right: 0;
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* The search field is one pill: the input draws the boundary, the submit button
+   sits inside it on the right. The bar hides it below 64rem, where the drawer
+   carries the same form. */
 .site-search {
   display: none;
+  flex: 0 1 21rem;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.site-search-field {
+  position: relative;
+}
+
+.site-search-label {
+  display: block;
+  margin-bottom: 0.55rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .site-search input {
   width: 100%;
+  height: 3.25rem;
   min-width: 0;
-  padding: 0.5rem 0.75rem;
+  padding: 0 3.75rem 0 1.1rem;
   border: 1px solid var(--border-strong);
-  border-radius: 0.375rem;
+  border-radius: 999px;
   background: var(--surface);
   color: var(--fg);
   font: inherit;
+  font-size: 0.9375rem;
 }
 
-.site-search button {
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--accent);
-  border-radius: 0.375rem;
+.site-search input::placeholder {
+  color: var(--muted);
+}
+
+.site-search input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.site-search-submit {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
   background: var(--accent);
   color: var(--on-accent);
-  font: inherit;
   cursor: pointer;
 }
 
-.site-menu summary {
-  padding: 0.35rem 0.8rem;
+.site-search-submit:hover {
+  background: color-mix(in srgb, var(--accent) 86%, var(--fg));
+}
+
+.site-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.site-search-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 1px solid var(--border-strong);
-  border-radius: 0.375rem;
+  border-radius: 999px;
   color: var(--fg);
+  text-decoration: none;
+}
+
+/* The theme switch: three icon segments in one pill. The visible label is the
+   icon; the accessible name is the label the messages already carry. */
+.theme-switch {
+  display: none;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.theme-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.theme-switch button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.site-menu summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 0.9375rem;
   cursor: pointer;
   list-style: none;
 }
@@ -72,10 +200,21 @@
   top: 100%;
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
-  padding: 1.5rem 1.25rem 2.5rem;
+  padding: 1.25rem 1.25rem 2.5rem;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
+}
+
+.site-menu-panel .site-search {
+  display: block;
+  margin: 0 0 1.75rem;
+}
+
+/* The bar hides the switch below 64rem; the drawer is where it lives then. */
+.site-menu-panel .theme-switch {
+  display: inline-flex;
+  align-self: flex-start;
 }
 
 .site-rail {
@@ -85,47 +224,68 @@
 .site-sections {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.75rem;
 }
 
-.site-sections nav ul {
+.site-rail-heading {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.site-sections .site-nav ul {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.site-sections a {
-  color: var(--fg);
+.site-nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
   text-decoration: none;
 }
 
-/* The masthead. It is a link home, but it is set as the site's own name: the
-   bare header/nav rules do not reach it, so it names its ink and drops the
-   underline the browser would otherwise add to every anchor. */
-.site-rail-wordmark {
+.site-nav a:hover {
   color: var(--fg);
-  text-decoration: none;
-  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
-  font-size: 1.25rem;
-  font-weight: 700;
 }
 
-.site-rail-wordmark:hover {
-  color: var(--accent);
+.site-nav a[aria-current="page"] {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* The marker is a short accent rule in the gutter, not a dot inside the line:
+   every label then starts on the same edge whether it is current or not. */
+.site-nav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  width: 2px;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--accent);
 }
 
 .site-categories {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .site-categories-heading {
-  margin: 0;
+  margin: 0 0 0.35rem;
   font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -144,62 +304,163 @@
 }
 
 .site-tree a {
-  padding: 0.25rem 0;
+  min-height: 2.75rem;
+  padding: 0.2rem 0;
   overflow-wrap: anywhere;
   color: var(--muted);
+  font-size: 0.9375rem;
   text-decoration: none;
 }
 
-.site-tree a[aria-current="page"] {
+.site-tree a:hover {
   color: var(--fg);
+}
+
+.site-tree a[aria-current="page"] {
+  color: var(--accent);
   font-weight: 600;
 }
 
-.site-rail-controls {
+.site-rail-foot {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--border);
 }
 
-.site-rail-controls nav ul {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
-}
-
-.site-rail-controls [role="group"] {
+.site-locale ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.site-rail button {
-  padding: 0.35rem 0.75rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  background: var(--surface);
+.site-locale a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.site-locale a:hover {
   color: var(--fg);
-  font: inherit;
-  cursor: pointer;
 }
 
-.site-rail button[aria-pressed="true"] {
-  border-color: var(--accent);
-  color: var(--accent);
+.site-locale a[aria-current="page"] {
+  color: var(--fg);
+  font-weight: 600;
 }
 
 .site-content {
   min-width: 0;
 }
 
+/* The sign-off. A publication ends on its own name, its sections, and the year
+   — the reader should never arrive at a page's end and find nothing there. */
+.site-footer {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  padding: 2.25rem 1.25rem 3rem;
+  border-top: 1px solid var(--border);
+}
+
+.site-footer-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+}
+
+.site-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--fg);
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+}
+
+.site-rail-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.site-footer-note {
+  margin: 0;
+  max-width: 26rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.site-footer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.site-footer-nav a:hover {
+  color: var(--accent);
+}
+
+.site-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.site-footer-bottom p {
+  margin: 0;
+}
+
+.site-footer-top-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-footer-top-link:hover {
+  color: var(--accent);
+}
+
 /* Thumb targets. The bar's own controls come from base.css; these are the ones
    the rail and the drawer add. */
 .site-rail a,
-.site-rail button,
-.site-menu summary {
+.site-menu summary,
+.theme-switch button,
+.site-search-submit {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
@@ -210,23 +471,18 @@
     padding-inline: 2rem;
   }
 
-  /* The wordmark lives in the rail from here up, so the bar holds the search
-     form and nothing else. */
-  .site-topbar .site-name {
+  .site-search {
+    display: block;
+  }
+
+  /* More specific than base.css's `.site-topbar a`, which is what sets a bar
+     link's display in the first place. */
+  .site-topbar .site-search-link {
     display: none;
   }
 
-  .site-search {
-    display: flex;
-    flex: 1 1 auto;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    max-width: 32rem;
-    margin-inline-start: auto;
-  }
-
-  .site-search input {
-    flex: 1 1 12rem;
+  .theme-switch {
+    display: inline-flex;
   }
 
   .site-menu {
@@ -248,26 +504,42 @@
     align-self: start;
     height: calc(100vh - 4rem);
     overflow-y: auto;
-    padding: 1.5rem 1.25rem 2rem;
+    padding: 2rem 1.5rem 1.5rem 2rem;
     border-inline-end: 1px solid var(--border);
   }
 
   .site-content > main {
-    padding: 2rem 2.5rem 4rem;
+    padding: 2.5rem 2.5rem 3rem;
+  }
+
+  .site-footer {
+    margin-top: 3.5rem;
+    padding: 2.5rem 2.5rem 3.5rem;
   }
 }
 
+.site-search-submit:active,
+.theme-switch button:active,
+.site-menu summary:active {
+  opacity: 0.8;
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .site-sections a,
-  .site-menu summary,
-  .site-search button {
-    transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+  .site-nav a,
+  .site-locale a,
+  .site-tree a,
+  .site-footer-nav a,
+  .site-footer-top-link,
+  .site-search-submit,
+  .theme-switch button {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
   }
 
-  /* The theme control is a three-way switch: 200ms reads as a change of
-     setting rather than a page transition. */
-  .site-rail button,
-  .site-rail-wordmark {
-    transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+  .site-brand-mark {
+    transition: transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .site-brand:hover .site-brand-mark {
+    transform: rotate(-8deg);
   }
 }

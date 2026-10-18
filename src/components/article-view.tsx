@@ -7,6 +7,7 @@ import type { Messages } from "@/messages";
 
 import { ArticleBody } from "./article-body";
 import { ArticleLanguageVersions, FallbackNotice } from "./article-language";
+import { ArrowLeftIcon, ArrowRightIcon } from "./icons";
 import { ImageZoom } from "./lightbox";
 
 export type ArticleViewLabels = Pick<
@@ -139,61 +140,74 @@ export function ArticleView({
           <img src={cover.address} alt="" />
         </figure>
       )}
-      {sections.length > 0 && (
-        <nav className="article-toc" aria-labelledby="article-toc-title">
-          <p className="article-toc-title" id="article-toc-title">
-            {labels.article.toc}
-          </p>
-          <ul className="article-toc-list">
-            {sections.map((section) =>
-              section.heading === null ? (
-                section.children.map((heading) => <TocEntry key={heading.id} heading={heading} />)
-              ) : (
-                <li
-                  className="article-toc-item"
-                  data-level={section.heading.level}
-                  key={section.heading.id}
-                >
-                  <a href={`#${section.heading.id}`}>{section.heading.text}</a>
-                  {section.children.length > 0 && (
-                    <ul className="article-toc-sublist">
-                      {section.children.map((heading) => (
-                        <TocEntry key={heading.id} heading={heading} />
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ),
+      <div className="reader-article-layout">
+        {sections.length > 0 && (
+          <nav className="article-toc" aria-labelledby="article-toc-title">
+            <p className="article-toc-title" id="article-toc-title">
+              {labels.article.toc}
+            </p>
+            <ul className="article-toc-list">
+              {sections.map((section) =>
+                section.heading === null ? (
+                  section.children.map((heading) => <TocEntry key={heading.id} heading={heading} />)
+                ) : (
+                  <li
+                    className="article-toc-item"
+                    data-level={section.heading.level}
+                    key={section.heading.id}
+                  >
+                    <a href={`#${section.heading.id}`}>{section.heading.text}</a>
+                    {section.children.length > 0 && (
+                      <ul className="article-toc-sublist">
+                        {section.children.map((heading) => (
+                          <TocEntry key={heading.id} heading={heading} />
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ),
+              )}
+            </ul>
+          </nav>
+        )}
+        <div className="reader-article-main">
+          <ImageZoom labels={labels.lightbox}>
+            <ArticleBody html={bodyHtml} />
+          </ImageZoom>
+          {tags.length > 0 && (
+            <div className="reader-article-tags">
+              <p className="reader-tags-label">{labels.article.tags}</p>
+              <ul className="reader-tags">
+                {tags.map((tag) => (
+                  <li key={tag.href}>
+                    <Link href={tag.href}>{tag.name}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <nav className="reader-article-nav" aria-label={title}>
+            {neighbours.previous !== null && (
+              <Link className="reader-article-previous" href={neighbours.previous.href}>
+                <span className="reader-article-nav-label">
+                  <ArrowLeftIcon width="14" height="14" />
+                  {labels.article.previous}
+                </span>
+                <span className="reader-article-nav-title">{neighbours.previous.title}</span>
+              </Link>
             )}
-          </ul>
-        </nav>
-      )}
-      <ImageZoom labels={labels.lightbox}>
-        <ArticleBody html={bodyHtml} />
-      </ImageZoom>
-      {tags.length > 0 && (
-        <ul className="reader-tags">
-          {tags.map((tag) => (
-            <li key={tag.href}>
-              <Link href={tag.href}>{tag.name}</Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      <nav className="reader-article-nav" aria-label={title}>
-        {neighbours.previous !== null && (
-          <Link className="reader-article-previous" href={neighbours.previous.href}>
-            <span>{labels.article.previous}</span>
-            {neighbours.previous.title}
-          </Link>
-        )}
-        {neighbours.next !== null && (
-          <Link className="reader-article-next" href={neighbours.next.href}>
-            <span>{labels.article.next}</span>
-            {neighbours.next.title}
-          </Link>
-        )}
-      </nav>
+            {neighbours.next !== null && (
+              <Link className="reader-article-next" href={neighbours.next.href}>
+                <span className="reader-article-nav-label">
+                  {labels.article.next}
+                  <ArrowRightIcon width="14" height="14" />
+                </span>
+                <span className="reader-article-nav-title">{neighbours.next.title}</span>
+              </Link>
+            )}
+          </nav>
+        </div>
+      </div>
     </article>
   );
 }
