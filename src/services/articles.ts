@@ -29,6 +29,7 @@ import {
 import { isSafeSlug, normaliseSlug, uniqueSlug } from "@/domain/slug";
 import { selectTranslation } from "@/domain/translation-coverage";
 import { generateUlid } from "@/domain/ulid";
+import { deriveMarkdown } from "@/editor/markdown";
 import { syncAssetReferences, type AssetContext } from "./assets";
 import { loadCategoryViews, type CategoryContext, type CategoryView } from "./categories";
 import { loadTagViews, type TagContext, type TagView } from "./tags";
@@ -65,6 +66,7 @@ export interface ArticleTranslationSummary {
 export interface ArticleTranslationView extends ArticleTranslationSummary {
   summary: string;
   bodyJson: string;
+  /** Derived from `bodyJson` when this service writes the row; never an input. */
   bodyMarkdown: string;
   createdAt: string;
 }
@@ -325,7 +327,6 @@ export async function createArticleDraft(
     slug?: string;
     summary?: string;
     bodyJson?: string;
-    bodyMarkdown?: string;
   },
 ): Promise<ArticleDetail> {
   const locale = input.locale ?? siteConfig.defaultLocale;
@@ -359,7 +360,7 @@ export async function createArticleDraft(
         title: input.title.trim(),
         summary: input.summary ?? "",
         bodyJson,
-        bodyMarkdown: input.bodyMarkdown ?? "",
+        bodyMarkdown: deriveMarkdown(bodyJson),
         version: 1,
         createdAt,
         updatedAt: createdAt,
@@ -420,7 +421,6 @@ export async function addArticleTranslation(
     title?: string;
     summary?: string;
     bodyJson?: string;
-    bodyMarkdown?: string;
   },
 ): Promise<ArticleMutation> {
   const db = ctx.database.db;
@@ -457,7 +457,7 @@ export async function addArticleTranslation(
         title: (input.title ?? "").trim(),
         summary: input.summary ?? "",
         bodyJson,
-        bodyMarkdown: input.bodyMarkdown ?? "",
+        bodyMarkdown: deriveMarkdown(bodyJson),
         version: 1,
         createdAt: now,
         updatedAt: now,
@@ -480,7 +480,6 @@ export async function saveArticleTranslation(
     title?: string;
     summary?: string;
     bodyJson?: string;
-    bodyMarkdown?: string;
   },
 ): Promise<ArticleMutation> {
   const db = ctx.database.db;
@@ -513,8 +512,7 @@ export async function saveArticleTranslation(
         title: input.title === undefined ? existing.title : input.title.trim(),
         summary: input.summary ?? existing.summary,
         bodyJson,
-        bodyMarkdown:
-          input.bodyMarkdown ?? (input.bodyJson === undefined ? existing.bodyMarkdown : ""),
+        bodyMarkdown: input.bodyJson === undefined ? existing.bodyMarkdown : deriveMarkdown(bodyJson),
         version: existing.version + 1,
         updatedAt: now,
       })

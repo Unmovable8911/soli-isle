@@ -9,7 +9,6 @@ import {
 import type { FeedView } from "@/domain/feed-view";
 import { pickLocalised } from "@/domain/localised";
 import { formatAbsoluteMinute, formatRelativeTime } from "@/domain/relative-time";
-import { deriveMarkdown } from "@/editor/markdown";
 import { renderArticleBody } from "@/editor/render/render-article";
 import { imageSrcset } from "@/editor/render/image-srcset";
 import { listTags } from "@/services/tags";
@@ -80,13 +79,13 @@ function unauthorized(auth: AuthorAuthContext, request: Request): Response | nul
   return isAuthorizedAuthor(auth, request) ? null : jsonError("unauthorized", 401);
 }
 
-/** The derived Markdown is always computed here; a client-supplied column is never trusted. */
-function bodyInput(body: Record<string, unknown>): { bodyJson?: string; bodyMarkdown?: string } {
-  const bodyJson = readOptionalString(body, "bodyJson");
-  return {
-    bodyJson,
-    bodyMarkdown: bodyJson === undefined ? undefined : deriveMarkdown(bodyJson),
-  };
+/**
+ * The body a composer sends: the ProseMirror JSON and nothing else. The derived
+ * Markdown column belongs to the service that writes the row, so a
+ * client-supplied value can never reach it.
+ */
+function bodyInput(body: Record<string, unknown>): { bodyJson?: string } {
+  return { bodyJson: readOptionalString(body, "bodyJson") };
 }
 
 export async function listPostsResponse(

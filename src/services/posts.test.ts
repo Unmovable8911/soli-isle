@@ -105,7 +105,6 @@ describe("post drafts", () => {
     const draft = await createPostDraft(posts, {
       locale: "zh",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     expect(isUlid(draft.id)).toBe(true);
@@ -176,7 +175,6 @@ describe("post translations", () => {
       locale: "zh",
       baseVersion: 1,
       bodyJson: EDITED,
-      bodyMarkdown: "edited",
     });
 
     expect(saved.ok).toBe(true);
@@ -224,7 +222,6 @@ describe("post translations", () => {
       postId: draft.id,
       locale: "en",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     expect(added.ok).toBe(true);
@@ -497,7 +494,6 @@ async function seedFeedPost(fixture: Fixture, input: SeedPostInput): Promise<str
   const draft = await createPostDraft(fixture.posts, {
     locale,
     bodyJson: input.body ?? DOC,
-    bodyMarkdown: "hello",
   });
 
   for (const extra of input.alsoIn ?? []) {

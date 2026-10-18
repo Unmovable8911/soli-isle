@@ -30,7 +30,8 @@ import {
   type ArticleContext,
 } from "./articles";
 
-const DOC = '{"type":"doc","content":[{"type":"paragraph","text":"hello"}]}';
+const DOC =
+  '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hello"}]}]}';
 
 interface ManualClock extends Clock {
   advance(ms: number): void;
@@ -123,14 +124,13 @@ describe("article drafts", () => {
     expect(second.slug).toBe("same-title-2");
   });
 
-  it("stores the ProseMirror JSON and the derived Markdown", async () => {
+  it("derives the Markdown column from the ProseMirror JSON it was given", async () => {
     const { articles, harness } = await createFixture();
 
     const article = await createArticleDraft(articles, {
       title: "Body",
       locale: "zh",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     const row = harness.database.sqlite
@@ -138,6 +138,38 @@ describe("article drafts", () => {
       .get(article.id) as { body_json: string; body_markdown: string };
 
     expect(row).toEqual({ body_json: DOC, body_markdown: "hello" });
+  });
+
+  it("re-derives the Markdown on a body save and keeps it on a title-only save", async () => {
+    const { articles, harness } = await createFixture();
+    const article = await createArticleDraft(articles, {
+      title: "Body",
+      locale: "zh",
+      bodyJson: DOC,
+    });
+    const stored = () =>
+      (
+        harness.database.sqlite
+          .prepare("SELECT body_markdown FROM article_translation WHERE article_id = ?")
+          .get(article.id) as { body_markdown: string }
+      ).body_markdown;
+
+    await saveArticleTranslation(articles, {
+      articleId: article.id,
+      locale: "zh",
+      baseVersion: 1,
+      bodyJson:
+        '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"changed"}]}]}',
+    });
+    expect(stored()).toBe("changed");
+
+    await saveArticleTranslation(articles, {
+      articleId: article.id,
+      locale: "zh",
+      baseVersion: 2,
+      title: "Just the title",
+    });
+    expect(stored()).toBe("changed");
   });
 
   it("rejects a body that is not a ProseMirror document", async () => {
@@ -197,7 +229,6 @@ describe("article translations", () => {
       title: "English title",
       summary: "Summary",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     expect(outcome.ok).toBe(true);
@@ -320,7 +351,6 @@ describe("article translations", () => {
         baseVersion: version,
         title,
         bodyJson: DOC,
-        bodyMarkdown: "hello",
       });
       if (outcome.ok) version = outcome.article.translations[0].version;
     }
@@ -340,7 +370,6 @@ describe("article translations", () => {
       baseVersion: article.translations[0].version,
       title: "Images",
       bodyJson: bodyWithImage(assetId),
-      bodyMarkdown: `![](/media/${assetId}/display.webp)`,
     });
 
     const assets = createAssetContext(harness.database, clock, harness.resources.rootDir);
@@ -366,7 +395,6 @@ describe("article translations", () => {
       baseVersion: article.translations[0].version,
       title: "Images",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     const assets = createAssetContext(harness.database, clock, harness.resources.rootDir);
@@ -381,7 +409,6 @@ describe("optimistic concurrency on a translation", () => {
       title: "Base",
       locale: "zh",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
     const translation = article.translations[0];
     if (translation === undefined) {
@@ -424,7 +451,6 @@ describe("optimistic concurrency on a translation", () => {
       baseVersion: version,
       title: "Server wins",
       bodyJson: '{"type":"doc","content":[{"type":"paragraph"}]}',
-      bodyMarkdown: "server",
     });
 
     const outcome = await saveArticleTranslation(fixture.articles, {
@@ -772,7 +798,6 @@ describe("revisions", () => {
       title: "Before",
       locale: "zh",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
     await publishArticle(articles, { articleId: article.id });
 
@@ -783,7 +808,6 @@ describe("revisions", () => {
       baseVersion: article.translations[0].version,
       title: "After",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
 
     const revisions = await listRevisions(articles, article.id);
@@ -827,7 +851,6 @@ describe("revisions", () => {
       title: "First title",
       locale: "zh",
       bodyJson: DOC,
-      bodyMarkdown: "hello",
     });
     await publishArticle(articles, { articleId: article.id });
     const [snapshot] = await listRevisions(articles, article.id);
@@ -841,7 +864,6 @@ describe("revisions", () => {
       baseVersion: article.translations[0].version,
       title: "Second title",
       bodyJson: '{"type":"doc","content":[{"type":"paragraph","text":"changed"}]}',
-      bodyMarkdown: "changed",
     });
 
     const outcome = await restoreRevision(articles, {

@@ -91,9 +91,13 @@ async function seedPublished(fixture: Fixture, input: SeedInput): Promise<Seeded
     locale,
     bodyJson: JSON.stringify({
       type: "doc",
-      content: [{ type: "paragraph", text: "body" }],
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: input.markdown ?? "body" }],
+        },
+      ],
     }),
-    bodyMarkdown: input.markdown ?? "body",
   });
 
   for (const extra of input.alsoIn ?? []) {
@@ -425,6 +429,18 @@ describe("search", () => {
 
     const byCategory = await searchArticles(fixture.reading, { locale: "zh", query: "笔记" });
     expect(titles(byCategory.results)).toEqual(["Filed"]);
+  });
+
+  it("finds a body word that was only ever saved as ProseMirror JSON", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, {
+      title: "Saved as JSON only",
+      publishTime: "2025-06-01T00:00:00.000Z",
+      markdown: "the searchable phrase",
+    });
+
+    const found = await searchArticles(fixture.reading, { locale: "zh", query: "searchable" });
+    expect(titles(found.results)).toEqual(["Saved as JSON only"]);
   });
 
   it("only searches the current Locale", async () => {

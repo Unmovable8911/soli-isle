@@ -116,7 +116,6 @@ async function seedPublished(
   const draft = await createPostDraft(fixture.posts, {
     locale: input.locale ?? "zh",
     bodyJson: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hello"}]}]}',
-    bodyMarkdown: "hello",
   });
   if (input.tagIds !== undefined) {
     await setPostTags(fixture.posts, { postId: draft.id, tagIds: input.tagIds });

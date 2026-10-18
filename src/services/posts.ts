@@ -23,6 +23,7 @@ import {
 } from "@/domain/publication";
 import { EMPTY_DOCUMENT, isRichTextDocument } from "@/domain/rich-text";
 import { generateUlid } from "@/domain/ulid";
+import { deriveMarkdown } from "@/editor/markdown";
 import { syncAssetReferences, type AssetContext } from "./assets";
 import { loadTagViews, type TagContext, type TagView } from "./tags";
 import { visibleToReader } from "./visibility";
@@ -68,6 +69,7 @@ export interface PostTranslationSummary {
 
 export interface PostTranslationView extends PostTranslationSummary {
   bodyJson: string;
+  /** Derived from `bodyJson` when this service writes the row; never an input. */
   bodyMarkdown: string;
   createdAt: string;
 }
@@ -302,7 +304,7 @@ async function syncPostAssets(ctx: PostContext, postId: string): Promise<void> {
 
 export async function createPostDraft(
   ctx: PostContext,
-  input: { locale?: Locale; defaultLocale?: Locale; bodyJson?: string; bodyMarkdown?: string },
+  input: { locale?: Locale; defaultLocale?: Locale; bodyJson?: string },
 ): Promise<PostDetail> {
   const locale = input.locale ?? siteConfig.defaultLocale;
   const defaultLocale = input.defaultLocale ?? locale;
@@ -331,7 +333,7 @@ export async function createPostDraft(
         postId,
         locale,
         bodyJson,
-        bodyMarkdown: input.bodyMarkdown ?? "",
+        bodyMarkdown: deriveMarkdown(bodyJson),
         version: 1,
         createdAt,
         updatedAt: createdAt,
@@ -354,7 +356,7 @@ export async function getPost(ctx: PostContext, postId: string): Promise<PostDet
 
 export async function addPostTranslation(
   ctx: PostContext,
-  input: { postId: string; locale: Locale; bodyJson?: string; bodyMarkdown?: string },
+  input: { postId: string; locale: Locale; bodyJson?: string },
 ): Promise<PostMutation> {
   const db = ctx.database.db;
   const existing = db.select().from(post).where(eq(post.id, input.postId)).get();
@@ -385,7 +387,7 @@ export async function addPostTranslation(
         postId: input.postId,
         locale: input.locale,
         bodyJson,
-        bodyMarkdown: input.bodyMarkdown ?? "",
+        bodyMarkdown: deriveMarkdown(bodyJson),
         version: 1,
         createdAt: now,
         updatedAt: now,
@@ -406,7 +408,6 @@ export async function savePostTranslation(
     /** The version this save was derived from; a different stored version refuses the write. */
     baseVersion: number;
     bodyJson?: string;
-    bodyMarkdown?: string;
   },
 ): Promise<PostMutation> {
   const db = ctx.database.db;
@@ -433,7 +434,9 @@ export async function savePostTranslation(
       .set({
         bodyJson: input.bodyJson ?? existing.bodyJson,
         bodyMarkdown:
-          input.bodyMarkdown ?? (input.bodyJson === undefined ? existing.bodyMarkdown : ""),
+          input.bodyJson === undefined
+            ? existing.bodyMarkdown
+            : deriveMarkdown(input.bodyJson),
         version: existing.version + 1,
         updatedAt: now,
       })
