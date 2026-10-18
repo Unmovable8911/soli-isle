@@ -196,6 +196,20 @@
         "notPublished": "Not published yet",
         "currentPublishTime": "Publish Time",
         "hintScheduled": "Readers see it once its Publish Time arrives."
+      },
+      "sync": {
+        "offline": "Offline: changes are kept in this browser and sync when you reconnect",
+        "conflict": "The server has a newer version; local changes are not synced",
+        "recovered": "Recovered unsynced local changes; syncing them again",
+        "resolve": "Resolve conflict",
+        "conflictTitle": "The server version has moved on",
+        "conflictBody": "This article was saved elsewhere and this browser still holds unsynced changes. Nothing is merged automatically: discard the local changes, or save the local version as a new draft.",
+        "discardLocal": "Discard local changes",
+        "saveAsNewDraft": "Save the local version as a new draft",
+        "savingNewDraft": "Saving…",
+        "keepEditing": "Keep editing",
+        "newDraftFailed": "Saving a new draft failed; the local changes are still here.",
+        "discardFailed": "The server copy could not be read; the local changes are still here."
       }
     }
   }

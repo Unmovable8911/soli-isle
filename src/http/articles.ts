@@ -39,11 +39,19 @@ const MUTATION_STATUS: Record<ArticleMutationFailure["reason"], number> = {
   "last-translation": 409,
   "not-published": 409,
   "not-archived": 409,
+  "stale-content": 409,
 };
 
 function mutationResponse(outcome: ArticleMutation): Response {
   if (outcome.ok) {
     return jsonOk({ article: outcome.article });
+  }
+  if (outcome.reason === "stale-content") {
+    // The refused save's concurrency payload: the Author is shown this copy.
+    return jsonOk(
+      { error: outcome.reason, current: outcome.current },
+      MUTATION_STATUS[outcome.reason],
+    );
   }
   return jsonError(outcome.reason, MUTATION_STATUS[outcome.reason]);
 }
@@ -59,6 +67,12 @@ function readLocale(value: unknown): Locale | null {
 function readOptionalString(body: Record<string, unknown>, key: string): string | undefined {
   const value = body[key];
   return typeof value === "string" ? value : undefined;
+}
+
+/** The version a save was derived from; the only accepted shape is a positive integer. */
+function readBaseVersion(body: Record<string, unknown>): number | null {
+  const value = body.baseVersion;
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
 }
 
 /** Drops absent fields so a service only sees the properties the caller supplied. */
@@ -287,9 +301,18 @@ export async function saveTranslationResponse(
   if (body === null) {
     return jsonError("invalid-json", 400);
   }
+  const baseVersion = readBaseVersion(body);
+  if (baseVersion === null) {
+    return jsonError("invalid-base-version", 400);
+  }
 
   return mutationResponse(
-    await saveArticleTranslation(articles, { articleId, locale, ...translationInput(body) }),
+    await saveArticleTranslation(articles, {
+      articleId,
+      locale,
+      baseVersion,
+      ...translationInput(body),
+    }),
   );
 }
 

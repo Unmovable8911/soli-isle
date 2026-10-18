@@ -196,6 +196,20 @@
         "notPublished": "尚未发布",
         "currentPublishTime": "发布时刻",
         "hintScheduled": "到达发布时刻后读者才能看到它。"
+      },
+      "sync": {
+        "offline": "离线中：改动已保存在本地，联网后自动同步",
+        "conflict": "服务端已有更新的版本，本地改动尚未同步",
+        "recovered": "已恢复上次未同步的本地改动，正在重新同步",
+        "resolve": "处理冲突",
+        "conflictTitle": "服务端版本已更新",
+        "conflictBody": "这篇文章在别处保存过，而本地还有未同步的改动。系统不会自动合并：请选择丢弃本地改动，或把本地版本另存为一篇新草稿。",
+        "discardLocal": "丢弃本地改动",
+        "saveAsNewDraft": "把本地版本另存为新草稿",
+        "savingNewDraft": "正在另存…",
+        "keepEditing": "先继续编辑",
+        "newDraftFailed": "另存为新草稿失败，本地改动仍然保留。",
+        "discardFailed": "读取服务端版本失败，本地改动仍然保留。"
       }
     }
   }

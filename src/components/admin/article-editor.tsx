@@ -8,13 +8,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { articleConfig } from "@/config/article";
 import { siteConfig, type Locale } from "@/config/site";
+import type { ServerArticleState } from "@/domain/article-sync";
+import { systemClock } from "@/domain/clock";
 import { pickLocalised } from "@/domain/localised";
 import { EMPTY_DOCUMENT } from "@/domain/rich-text";
 import { instantToSiteLocal } from "@/domain/site-time";
 import { articleExtensions } from "@/editor/extensions";
 import { looksLikeMarkdown, parseMarkdown } from "@/editor/markdown";
 import type { Messages } from "@/messages";
-import type { ArticleDetail } from "@/services/articles";
+import type { ArticleDetail, ArticleTranslationView } from "@/services/articles";
 import type { CategoryNode } from "@/services/categories";
 import type { TagView } from "@/services/tags";
 import type { AssetSummary } from "@/services/assets";
@@ -22,12 +24,57 @@ import type { AssetSummary } from "@/services/assets";
 import { ArticleBody } from "../article-body";
 import { AssetPicker } from "./asset-picker";
 import type { AssetLabels } from "./asset-library";
-import { clearLocalDraft, saveLocalDraft } from "./article-local-store";
+import {
+  getArticleDraftStore,
+  type ArticleDraftStore,
+  type PendingArticleEdit,
+} from "./article-local-store";
+import {
+  createArticleSyncEngine,
+  createTimeoutSchedule,
+  type ArticleSyncEngine,
+  type SyncStatus,
+} from "./article-sync-engine";
+import { createArticleSyncTransport } from "./article-sync-transport";
 import { createSlashCommand, createSlashItems } from "./slash-menu";
 
 export type ArticleLabels = Messages["admin"]["articles"];
 
-type SaveStatus = "idle" | "saving" | "saved" | "local" | "error";
+interface EditorSession {
+  engine: ArticleSyncEngine;
+  store: ArticleDraftStore;
+}
+
+function toServerState(translation: ArticleTranslationView): ServerArticleState {
+  return {
+    version: translation.version,
+    title: translation.title,
+    summary: translation.summary,
+    bodyJson: translation.bodyJson,
+  };
+}
+
+/** Keeps the read model in step with a translation the server has just acknowledged. */
+function withSavedTranslation(
+  article: ArticleDetail,
+  locale: Locale,
+  translation: ServerArticleState,
+): ArticleDetail {
+  return {
+    ...article,
+    translations: article.translations.map((candidate) =>
+      candidate.locale === locale
+        ? {
+            ...candidate,
+            version: translation.version,
+            title: translation.title,
+            summary: translation.summary,
+            bodyJson: translation.bodyJson,
+          }
+        : candidate,
+    ),
+  };
+}
 
 export interface ArticleEditorProps {
   article: ArticleDetail;
@@ -75,7 +122,10 @@ export default function ArticleEditor({
   const [title, setTitle] = useState(translation?.title ?? "");
   const [summary, setSummary] = useState(translation?.summary ?? "");
   const [slug, setSlug] = useState(article.slug);
-  const [status, setStatus] = useState<SaveStatus>("idle");
+  const [status, setStatus] = useState<SyncStatus>("idle");
+  const [recovered, setRecovered] = useState(false);
+  const [conflictOpen, setConflictOpen] = useState(false);
+  const [newDraftBusy, setNewDraftBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
@@ -96,66 +146,199 @@ export default function ArticleEditor({
     summary,
     bodyJson: translation?.bodyJson ?? EMPTY_DOCUMENT,
   });
-  const lastServerSave = useRef(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef = useRef<Editor | null>(null);
+  const sessionRef = useRef<EditorSession | null>(null);
+  const detailRef = useRef<ArticleDetail>(detail);
+  /** A recovered body the editor could not take yet because it mounted later. */
+  const recoveredBody = useRef<string | null>(null);
+  const [sessionKey, setSessionKey] = useState(0);
 
-  const sendSave = useCallback(async () => {
+  useEffect(() => {
+    detailRef.current = detail;
+  }, [detail]);
+
+  const pushEdit = useCallback(() => {
     const snapshot = latest.current;
-    setStatus("saving");
-    try {
-      const response = await fetch(
-        `/api/admin/articles/${article.id}/translations/${snapshot.locale}`,
-        {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            title: snapshot.title,
-            summary: snapshot.summary,
-            bodyJson: snapshot.bodyJson,
-          }),
-        },
-      );
-      if (!response.ok) {
-        setStatus("error");
-        return;
-      }
-      const payload = (await response.json()) as { article: ArticleDetail };
-      setDetail(payload.article);
-      lastServerSave.current = Date.now();
-      setStatus("saved");
-      await clearLocalDraft(article.id, snapshot.locale);
-      // The service throttles this to one automatic snapshot per window.
-      void fetch(`/api/admin/articles/${article.id}/revisions`, { method: "POST" });
-    } catch {
-      setStatus("error");
+    const session = sessionRef.current;
+    if (session !== null) {
+      void session.engine.edit({
+        title: snapshot.title,
+        summary: snapshot.summary,
+        bodyJson: snapshot.bodyJson,
+      });
+      return;
     }
-  }, [article.id]);
-
-  const queueSave = useCallback(() => {
-    const snapshot = latest.current;
+    // No Locale version exists yet, so there is nothing to sync against — the
+    // bytes still go to the durable store, and creating the version picks them
+    // up instead of showing an empty page.
     setStatus("local");
-    void saveLocalDraft({
+    void getArticleDraftStore().save({
       articleId: article.id,
       locale: snapshot.locale,
       title: snapshot.title,
       summary: snapshot.summary,
       bodyJson: snapshot.bodyJson,
-      savedAt: new Date().toISOString(),
+      baseVersion: 0,
+      savedAt: systemClock.now().toISOString(),
+    });
+  }, [article.id]);
+
+  /** Puts a body the Author cannot see yet back into the editor. */
+  const adoptBody = useCallback((bodyJson: string) => {
+    latest.current.bodyJson = bodyJson;
+    const instance = editorRef.current;
+    if (instance === null) {
+      recoveredBody.current = bodyJson;
+      return;
+    }
+    instance.commands.setContent(JSON.parse(bodyJson) as JSONContent, { emitUpdate: false });
+  }, []);
+
+  const adoptTranslation = useCallback(
+    (next: ArticleTranslationView) => {
+      setTitle(next.title);
+      setSummary(next.summary);
+      latest.current.title = next.title;
+      latest.current.summary = next.summary;
+      adoptBody(next.bodyJson);
+    },
+    [adoptBody],
+  );
+
+  const applyRecovered = useCallback(
+    (draft: PendingArticleEdit) => {
+      setTitle(draft.title);
+      setSummary(draft.summary);
+      latest.current.title = draft.title;
+      latest.current.summary = draft.summary;
+      adoptBody(draft.bodyJson);
+      setRecovered(true);
+    },
+    [adoptBody],
+  );
+
+  // One session per Locale: it owns the local queue for that translation.
+  useEffect(() => {
+    const row = detailRef.current.translations.find(
+      (candidate) => candidate.locale === activeLocale,
+    );
+    if (row === undefined) {
+      sessionRef.current = null;
+      setStatus("idle");
+      return;
+    }
+
+    const store = getArticleDraftStore();
+    const engine = createArticleSyncEngine({
+      articleId: article.id,
+      locale: activeLocale,
+      store,
+      transport: createArticleSyncTransport({ articleId: article.id, locale: activeLocale }),
+      clock: systemClock,
+      schedule: createTimeoutSchedule(),
+      throttleMs: articleConfig.autosaveThrottleMs,
+      retryBaseMs: articleConfig.syncRetryBaseMs,
+      retryMaxMs: articleConfig.syncRetryMaxMs,
+      onSaved: (translation) => {
+        // Mirror the acknowledgement so a later session starts from the
+        // version the server actually holds.
+        setDetail((current) => withSavedTranslation(current, activeLocale, translation));
+        // The service throttles this to one automatic snapshot per window.
+        void fetch(`/api/admin/articles/${article.id}/revisions`, { method: "POST" });
+      },
+    });
+    sessionRef.current = { engine, store };
+    const unsubscribe = engine.subscribe(setStatus);
+
+    let cancelled = false;
+    void engine.start(toServerState(row)).then((outcome) => {
+      if (cancelled) {
+        return;
+      }
+      if (outcome.kind === "recovered") {
+        applyRecovered(outcome.draft);
+      }
     });
 
-    const wait = Math.max(
-      0,
-      articleConfig.autosaveThrottleMs - (Date.now() - lastServerSave.current),
-    );
-    if (timer.current !== null) {
-      clearTimeout(timer.current);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+      engine.dispose();
+      if (sessionRef.current?.engine === engine) {
+        sessionRef.current = null;
+      }
+    };
+  }, [article.id, activeLocale, sessionKey, applyRecovered]);
+
+  useEffect(() => {
+    const goOnline = () => sessionRef.current?.engine.setOnline(true);
+    const goOffline = () => sessionRef.current?.engine.setOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    setConflictOpen(status === "conflict");
+  }, [status]);
+
+  async function adoptServerCopy() {
+    const session = sessionRef.current;
+    const response = await fetch(`/api/admin/articles/${article.id}`);
+    if (!response.ok) {
+      setError(labels.sync.discardFailed);
+      return;
     }
-    timer.current = setTimeout(() => {
-      timer.current = null;
-      void sendSave();
-    }, wait);
-  }, [article.id, sendSave]);
+    const payload = (await response.json()) as { article: ArticleDetail };
+    setDetail(payload.article);
+    const next = payload.article.translations.find(
+      (candidate) => candidate.locale === activeLocale,
+    );
+    if (next !== undefined) {
+      adoptTranslation(next);
+      session?.engine.adoptServer(toServerState(next));
+    }
+    await session?.engine.discardLocal();
+    setRecovered(false);
+  }
+
+  async function saveLocalAsNewDraft() {
+    const session = sessionRef.current;
+    if (session === null) {
+      return;
+    }
+    const draft = await session.store.load(article.id, activeLocale);
+    if (draft === null) {
+      return;
+    }
+    setNewDraftBusy(true);
+    try {
+      const response = await fetch("/api/admin/articles", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: draft.title,
+          summary: draft.summary,
+          bodyJson: draft.bodyJson,
+          locale: activeLocale,
+        }),
+      });
+      if (!response.ok) {
+        setError(labels.sync.newDraftFailed);
+        return;
+      }
+      const payload = (await response.json()) as { article: ArticleDetail };
+      // Only once the new Article exists are the queued bytes no longer owed
+      // to this one.
+      await session.engine.discardLocal();
+      router.push(`/admin/articles/${payload.article.id}`);
+    } finally {
+      setNewDraftBusy(false);
+    }
+  }
 
   const slashItems = useRef(createSlashItems(labels.slash, { onInsertImage: () => setPickerOpen(true) }));
 
@@ -188,25 +371,24 @@ export default function ArticleEditor({
     },
     onUpdate: ({ editor: instance }) => {
       latest.current.bodyJson = JSON.stringify(instance.getJSON());
-      queueSave();
+      pushEdit();
     },
   });
 
   useEffect(() => {
     editorRef.current = editor;
+    const pendingBody = recoveredBody.current;
+    if (editor !== null && pendingBody !== null) {
+      recoveredBody.current = null;
+      editor.commands.setContent(JSON.parse(pendingBody) as JSONContent, { emitUpdate: false });
+    }
   }, [editor]);
-
-  useEffect(() => {
-    return () => {
-      if (timer.current !== null) {
-        clearTimeout(timer.current);
-      }
-    };
-  }, []);
 
   function switchLocale(next: Locale) {
     const target = detail.translations.find((candidate) => candidate.locale === next);
     setActiveLocale(next);
+    setRecovered(false);
+    recoveredBody.current = null;
     latest.current.locale = next;
     setTitle(target?.title ?? "");
     setSummary(target?.summary ?? "");
@@ -235,9 +417,26 @@ export default function ArticleEditor({
     const created = payload.article.translations.find(
       (candidate) => candidate.locale === activeLocale,
     );
-    editor?.commands.setContent(JSON.parse(created?.bodyJson ?? EMPTY_DOCUMENT) as JSONContent, {
-      emitUpdate: false,
-    });
+
+    // Bytes typed while the version did not exist are newer than the empty row
+    // that was just created: send them instead of blanking the editor.
+    const store = getArticleDraftStore();
+    const draft = await store.load(article.id, activeLocale);
+    if (draft !== null && created !== undefined) {
+      const outcome = await createArticleSyncTransport({
+        articleId: article.id,
+        locale: activeLocale,
+      }).save({ ...draft, baseVersion: created.version });
+      if (outcome.kind === "saved") {
+        await store.clear(article.id, activeLocale);
+        setDetail(withSavedTranslation(payload.article, activeLocale, outcome.translation));
+      }
+    } else {
+      editor?.commands.setContent(JSON.parse(created?.bodyJson ?? EMPTY_DOCUMENT) as JSONContent, {
+        emitUpdate: false,
+      });
+    }
+    setSessionKey((key) => key + 1);
   }
 
   async function patchMeta(input: Record<string, unknown>) {
@@ -385,15 +584,17 @@ export default function ArticleEditor({
 
   const flatTree = flattenTree(tree);
   const statusLabel =
-    status === "saving"
+    status === "syncing"
       ? labels.saving
       : status === "saved"
         ? labels.saved
         : status === "local"
           ? labels.localSave
-          : status === "error"
-            ? labels.saveFailed
-            : "";
+          : status === "offline"
+            ? labels.sync.offline
+            : status === "conflict"
+              ? labels.sync.conflict
+              : "";
 
   return (
     <div className="article-editor">
@@ -402,6 +603,11 @@ export default function ArticleEditor({
         <span aria-live="polite" className={`article-save article-save-${status}`}>
           {statusLabel}
         </span>
+        {status === "conflict" ? (
+          <button type="button" onClick={() => setConflictOpen(true)}>
+            {labels.sync.resolve}
+          </button>
+        ) : null}
         <button type="button" onClick={() => void openPreview()}>
           {labels.preview.open}
         </button>
@@ -412,6 +618,36 @@ export default function ArticleEditor({
           {error}
         </p>
       )}
+
+      {recovered ? (
+        <p role="status" className="article-sync-notice">
+          {labels.sync.recovered}
+        </p>
+      ) : null}
+
+      {conflictOpen && status === "conflict" ? (
+        <section
+          className="article-conflict"
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="article-conflict-title"
+          aria-describedby="article-conflict-body"
+        >
+          <h2 id="article-conflict-title">{labels.sync.conflictTitle}</h2>
+          <p id="article-conflict-body">{labels.sync.conflictBody}</p>
+          <div className="article-conflict-actions">
+            <button type="button" onClick={() => void adoptServerCopy()}>
+              {labels.sync.discardLocal}
+            </button>
+            <button type="button" disabled={newDraftBusy} onClick={() => void saveLocalAsNewDraft()}>
+              {newDraftBusy ? labels.sync.savingNewDraft : labels.sync.saveAsNewDraft}
+            </button>
+            <button type="button" onClick={() => setConflictOpen(false)}>
+              {labels.sync.keepEditing}
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <div className="article-editor-locales" role="group" aria-label={labels.languages.label}>
         {siteConfig.locales.map((candidate) => (
@@ -536,7 +772,7 @@ export default function ArticleEditor({
             onChange={(event) => {
               setTitle(event.target.value);
               latest.current.title = event.target.value;
-              queueSave();
+              pushEdit();
             }}
           />
 
@@ -567,7 +803,7 @@ export default function ArticleEditor({
               onChange={(event) => {
                 setSummary(event.target.value);
                 latest.current.summary = event.target.value;
-                queueSave();
+                pushEdit();
               }}
             />
           </label>
