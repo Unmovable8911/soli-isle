@@ -529,6 +529,19 @@ main {
   color: var(--accent);
 }
 
+.article-editor-remove-locale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-left: 0.75rem;
+}
+
+.article-editor-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .article-editor-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 20rem;
@@ -1015,6 +1028,40 @@ main {
   font-size: 0.9rem;
 }
 
+.article-locales ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.article-locales a {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--muted) 30%, var(--bg));
+  color: var(--muted);
+}
+
+/* The Locale with no version of this work: offered, but not as a version. */
+.article-locales a[data-version="fallback"] {
+  border-style: dashed;
+}
+
+.article-locales a[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+.article-locale-note {
+  margin-left: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 .reader-article-nav {
   display: grid;
   gap: 0.75rem;
@@ -1459,6 +1506,25 @@ main {
 .post-composer-locales button[aria-pressed="true"] {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.post-composer-remove-locale,
+.post-composer-default-locale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-left: 0.75rem;
+}
+
+.post-composer-default-locale select {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--muted);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
 }
 
 .post-images {

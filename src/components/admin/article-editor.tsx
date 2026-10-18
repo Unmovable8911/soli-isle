@@ -132,6 +132,8 @@ export default function ArticleEditor({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(false);
+  const [pendingLocaleRemove, setPendingLocaleRemove] = useState(false);
+  const [localeRemoveBusy, setLocaleRemoveBusy] = useState(false);
   const [publishTimeInput, setPublishTimeInput] = useState(
     toPublishTimeInput(article.publishTime),
   );
@@ -384,8 +386,8 @@ export default function ArticleEditor({
     }
   }, [editor]);
 
-  function switchLocale(next: Locale) {
-    const target = detail.translations.find((candidate) => candidate.locale === next);
+  function switchLocale(next: Locale, from: ArticleDetail = detail) {
+    const target = from.translations.find((candidate) => candidate.locale === next);
     setActiveLocale(next);
     setRecovered(false);
     recoveredBody.current = null;
@@ -437,6 +439,47 @@ export default function ArticleEditor({
       });
     }
     setSessionKey((key) => key + 1);
+  }
+
+  /** Why this Locale version cannot be deleted, or null when it can. */
+  function localeRemoveLock(locale: Locale): string | null {
+    if (locale === detail.defaultLocale) {
+      return labels.languages.lockedDefault;
+    }
+    if (detail.translations.length <= 1) {
+      return labels.languages.lockedLast;
+    }
+    return null;
+  }
+
+  async function removeLocaleVersion() {
+    const locale = activeLocale;
+    setPendingLocaleRemove(false);
+    setLocaleRemoveBusy(true);
+    try {
+      const response = await fetch(
+        `/api/admin/articles/${article.id}/translations/${locale}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) {
+        setError(labels.languages.removeFailed);
+        return;
+      }
+      const payload = (await response.json()) as { article: ArticleDetail };
+      setDetail(payload.article);
+      // The deleted version's queued bytes are not owed to anything any more.
+      await getArticleDraftStore().clear(article.id, locale);
+      const remaining =
+        payload.article.translations.find(
+          (candidate) => candidate.locale === payload.article.defaultLocale,
+        ) ?? payload.article.translations[0];
+      if (remaining !== undefined) {
+        switchLocale(remaining.locale, payload.article);
+      }
+      setSessionKey((key) => key + 1);
+    } finally {
+      setLocaleRemoveBusy(false);
+    }
   }
 
   async function patchMeta(input: Record<string, unknown>) {
@@ -664,7 +707,35 @@ export default function ArticleEditor({
           <button type="button" onClick={() => void addLocaleVersion()}>
             {labels.languages.add}
           </button>
-        ) : null}
+        ) : (
+          <span className="article-editor-remove-locale">
+            {pendingLocaleRemove ? (
+              <>
+                <button
+                  type="button"
+                  disabled={localeRemoveBusy}
+                  onClick={() => void removeLocaleVersion()}
+                >
+                  {labels.languages.confirmRemove}
+                </button>
+                <button type="button" onClick={() => setPendingLocaleRemove(false)}>
+                  {labels.languages.cancel}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={localeRemoveLock(activeLocale) !== null || localeRemoveBusy}
+                onClick={() => setPendingLocaleRemove(true)}
+              >
+                {labels.languages.remove}
+              </button>
+            )}
+            {localeRemoveLock(activeLocale) === null ? null : (
+              <span className="article-editor-hint">{localeRemoveLock(activeLocale)}</span>
+            )}
+          </span>
+        )}
       </div>
 
       <div className="article-editor-main">
@@ -820,6 +891,7 @@ export default function ArticleEditor({
                 </option>
               ))}
             </select>
+            <span className="article-editor-hint">{labels.meta.defaultLocaleHint}</span>
           </label>
 
           <label className="article-field">

@@ -18,6 +18,8 @@ import {
   listPosts,
   publishPost,
   readFeedPage,
+  removePostTranslation,
+  setPostDefaultLocale,
   savePostTranslation,
   setPostImages,
   setPostTags,
@@ -534,6 +536,106 @@ async function seedFeedPost(fixture: Fixture, input: SeedPostInput): Promise<str
   return draft.id;
 }
 
+describe("Locale versions", () => {
+  it("removes one Locale version and leaves the work, its images and its Tags intact", async () => {
+    const fixture = await createFixture();
+    const picture = await uploadPicture(fixture, "kept.png");
+    const tag = await createNamedTag(fixture, "保留", "kept");
+    const draft = await createPostDraft(fixture.posts, { locale: "zh", bodyJson: DOC });
+    await addPostTranslation(fixture.posts, { postId: draft.id, locale: "en", bodyJson: EDITED });
+    await setPostImages(fixture.posts, { postId: draft.id, assetIds: [picture] });
+    await setPostTags(fixture.posts, { postId: draft.id, tagIds: [tag.id] });
+
+    const removed = await removePostTranslation(fixture.posts, {
+      postId: draft.id,
+      locale: "en",
+    });
+    if (!removed.ok) {
+      throw new Error(`could not remove: ${removed.reason}`);
+    }
+
+    expect(removed.post.id).toBe(draft.id);
+    expect(removed.post.translations.map((translation) => translation.locale)).toEqual(["zh"]);
+    expect(removed.post.translations[0]?.bodyJson).toBe(DOC);
+    expect(removed.post.images.map((image) => image.assetId)).toEqual([picture]);
+    expect(removed.post.tags.map((tagged) => tagged.id)).toEqual([tag.id]);
+    expect(removed.post.defaultLocale).toBe("zh");
+  });
+
+  it("refuses to remove the default Locale version, which Content Fallback needs", async () => {
+    const fixture = await createFixture();
+    const draft = await createPostDraft(fixture.posts, { locale: "zh", bodyJson: DOC });
+    await addPostTranslation(fixture.posts, { postId: draft.id, locale: "en", bodyJson: EDITED });
+
+    await expect(
+      removePostTranslation(fixture.posts, { postId: draft.id, locale: "zh" }),
+    ).resolves.toEqual({ ok: false, reason: "default-locale" });
+    expect((await getPost(fixture.posts, draft.id))?.translations).toHaveLength(2);
+  });
+
+  it("refuses the last remaining version, the backstop behind the default rule", async () => {
+    const fixture = await createFixture();
+    const draft = await createPostDraft(fixture.posts, { locale: "zh", bodyJson: DOC });
+    // The default-Locale rule is checked first, so the last-version refusal only
+    // answers for a Post whose default Locale no longer has a row.
+    fixture.harness.database.sqlite
+      .prepare("UPDATE post SET default_locale = ? WHERE id = ?")
+      .run("en", draft.id);
+
+    await expect(
+      removePostTranslation(fixture.posts, { postId: draft.id, locale: "zh" }),
+    ).resolves.toEqual({ ok: false, reason: "last-translation" });
+  });
+
+  it("has nothing to remove for an unknown Post or a Locale it does not have", async () => {
+    const fixture = await createFixture();
+    const draft = await createPostDraft(fixture.posts, { locale: "zh", bodyJson: DOC });
+
+    await expect(
+      removePostTranslation(fixture.posts, { postId: "01JWZZZZZZZZZZZZZZZZZZZZZZ", locale: "en" }),
+    ).resolves.toEqual({ ok: false, reason: "not-found" });
+    await expect(
+      removePostTranslation(fixture.posts, { postId: draft.id, locale: "en" }),
+    ).resolves.toEqual({ ok: false, reason: "not-found" });
+  });
+
+  it("lets the Author choose which version is the work's default", async () => {
+    const fixture = await createFixture();
+    const draft = await createPostDraft(fixture.posts, { locale: "zh", bodyJson: DOC });
+    await addPostTranslation(fixture.posts, { postId: draft.id, locale: "en", bodyJson: EDITED });
+
+    const changed = await setPostDefaultLocale(fixture.posts, {
+      postId: draft.id,
+      defaultLocale: "en",
+    });
+
+    expect(changed.ok && changed.post.defaultLocale).toBe("en");
+    // The new default is the one that cannot be removed any more, and the
+    // version it used to be can.
+    await expect(
+      removePostTranslation(fixture.posts, { postId: draft.id, locale: "en" }),
+    ).resolves.toEqual({ ok: false, reason: "default-locale" });
+    await expect(
+      removePostTranslation(fixture.posts, { postId: draft.id, locale: "zh" }),
+    ).resolves.toMatchObject({ ok: true });
+  });
+
+  it("refuses a default Locale the Post has no version in, and an unknown Post", async () => {
+    const fixture = await createFixture();
+    const draft = await createPostDraft(fixture.posts, { locale: "zh", bodyJson: DOC });
+
+    await expect(
+      setPostDefaultLocale(fixture.posts, { postId: draft.id, defaultLocale: "en" }),
+    ).resolves.toEqual({ ok: false, reason: "invalid-locale" });
+    await expect(
+      setPostDefaultLocale(fixture.posts, {
+        postId: "01JWZZZZZZZZZZZZZZZZZZZZZZ",
+        defaultLocale: "zh",
+      }),
+    ).resolves.toEqual({ ok: false, reason: "not-found" });
+  });
+});
+
 describe("the feed read", () => {
   it("is locale-strict: a Post without a version in the Locale is not in that Feed", async () => {
     const fixture = await createFixture();
@@ -558,6 +660,26 @@ describe("the feed read", () => {
     expect((await readFeedPage(fixture.posts, { locale: "en" })).posts.map((post) => post.id)).toEqual([
       both,
       enOnly,
+    ]);
+  });
+
+  it("drops a Post from a Feed once that Locale's version is removed", async () => {
+    const fixture = await createFixture();
+    const both = await seedFeedPost(fixture, {
+      locale: "zh",
+      alsoIn: ["en"],
+      publishTime: "2025-06-01T00:00:00.000Z",
+    });
+
+    expect((await readFeedPage(fixture.posts, { locale: "en" })).posts.map((post) => post.id)).toEqual([
+      both,
+    ]);
+
+    await removePostTranslation(fixture.posts, { postId: both, locale: "en" });
+
+    expect((await readFeedPage(fixture.posts, { locale: "en" })).posts).toEqual([]);
+    expect((await readFeedPage(fixture.posts, { locale: "zh" })).posts.map((post) => post.id)).toEqual([
+      both,
     ]);
   });
 

@@ -25,6 +25,7 @@ import {
   getPostResponse,
   listPostsResponse,
   publicationResponse,
+  removePostTranslationResponse,
   savePostTranslationResponse,
   setPostImagesResponse,
   updatePostResponse,
@@ -448,6 +449,130 @@ describe("post translation endpoints", () => {
       "zh",
       "en",
     ]);
+  });
+
+  it("removes one Locale version and answers with the Post it left", async () => {
+    const fixture = await createFixture();
+    const created = await createPostResponse(
+      fixture.posts,
+      fixture.auth,
+      jsonRequest("/api/admin/posts", "POST", { locale: "zh" }, fixture.cookie),
+    );
+    const { post } = (await created.json()) as { post: { id: string } };
+    await addPostTranslation(fixture.posts, { postId: post.id, locale: "en" });
+
+    const removed = await removePostTranslationResponse(
+      fixture.posts,
+      fixture.auth,
+      adminRequest(`/api/admin/posts/${post.id}/translations/en`, {
+        method: "DELETE",
+        cookie: fixture.cookie,
+      }),
+      post.id,
+      "en",
+    );
+
+    expect(removed.status).toBe(200);
+    const payload = (await removed.json()) as { post: { translations: { locale: string }[] } };
+    expect(payload.post.translations.map((translation) => translation.locale)).toEqual(["zh"]);
+  });
+
+  it("refuses the default Locale version with 409 and an unknown Locale with 404", async () => {
+    const fixture = await createFixture();
+    const created = await createPostResponse(
+      fixture.posts,
+      fixture.auth,
+      jsonRequest("/api/admin/posts", "POST", { locale: "zh" }, fixture.cookie),
+    );
+    const { post } = (await created.json()) as { post: { id: string } };
+    await addPostTranslation(fixture.posts, { postId: post.id, locale: "en" });
+
+    const refused = await removePostTranslationResponse(
+      fixture.posts,
+      fixture.auth,
+      adminRequest(`/api/admin/posts/${post.id}/translations/zh`, {
+        method: "DELETE",
+        cookie: fixture.cookie,
+      }),
+      post.id,
+      "zh",
+    );
+    expect(refused.status).toBe(409);
+    await expect(refused.json()).resolves.toEqual({ error: "default-locale" });
+
+    const invalid = await removePostTranslationResponse(
+      fixture.posts,
+      fixture.auth,
+      adminRequest(`/api/admin/posts/${post.id}/translations/zz`, {
+        method: "DELETE",
+        cookie: fixture.cookie,
+      }),
+      post.id,
+      "zz",
+    );
+    expect(invalid.status).toBe(400);
+    await expect(invalid.json()).resolves.toEqual({ error: "invalid-locale" });
+
+    const missing = await removePostTranslationResponse(
+      fixture.posts,
+      fixture.auth,
+      adminRequest("/api/admin/posts/01JX3Z8Q4A0W7Y6TCVN1KH2M9R/translations/en", {
+        method: "DELETE",
+        cookie: fixture.cookie,
+      }),
+      "01JX3Z8Q4A0W7Y6TCVN1KH2M9R",
+      "en",
+    );
+    expect(missing.status).toBe(404);
+  });
+
+  it("changes which version the Post's defaultLocale names through PATCH", async () => {
+    const fixture = await createFixture();
+    const created = await createPostResponse(
+      fixture.posts,
+      fixture.auth,
+      jsonRequest("/api/admin/posts", "POST", { locale: "zh" }, fixture.cookie),
+    );
+    const { post } = (await created.json()) as { post: { id: string } };
+    await addPostTranslation(fixture.posts, { postId: post.id, locale: "en" });
+
+    const changed = await updatePostResponse(
+      fixture.posts,
+      fixture.auth,
+      jsonRequest(
+        `/api/admin/posts/${post.id}`,
+        "PATCH",
+        { defaultLocale: "en" },
+        fixture.cookie,
+      ),
+      post.id,
+    );
+    expect(changed.status).toBe(200);
+    await expect(changed.json()).resolves.toMatchObject({
+      post: { defaultLocale: "en" },
+    });
+
+    const refused = await updatePostResponse(
+      fixture.posts,
+      fixture.auth,
+      jsonRequest(
+        `/api/admin/posts/${post.id}`,
+        "PATCH",
+        { defaultLocale: "zz" },
+        fixture.cookie,
+      ),
+      post.id,
+    );
+    expect(refused.status).toBe(400);
+    await expect(refused.json()).resolves.toEqual({ error: "invalid-locale" });
+
+    const nothing = await updatePostResponse(
+      fixture.posts,
+      fixture.auth,
+      jsonRequest(`/api/admin/posts/${post.id}`, "PATCH", {}, fixture.cookie),
+      post.id,
+    );
+    expect(nothing.status).toBe(400);
   });
 
   it("answers the publication actions and maps an unknown Post to 404", async () => {

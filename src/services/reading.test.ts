@@ -179,6 +179,29 @@ describe("recent articles", () => {
     expect(cards[1]?.category).toBeNull();
   });
 
+  it("shows a Category and Tag name in the Reader's Locale, falling back to the one that exists", async () => {
+    const fixture = await createFixture();
+    // Latin slugs, so a Reader shown a slug instead of a name is unmistakable.
+    const category = await seedCategory(fixture, {
+      locale: "zh",
+      name: "笔记",
+      slug: "notes",
+    });
+    const tag = await seedTag(fixture, { locale: "zh", name: "编辑器", slug: "editor" });
+    await seedPublished(fixture, {
+      title: "Both bodies, one set of names",
+      locale: "zh",
+      alsoIn: ["en"],
+      publishTime: "2025-06-01T00:00:00.000Z",
+      categoryId: category.id,
+      tagIds: [tag.id],
+    });
+
+    const noEnglish = await listRecentArticles(fixture.reading, { locale: "en" });
+    expect(noEnglish[0]?.category).toEqual({ slug: "notes", path: "notes", name: "笔记" });
+    expect(noEnglish[0]?.tags).toEqual([{ slug: "editor", name: "编辑器" }]);
+  });
+
   it("hides drafts, archived Articles and Articles whose Publish Time has not arrived", async () => {
     const fixture = await createFixture();
     await createArticleDraft(fixture.articles, { title: "Draft", locale: "zh" });

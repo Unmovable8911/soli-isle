@@ -163,6 +163,7 @@
         "tags": "Tags",
         "noTags": "No tags yet",
         "defaultLocale": "Default Locale",
+        "defaultLocaleHint": "Shown instead when the reader asks for a Locale this work has no version in.",
         "newCategoryPlaceholder": "New category name",
         "newTagPlaceholder": "New tag name",
         "create": "Create",
@@ -172,7 +173,13 @@
       "languages": {
         "label": "Locales",
         "add": "Add this Locale version",
-        "missing": "No text in this Locale yet"
+        "missing": "No text in this Locale yet",
+        "remove": "Delete this Locale version",
+        "confirmRemove": "Confirm: delete this Locale version",
+        "cancel": "Cancel",
+        "removeFailed": "Deleting the version failed, please try again.",
+        "lockedDefault": "The default Locale version cannot be deleted.",
+        "lockedLast": "This is the last Locale version, so it cannot be deleted."
       },
       "preview": {
         "open": "Preview",
@@ -248,10 +255,20 @@
         "creating": "Creating…",
         "createFailed": "Could not create it."
       },
+      "meta": {
+        "defaultLocale": "Default Locale",
+        "defaultLocaleHint": "Shown instead when the reader asks for a Locale this work has no version in."
+      },
       "languages": {
         "label": "Language versions",
         "add": "Add this language version",
-        "missing": "No body in this language yet"
+        "missing": "No body in this language yet",
+        "remove": "Delete this language version",
+        "confirmRemove": "Confirm: delete this language version",
+        "cancel": "Cancel",
+        "removeFailed": "Deleting the version failed, please try again.",
+        "lockedDefault": "The default Locale version cannot be deleted.",
+        "lockedLast": "This is the last Locale version, so it cannot be deleted."
       },
       "state": {
         "draft": "Draft",
@@ -332,6 +349,10 @@
     },
     "fallback": {
       "notice": "This article has no {requested} version yet; what follows is its {shown} version."
+    },
+    "languages": {
+      "label": "This article in other languages",
+      "missing": "No version in this language"
     },
     "gone": {
       "title": "This article was permanently removed",

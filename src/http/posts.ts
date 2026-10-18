@@ -23,6 +23,8 @@ import {
   listPosts,
   publishPost,
   readFeedPage,
+  removePostTranslation,
+  setPostDefaultLocale,
   savePostTranslation,
   setPostImages,
   setPostTags,
@@ -53,6 +55,8 @@ const MUTATION_STATUS: Record<PostMutationFailure["reason"], number> = {
   "invalid-publish-time": 400,
   "unknown-tag": 400,
   "unknown-asset": 400,
+  "default-locale": 409,
+  "last-translation": 409,
   "not-published": 409,
   "not-archived": 409,
   "stale-content": 409,
@@ -175,12 +179,35 @@ export async function updatePostResponse(
     tagIds = read;
   }
 
-  if (tagIds === undefined) {
-    // Tags are the only thing a PATCH may change; a body without them asks for nothing.
+  const defaultLocale =
+    body.defaultLocale === undefined ? undefined : readLocale(body.defaultLocale);
+  if (defaultLocale === null) {
+    return jsonError("invalid-locale", 400);
+  }
+
+  if (tagIds === undefined && defaultLocale === undefined) {
+    // Tags and the default Locale are the only things a PATCH may change; a
+    // body without either asks for nothing.
     return jsonError("invalid-tag-ids", 400);
   }
 
-  return mutationResponse(await setPostTags(posts, { postId, tagIds }));
+  // One call per field, in a fixed order, so neither change can undo the other.
+  let outcome: PostMutation | null = null;
+  if (tagIds !== undefined) {
+    outcome = await setPostTags(posts, { postId, tagIds });
+    if (!outcome.ok) {
+      return mutationResponse(outcome);
+    }
+  }
+  if (defaultLocale !== undefined) {
+    outcome = await setPostDefaultLocale(posts, { postId, defaultLocale });
+  }
+  if (outcome === null) {
+    // Unreachable: the guard above refuses a body that asks for nothing.
+    return jsonError("invalid-tag-ids", 400);
+  }
+
+  return mutationResponse(outcome);
 }
 
 export async function deletePostResponse(
@@ -253,6 +280,24 @@ export async function savePostTranslationResponse(
   return mutationResponse(
     await savePostTranslation(posts, { postId, locale, baseVersion, ...bodyInput(body) }),
   );
+}
+
+export async function removePostTranslationResponse(
+  posts: PostContext,
+  auth: AuthorAuthContext,
+  request: Request,
+  postId: string,
+  locale: string,
+): Promise<Response> {
+  const denied = unauthorized(auth, request);
+  if (denied !== null) {
+    return denied;
+  }
+  if (!isLocale(locale)) {
+    return jsonError("invalid-locale", 400);
+  }
+
+  return mutationResponse(await removePostTranslation(posts, { postId, locale }));
 }
 
 export async function setPostImagesResponse(

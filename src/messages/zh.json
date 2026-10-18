@@ -163,6 +163,7 @@
         "tags": "标签",
         "noTags": "还没有标签",
         "defaultLocale": "默认语言",
+        "defaultLocaleHint": "读者请求的语言没有版本时，降级显示的是这一版。",
         "newCategoryPlaceholder": "新分类名称",
         "newTagPlaceholder": "新标签名称",
         "create": "创建",
@@ -172,7 +173,13 @@
       "languages": {
         "label": "语言版本",
         "add": "添加此语言版本",
-        "missing": "此语言还没有正文"
+        "missing": "此语言还没有正文",
+        "remove": "删除此语言版本",
+        "confirmRemove": "确认删除此语言版本",
+        "cancel": "取消",
+        "removeFailed": "删除失败，请重试。",
+        "lockedDefault": "默认语言版本不能删除。",
+        "lockedLast": "这是最后一个语言版本，不能删除。"
       },
       "preview": {
         "open": "预览",
@@ -248,10 +255,20 @@
         "creating": "创建中…",
         "createFailed": "创建失败。"
       },
+      "meta": {
+        "defaultLocale": "默认语言",
+        "defaultLocaleHint": "读者请求的语言没有版本时，降级显示的是这一版。"
+      },
       "languages": {
         "label": "语言版本",
         "add": "添加此语言版本",
-        "missing": "此语言还没有正文"
+        "missing": "此语言还没有正文",
+        "remove": "删除此语言版本",
+        "confirmRemove": "确认删除此语言版本",
+        "cancel": "取消",
+        "removeFailed": "删除失败，请重试。",
+        "lockedDefault": "默认语言版本不能删除。",
+        "lockedLast": "这是最后一个语言版本，不能删除。"
       },
       "state": {
         "draft": "草稿",
@@ -332,6 +349,10 @@
     },
     "fallback": {
       "notice": "这篇长文还没有{requested}版本，以下是它的{shown}版本。"
+    },
+    "languages": {
+      "label": "本文语言版本",
+      "missing": "暂无此语言版本"
     },
     "gone": {
       "title": "这篇长文已被永久移除",
