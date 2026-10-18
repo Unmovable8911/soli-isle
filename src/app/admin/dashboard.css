@@ -6,6 +6,7 @@
 
 .dashboard {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2rem;
   margin-top: 1.5rem;
 }
@@ -114,6 +115,8 @@
 .category-move-form select,
 .tag-name-form input,
 .confirm-dialog select {
+  min-width: 0;
+  max-width: 100%;
   padding: 0.25rem 0.35rem;
   border: 1px solid var(--border-strong);
   border-radius: 0.375rem;
@@ -161,6 +164,7 @@
 .category-manager,
 .tag-manager {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   margin-top: 1.5rem;
 }
@@ -168,6 +172,7 @@
 .category-create-form,
 .tag-create-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.35rem;
   max-width: 32rem;
   margin-top: 0.5rem;

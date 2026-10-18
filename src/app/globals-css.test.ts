@@ -1378,3 +1378,24 @@ describe("no dead rules", () => {
     expect(unused).toEqual([]);
   });
 });
+/**
+ * A console page at 200% zoom is a 180px-wide page. A six-column table and a
+ * grid that sizes its track to the table's min-content both widen the document
+ * instead of scrolling, so the table is wrapped and the tracks are allowed to
+ * be narrower than their content.
+ */
+describe("the console at 200% zoom", () => {
+  it("scrolls a wide table inside its own box", () => {
+    const scroll = declarations(blockBody(".table-scroll"));
+    expect(scroll.get("overflow-x")).toBe("auto");
+    expect(scroll.get("max-width")).toBe("100%");
+  });
+
+  it("lets every single-column grid be narrower than its content", () => {
+    for (const selector of [".article-list", ".dashboard", ".tag-manager", ".category-manager", ".asset-library"]) {
+      expect(declarations(blockBody(selector)).get("grid-template-columns"), selector).toBe(
+        "minmax(0, 1fr)",
+      );
+    }
+  });
+});

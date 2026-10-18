@@ -174,38 +174,40 @@ export function TagTable({
   onDelete,
 }: TagTableProps) {
   return (
-    <table className="article-table tag-table">
-      <thead>
-        <tr>
-          <th scope="col">{labels.columns.slug}</th>
-          <th scope="col">{labels.columns.names}</th>
-          <th scope="col">{labels.columns.actions}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {tags.map((tag) => (
-          <tr key={tag.id}>
-            <td>
-              <code>{tag.slug}</code>
-            </td>
-            <td>
-              <TagNames
-                tag={tag}
-                labels={labels}
-                localeNames={localeNames}
-                busy={busy}
-                onSave={(entry, name) => onSave(tag, entry, name)}
-              />
-            </td>
-            <td>
-              <button type="button" disabled={busy} onClick={() => onDelete(tag)}>
-                {labels.delete}
-              </button>
-            </td>
+    <div className="table-scroll">
+      <table className="article-table tag-table">
+        <thead>
+          <tr>
+            <th scope="col">{labels.columns.slug}</th>
+            <th scope="col">{labels.columns.names}</th>
+            <th scope="col">{labels.columns.actions}</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {tags.map((tag) => (
+            <tr key={tag.id}>
+              <td>
+                <code>{tag.slug}</code>
+              </td>
+              <td>
+                <TagNames
+                  tag={tag}
+                  labels={labels}
+                  localeNames={localeNames}
+                  busy={busy}
+                  onSave={(entry, name) => onSave(tag, entry, name)}
+                />
+              </td>
+              <td>
+                <button type="button" disabled={busy} onClick={() => onDelete(tag)}>
+                  {labels.delete}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

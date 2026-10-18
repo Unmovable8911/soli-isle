@@ -52,44 +52,46 @@ export function DashboardTable({ articles, posts, labels, renderActions }: Dashb
             action={<Link href="/admin/articles">{labels.articles.newArticle}</Link>}
           />
         ) : (
-          <table className="article-table">
-            <thead>
-              <tr>
-                <th scope="col">{labels.articles.columns.title}</th>
-                <th scope="col">{labels.articles.columns.slug}</th>
-                <th scope="col">{labels.articles.columns.state}</th>
-                <th scope="col">{labels.articles.columns.publishTime}</th>
-                <th scope="col">{labels.articles.columns.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {articles.map((article) => (
-                <tr key={article.id}>
-                  <td>
-                    <Link href={`/admin/articles/${article.id}`}>
-                      {displayTitle(article, labels.untitled)}
-                    </Link>
-                  </td>
-                  <td>
-                    <code>{article.slug}</code>
-                  </td>
-                  <td>
-                    <span className={`publication-state publication-state-${article.visibility}`}>
-                      {labels.state[article.visibility]}
-                    </span>
-                  </td>
-                  <td>{publishTimeCell(article.publishTime, labels.neverPublished)}</td>
-                  <td>
-                    {renderActions({
-                      kind: "article",
-                      id: article.id,
-                      visibility: article.visibility,
-                    })}
-                  </td>
+          <div className="table-scroll">
+            <table className="article-table">
+              <thead>
+                <tr>
+                  <th scope="col">{labels.articles.columns.title}</th>
+                  <th scope="col">{labels.articles.columns.slug}</th>
+                  <th scope="col">{labels.articles.columns.state}</th>
+                  <th scope="col">{labels.articles.columns.publishTime}</th>
+                  <th scope="col">{labels.articles.columns.actions}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {articles.map((article) => (
+                  <tr key={article.id}>
+                    <td>
+                      <Link href={`/admin/articles/${article.id}`}>
+                        {displayTitle(article, labels.untitled)}
+                      </Link>
+                    </td>
+                    <td>
+                      <code>{article.slug}</code>
+                    </td>
+                    <td>
+                      <span className={`publication-state publication-state-${article.visibility}`}>
+                        {labels.state[article.visibility]}
+                      </span>
+                    </td>
+                    <td>{publishTimeCell(article.publishTime, labels.neverPublished)}</td>
+                    <td>
+                      {renderActions({
+                        kind: "article",
+                        id: article.id,
+                        visibility: article.visibility,
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
@@ -102,34 +104,36 @@ export function DashboardTable({ articles, posts, labels, renderActions }: Dashb
             action={<Link href="/admin/posts">{labels.posts.newPost}</Link>}
           />
         ) : (
-          <table className="article-table">
-            <thead>
-              <tr>
-                <th scope="col">{labels.posts.columns.open}</th>
-                <th scope="col">{labels.posts.columns.state}</th>
-                <th scope="col">{labels.posts.columns.publishTime}</th>
-                <th scope="col">{labels.posts.columns.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => (
-                <tr key={post.id}>
-                  <td>
-                    <Link href={`/admin/posts/${post.id}`}>{labels.actions.open}</Link>
-                  </td>
-                  <td>
-                    <span className={`publication-state publication-state-${post.visibility}`}>
-                      {labels.state[post.visibility]}
-                    </span>
-                  </td>
-                  <td>{publishTimeCell(post.publishTime, labels.neverPublished)}</td>
-                  <td>
-                    {renderActions({ kind: "post", id: post.id, visibility: post.visibility })}
-                  </td>
+          <div className="table-scroll">
+            <table className="article-table">
+              <thead>
+                <tr>
+                  <th scope="col">{labels.posts.columns.open}</th>
+                  <th scope="col">{labels.posts.columns.state}</th>
+                  <th scope="col">{labels.posts.columns.publishTime}</th>
+                  <th scope="col">{labels.posts.columns.actions}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {posts.map((post) => (
+                  <tr key={post.id}>
+                    <td>
+                      <Link href={`/admin/posts/${post.id}`}>{labels.actions.open}</Link>
+                    </td>
+                    <td>
+                      <span className={`publication-state publication-state-${post.visibility}`}>
+                        {labels.state[post.visibility]}
+                      </span>
+                    </td>
+                    <td>{publishTimeCell(post.publishTime, labels.neverPublished)}</td>
+                    <td>
+                      {renderActions({ kind: "post", id: post.id, visibility: post.visibility })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>
