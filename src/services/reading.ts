@@ -22,6 +22,7 @@ import { categoryAncestorPaths, isWithinCategoryPath } from "@/domain/category-p
 import type { Clock } from "@/domain/clock";
 import { pickLocalised } from "@/domain/localised";
 import { escapeLikeTerm, matchSnippet, parseSearchTerms } from "@/domain/search";
+import { flattenTree } from "@/domain/tree";
 import { loadCategoryViews, listCategoryTree, type CategoryContext } from "./categories";
 import { loadTagViews, listTags, type TagContext } from "./tags";
 import { readableByUrl, visibleToReader } from "./visibility";
@@ -273,16 +274,12 @@ export async function listReaderCategories(
   return toReaderTree(ctx, input.locale, tree, cards);
 }
 
-function flattenTree(nodes: readonly ReaderCategoryNode[]): ReaderCategoryNode[] {
-  return nodes.flatMap((node) => [node, ...flattenTree(node.children)]);
-}
-
 export async function findReaderCategory(
   ctx: ReadingContext,
   input: { locale: Locale; categoryPath: string },
 ): Promise<ReaderCategoryPage | null> {
   const tree = await listReaderCategories(ctx, { locale: input.locale });
-  const flat = flattenTree(tree);
+  const flat = flattenTree(tree).map((entry) => entry.node);
   const category = flat.find((node) => node.path === input.categoryPath);
   if (category === undefined) {
     return null;
