@@ -2,6 +2,7 @@ import { isLocale, siteConfig, type Locale } from "@/config/site";
 import { isRichTextDocument } from "@/domain/rich-text";
 import { siteLocalToInstant } from "@/domain/site-time";
 import { deriveMarkdown } from "@/editor/markdown";
+import { messages } from "@/messages";
 import { renderArticleBody } from "@/editor/render/render-article";
 import type { AuthorAuthContext } from "@/services/auth";
 import {
@@ -394,7 +395,11 @@ export async function previewArticleResponse(
     return jsonError("invalid-body", 400);
   }
 
-  return jsonOk({ html: await renderArticleBody(bodyJson) });
+  return jsonOk({
+    html: await renderArticleBody(bodyJson, {
+      footnoteBackLabel: messages[detail.defaultLocale].reader.article.footnoteBack,
+    }),
+  });
 }
 
 export async function listRevisionsResponse(

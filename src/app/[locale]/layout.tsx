@@ -10,6 +10,7 @@ import { buildArchivePath, buildCategoryIndexPath, buildSearchPath } from "@/dom
 import { messages } from "@/messages";
 import { themeInitScript } from "../theme-init";
 
+import "katex/dist/katex.min.css";
 import "../globals.css";
 
 type LocaleParams = { locale: string };

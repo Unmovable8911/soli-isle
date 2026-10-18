@@ -154,3 +154,127 @@ describe("body images on the Reader page", () => {
     expect(html).not.toContain("data-original");
   });
 });
+
+describe("power blocks on the published page", () => {
+  it("renders math as KaTeX instead of the extension's marker element", async () => {
+    const html = await renderArticleBody(
+      doc([
+        { type: "blockMath", attrs: { latex: "x^2 + y^2" } },
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "inline " },
+            { type: "inlineMath", attrs: { latex: "a+b" } },
+          ],
+        },
+      ]),
+    );
+
+    expect(html).toContain('class="katex"');
+    expect(html).toContain("katex-display");
+    expect(html).not.toContain("data-type=\"block-math\"");
+    expect(html).not.toContain("data-type=\"inline-math\"");
+  });
+
+  it("renders a table as a semantic table", async () => {
+    const html = await renderArticleBody(
+      doc([
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                { type: "tableHeader", content: [{ type: "paragraph", content: [{ type: "text", text: "metric" }] }] },
+                { type: "tableHeader", content: [{ type: "paragraph", content: [{ type: "text", text: "value" }] }] },
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                { type: "tableCell", content: [{ type: "paragraph", content: [{ type: "text", text: "visits" }] }] },
+                { type: "tableCell", content: [{ type: "paragraph", content: [{ type: "text", text: "42" }] }] },
+              ],
+            },
+          ],
+        },
+      ]),
+    );
+
+    expect(html).toContain("<table");
+    expect(html).toContain("<th><p>metric</p></th>");
+    expect(html).toContain("<td><p>42</p></td>");
+  });
+
+  it("renders a callout with its tone and body", async () => {
+    const html = await renderArticleBody(
+      doc([
+        {
+          type: "callout",
+          attrs: { tone: "warn" },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "watch out" }] }],
+        },
+      ]),
+    );
+
+    expect(html).toContain('data-type="callout"');
+    expect(html).toContain('data-tone="warn"');
+    expect(html).toContain('class="callout-body"');
+    expect(html).toContain("<p>watch out</p>");
+  });
+
+  it("renders a fold block collapsed, with its summary and body", async () => {
+    const html = await renderArticleBody(
+      doc([
+        {
+          type: "details",
+          content: [
+            { type: "detailsSummary", content: [{ type: "text", text: "The long version" }] },
+            {
+              type: "detailsContent",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "hidden body" }] }],
+            },
+          ],
+        },
+      ]),
+    );
+
+    expect(html).toContain("<details>");
+    expect(html).toContain("<summary>The long version</summary>");
+    expect(html).toContain("hidden body");
+    expect(html).not.toContain("open=");
+  });
+
+  it("renders footnotes as a list with back-links", async () => {
+    const html = await renderArticleBody(
+      doc([
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "Cited" },
+            { type: "footnoteRef", attrs: { label: "2" } },
+            { type: "text", text: " here." },
+          ],
+        },
+        {
+          type: "footnoteSection",
+          content: [
+            {
+              type: "footnoteItem",
+              attrs: { label: "2" },
+              content: [{ type: "paragraph", content: [{ type: "text", text: "the note" }] }],
+            },
+          ],
+        },
+      ]),
+    );
+
+    expect(html).toContain('class="footnotes"');
+    expect(html).toContain("<ol");
+    expect(html).toContain('id="fn-2"');
+    expect(html).toContain('data-label="2"');
+    expect(html).toContain('id="fnref-2"');
+    expect(html).toContain("the note");
+    expect(html).toContain('href="#fnref-2"');
+  });
+});

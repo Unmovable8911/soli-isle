@@ -139,6 +139,14 @@
           "horizontalRule": "Divider",
           "undo": "Undo",
           "redo": "Redo"
+        },
+        "mathPrompt": "LaTeX formula",
+        "calloutTone": "Callout tone",
+        "calloutTones": {
+          "note": "Note",
+          "tip": "Tip",
+          "warn": "Warning",
+          "danger": "Danger"
         }
       },
       "slash": {
@@ -152,7 +160,18 @@
         "blockquote": "Quote",
         "codeBlock": "Code block",
         "image": "Image",
-        "horizontalRule": "Divider"
+        "horizontalRule": "Divider",
+        "table": "Table",
+        "addRow": "Add row",
+        "addColumn": "Add column",
+        "deleteRow": "Delete row",
+        "deleteColumn": "Delete column",
+        "deleteTable": "Delete table",
+        "callout": "Callout",
+        "details": "Fold block",
+        "mathBlock": "Formula block",
+        "mathInline": "Inline formula",
+        "footnote": "Footnote"
       },
       "meta": {
         "title": "Title",
@@ -253,7 +272,8 @@
       "publishedOn": "Published",
       "tags": "Tags",
       "previous": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "footnoteBack": "Back to the text"
     },
     "fallback": {
       "notice": "This article has no {requested} version yet; what follows is its {shown} version."
