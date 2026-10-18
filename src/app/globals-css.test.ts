@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -220,6 +220,73 @@ describe("the stylesheet layers", () => {
 
   it("never imports the palette twice", () => {
     expect(IMPORTS.filter((specifier) => specifier.endsWith("tokens.css"))).toHaveLength(1);
+  });
+});
+
+/**
+ * Type is the other half of the visual contract and the one part of it a
+ * network request could quietly replace: a CDN face means a third party learns
+ * who read what, and an offline reader gets a fallback. Both families are OFL,
+ * so both are shipped with their licence next to them.
+ */
+const FONT_DIR = path.resolve(process.cwd(), "public/fonts");
+
+const FACES = [
+  { family: "Lora", file: "lora-latin-wght-normal.woff2", weights: "400 700", licence: "OFL-Lora.txt" },
+  { family: "Inter", file: "inter-latin-wght-normal.woff2", weights: "100 900", licence: "OFL-Inter.txt" },
+] as const;
+
+function fontFace(family: string): Map<string, string> | undefined {
+  return rules()
+    .filter((rule) => rule.prelude === "@font-face")
+    .map((rule) => declarations(rule.body))
+    .find((face) => face.get("font-family") === `"${family}"`);
+}
+
+describe("self-hosted type", () => {
+  it.each(FACES)("ships $family as a local latin subset", ({ family, file, weights, licence }) => {
+    expect(statSync(path.join(FONT_DIR, file)).size, file).toBeGreaterThan(8000);
+    expect(readdirSync(FONT_DIR), `${family} licence`).toContain(licence);
+
+    const face = fontFace(family);
+    expect(face, `no @font-face for ${family}`).toBeDefined();
+    expect(face?.get("src"), family).toContain(`/fonts/${file}`);
+    expect(face?.get("font-display"), family).toBe("swap");
+    expect(face?.get("font-weight"), family).toBe(weights);
+  });
+
+  it("never fetches a face from another origin", () => {
+    expect(SOURCE).not.toMatch(/https?:\/\//);
+    expect(SOURCE).not.toMatch(/@import\s+url\(/);
+  });
+
+  it("puts the Latin serif on headings and the Latin sans on body text", () => {
+    // The Chinese faces follow in the same stack, so a han glyph falls through
+    // to the system CJK face without a second rule on every element.
+    const body = declarations(blockBody("body")).get("font-family") ?? "";
+    expect(body.indexOf('"Inter"')).toBe(0);
+    expect(body).toContain('"PingFang SC"');
+    expect(body).toContain('"Noto Sans CJK SC"');
+    expect(body).toContain("sans-serif");
+
+    const heading = declarations(blockBody("h1")).get("font-family") ?? "";
+    expect(heading.indexOf('"Lora"')).toBe(0);
+    expect(heading).toContain('"Songti SC"');
+    expect(heading).toContain('"Noto Serif CJK SC"');
+    expect(heading).toContain("serif");
+  });
+
+  it("changes only the metrics under :lang(zh)", () => {
+    // Serifs and sans are the same faces; what a han glyph needs is air
+    // between the lines and a hair of tracking, and what it does not need is
+    // the negative tracking a Latin display face is cut for.
+    const prose = declarations(blockBody(":lang(zh) .article-body"));
+    expect(prose.get("line-height")).toBe("1.9");
+    expect(prose.get("letter-spacing")).toBe("0.01em");
+
+    const heading = declarations(blockBody(":lang(zh) h1"));
+    expect(heading.get("line-height")).toBe("1.4");
+    expect(heading.get("letter-spacing")).toBe("0");
   });
 });
 
