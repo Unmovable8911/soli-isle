@@ -6,13 +6,17 @@ import { ReactRenderer } from "@tiptap/react";
 import { Suggestion, type SuggestionProps } from "@tiptap/suggestion";
 import { forwardRef, useImperativeHandle, useState } from "react";
 
+import { insertFootnote } from "@/editor/nodes/footnotes";
 import type { Messages } from "@/messages";
 
 export type SlashLabels = Messages["admin"]["articles"]["slash"];
+export type SlashEditorLabels = Messages["admin"]["articles"]["editor"];
 
 export interface SlashItem {
   key: string;
   title: string;
+  /** Off while the command cannot run at the current selection. */
+  available?: (editor: Editor) => boolean;
   run: (props: { editor: Editor; range: Range }) => void;
 }
 
@@ -84,6 +88,7 @@ const SlashList = forwardRef<SlashListHandle, SlashListProps>(function SlashList
 
 export function createSlashItems(
   labels: SlashLabels,
+  editorLabels: SlashEditorLabels,
   hooks: { onInsertImage: () => void },
 ): SlashItem[] {
   return [
@@ -141,6 +146,91 @@ export function createSlashItems(
         editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
     },
     {
+      key: "table",
+      title: labels.table,
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+    },
+    {
+      key: "addRow",
+      title: labels.addRow,
+      available: (editor) => editor.can().addRowAfter(),
+      run: ({ editor }) => editor.chain().focus().addRowAfter().run(),
+    },
+    {
+      key: "addColumn",
+      title: labels.addColumn,
+      available: (editor) => editor.can().addColumnAfter(),
+      run: ({ editor }) => editor.chain().focus().addColumnAfter().run(),
+    },
+    {
+      key: "deleteRow",
+      title: labels.deleteRow,
+      available: (editor) => editor.can().deleteRow(),
+      run: ({ editor }) => editor.chain().focus().deleteRow().run(),
+    },
+    {
+      key: "deleteColumn",
+      title: labels.deleteColumn,
+      available: (editor) => editor.can().deleteColumn(),
+      run: ({ editor }) => editor.chain().focus().deleteColumn().run(),
+    },
+    {
+      key: "deleteTable",
+      title: labels.deleteTable,
+      available: (editor) => editor.can().deleteTable(),
+      run: ({ editor }) => editor.chain().focus().deleteTable().run(),
+    },
+    {
+      key: "callout",
+      title: labels.callout,
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleWrap("callout").run(),
+    },
+    {
+      key: "details",
+      title: labels.details,
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).setDetails().run(),
+    },
+    {
+      key: "mathBlock",
+      title: labels.mathBlock,
+      run: ({ editor, range }) => {
+        const latex = window.prompt(editorLabels.mathPrompt, "e = mc^2");
+        if (latex === null) {
+          return;
+        }
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent({ type: "blockMath", attrs: { latex } })
+          .run();
+      },
+    },
+    {
+      key: "mathInline",
+      title: labels.mathInline,
+      run: ({ editor, range }) => {
+        const latex = window.prompt(editorLabels.mathPrompt, "a^2 + b^2");
+        if (latex === null) {
+          return;
+        }
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent({ type: "inlineMath", attrs: { latex } })
+          .run();
+      },
+    },
+    {
+      key: "footnote",
+      title: labels.footnote,
+      run: ({ editor, range }) => insertFootnote({ editor, range }),
+    },
+    {
       key: "image",
       title: labels.image,
       run: ({ editor, range }) => {
@@ -161,8 +251,12 @@ export function createSlashCommand(items: () => SlashItem[], empty: string): Ext
           editor: this.editor,
           char: "/",
           startOfLine: false,
-          items: ({ query }) =>
-            items().filter((item) => item.title.toLowerCase().includes(query.toLowerCase())),
+          items: ({ editor, query }) =>
+            items().filter(
+              (item) =>
+                item.title.toLowerCase().includes(query.toLowerCase()) &&
+                (item.available?.(editor) ?? true),
+            ),
           command: ({ editor, range, props }) => props.run({ editor, range }),
           render: () => {
             let component: ReactRenderer<SlashListHandle> | null = null;

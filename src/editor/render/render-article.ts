@@ -7,6 +7,7 @@ import { isRichTextDocument } from "@/domain/rich-text";
 import { articleExtensions } from "../extensions";
 import { escapeHtml, getHighlighter, highlightCode } from "./highlighter";
 import { imageSrcset } from "./image-srcset";
+import { renderMath } from "./math";
 
 const IMAGE_SIZES = "(max-width: 900px) 100vw, 800px";
 
@@ -30,6 +31,16 @@ export interface ArticleBodyOptions {
    * access, so the page supplies the original address and true dimensions.
    */
   resolveImage?: (src: string) => ArticleBodyImage | null;
+  /**
+   * The accessible name of a footnote's back-link. The renderer holds no
+   * messages, so the surface that knows the Locale supplies it.
+   */
+  footnoteBackLabel?: string;
+}
+
+function attribute(node: ProseMirrorNode, key: string): string {
+  const value: unknown = node.attrs[key];
+  return typeof value === "string" ? value : "";
 }
 
 function dimension(node: ProseMirrorNode, key: "width" | "height"): number | null {
@@ -73,6 +84,20 @@ function renderImage(
   return `<img ${attributes.join(" ")} />`;
 }
 
+function renderFootnoteItem(
+  node: ProseMirrorNode,
+  children: string | string[],
+  backLabel: string | undefined,
+): string {
+  const label = escapeHtml(attribute(node, "label") || "1");
+  const body = Array.isArray(children) ? children.join("") : children;
+  const name = backLabel === undefined ? "" : ` aria-label="${escapeHtml(backLabel)}"`;
+  return (
+    `<li data-type="footnote-item" data-label="${label}" id="fn-${label}">${body}` +
+    `<a class="footnote-back" href="#fnref-${label}"${name}>\u21a9</a></li>`
+  );
+}
+
 /**
  * The one content renderer: the admin preview and the public Article page.
  * The `nodeMapping` seam is where ticket 09 injects math, callouts and fold
@@ -96,6 +121,10 @@ export async function renderArticleBody(
         codeBlock: ({ node }) =>
           highlightCode(highlighter, node.textContent, node.attrs.language ?? null),
         image: ({ node }) => renderImage(node, options.resolveImage),
+        blockMath: ({ node }) => renderMath(attribute(node, "latex"), true),
+        inlineMath: ({ node }) => renderMath(attribute(node, "latex"), false),
+        footnoteItem: ({ node, children }) =>
+          renderFootnoteItem(node, children ?? "", options.footnoteBackLabel),
       },
     },
   });
