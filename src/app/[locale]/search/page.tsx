@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ArticleList } from "@/components/article-list";
+import { ArticleGrid } from "@/components/article-grid";
+import { EmptyState } from "@/components/empty-state";
+import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
 import { buildSearchPath } from "@/domain/public-paths";
@@ -59,33 +61,34 @@ export default async function SearchPage({
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <h1>{t.reader.search.title}</h1>
-      <form className="reader-search-form" action={buildSearchPath({ locale })} method="get" role="search">
-        <label htmlFor="reader-search-input">{t.reader.search.label}</label>
-        <input
-          id="reader-search-input"
-          type="search"
-          name="q"
-          defaultValue={query}
-          placeholder={t.reader.search.placeholder}
-        />
-        <button type="submit">{t.reader.search.submit}</button>
-      </form>
-      <p className="reader-hint">{t.reader.search.hint}</p>
-      {query.length === 0 ? null : search.results.length === 0 ? (
-        <p className="reader-empty">{t.reader.search.empty}</p>
-      ) : (
-        <>
-          <p className="reader-search-summary" role="status">
+      <ReaderPageHead locale={locale} title={t.reader.search.title}>
+        <form
+          className="reader-search-form"
+          action={buildSearchPath({ locale })}
+          method="get"
+          role="search"
+        >
+          <label htmlFor="reader-search-input">{t.reader.search.label}</label>
+          <input
+            id="reader-search-input"
+            type="search"
+            name="q"
+            defaultValue={query}
+            placeholder={t.reader.search.placeholder}
+          />
+          <button type="submit">{t.reader.search.submit}</button>
+        </form>
+        <p className="reader-hint">{t.reader.search.hint}</p>
+        {query.length > 0 && (
+          <p className="reader-page-count reader-search-summary" role="status">
             {summary}
           </p>
-          <ArticleList
-            articles={search.results}
-            locale={locale}
-            labels={t.reader.list}
-            highlight={search.terms}
-          />
-        </>
+        )}
+      </ReaderPageHead>
+      {query.length === 0 ? null : search.results.length === 0 ? (
+        <EmptyState title={t.reader.search.emptyTitle} body={t.reader.search.empty} />
+      ) : (
+        <ArticleGrid articles={search.results} locale={locale} terms={search.terms} />
       )}
     </main>
   );

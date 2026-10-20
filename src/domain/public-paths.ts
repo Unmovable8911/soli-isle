@@ -8,7 +8,20 @@ export function buildHomePath(locale: Locale): string {
   return `/${locale}`;
 }
 
+export function buildArchivePath(locale: Locale): string {
+  return `/${locale}/archive`;
+}
+
+/**
+ * The Category index now sits at the top of the Archive. Category detail pages
+ * keep their `/categories/...` addresses, so old links and nested paths still
+ * work; `buildCategoryPath` uses that detail base rather than this index.
+ */
 export function buildCategoryIndexPath(locale: Locale): string {
+  return `${buildArchivePath(locale)}#categories`;
+}
+
+function buildCategoryDetailBasePath(locale: Locale): string {
   return `/${locale}/categories`;
 }
 
@@ -21,7 +34,7 @@ export function buildCategoryPath(input: { locale: Locale; categoryPath: string 
   if (segments.length === 0) {
     return buildCategoryIndexPath(input.locale);
   }
-  return `${buildCategoryIndexPath(input.locale)}/${segments.join("/")}`;
+  return `${buildCategoryDetailBasePath(input.locale)}/${segments.join("/")}`;
 }
 
 export function buildTagPath(input: { locale: Locale; slug: string }): string {
@@ -42,8 +55,34 @@ export function buildFeedPath(input: { locale: Locale; tagSlug?: string | null }
   return `${base}?${new URLSearchParams({ tag: tagSlug }).toString()}`;
 }
 
-export function buildArchivePath(locale: Locale): string {
-  return `/${locale}/archive`;
+/**
+ * The Home listing. Category and Page are query params rather than path
+ * segments: the Home page keeps its one address per Locale, so filtering and
+ * paging never mint a URL that only exists as a redirect target.
+ *
+ * Splitting the Slug chain is normalisation only. Escaping is left entirely to
+ * URLSearchParams, so the page reads back the exact path with one
+ * `searchParams.get("category")` instead of having to decode twice.
+ */
+export function buildHomeListingPath(input: {
+  locale: Locale;
+  categoryPath?: string | null;
+  page?: number;
+}): string {
+  const base = buildHomePath(input.locale);
+  const params = new URLSearchParams();
+  const segments = (input.categoryPath ?? "").split("/").filter((segment) => segment.length > 0);
+
+  if (segments.length > 0) {
+    params.set("category", segments.join("/"));
+  }
+  const page = input.page;
+  if (page !== undefined && Number.isFinite(page) && page >= 2) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+  return query.length === 0 ? base : `${base}?${query}`;
 }
 
 export function buildSearchPath(input: { locale: Locale; query?: string }): string {

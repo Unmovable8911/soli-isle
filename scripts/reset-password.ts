@@ -16,6 +16,15 @@ import {
 
 const ENV_KEY = "AUTHOR_PASSWORD_HASH";
 
+/**
+ * Both Next.js and Docker Compose expand "$" in .env values. An Argon2id hash
+ * is mostly "$" separators, so writing it raw mangles it into something like
+ * "=19=19456,p=1,t=2". A backslash escapes the "$" for both readers.
+ */
+function escapeEnvValue(value: string): string {
+  return value.replaceAll("$", "\\$");
+}
+
 function writeEnvFile(envPath: string, content: string): void {
   const directory = path.dirname(envPath);
   const temporaryPath = path.join(directory, `.env.${process.pid}.${Date.now()}.tmp`);
@@ -38,7 +47,7 @@ async function main(): Promise<void> {
   const originalContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
 
   const hash = await hashPassword(password);
-  writeEnvFile(envPath, upsertEnvValue(originalContent, ENV_KEY, hash));
+  writeEnvFile(envPath, upsertEnvValue(originalContent, ENV_KEY, escapeEnvValue(hash)));
 
   const mergedEnv = { ...parseEnvFile(originalContent), ...process.env };
   const { databasePath, migrationsDir } = resolveRuntimePaths(mergedEnv, cwd);

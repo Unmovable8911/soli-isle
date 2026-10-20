@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { ArticleBody } from "@/components/article-body";
-import { ArticleLanguageVersions, FallbackNotice } from "@/components/article-language";
-import { ImageZoom } from "@/components/lightbox";
+import { ArticleView } from "@/components/article-view";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale, type Locale } from "@/config/site";
 import {
@@ -18,8 +16,9 @@ import {
 import { alternateLanguageMap, articleLanguageLinks } from "@/domain/article-language";
 import { formatPublishDate } from "@/domain/article-time";
 import { buildArticlePath } from "@/domain/article-url";
-import { buildCategoryPath, buildTagPath } from "@/domain/public-paths";
+import { buildCategoryIndexPath, buildCategoryPath, buildTagPath } from "@/domain/public-paths";
 import { pickLocalised } from "@/domain/localised";
+import { buildTableOfContents } from "@/domain/table-of-contents";
 import { absoluteUrl } from "@/domain/urls";
 import { renderArticleBody } from "@/editor/render/render-article";
 import { messages } from "@/messages";
@@ -140,78 +139,82 @@ export default async function ArticlePage({ params }: { params: Promise<ArticleP
     headers: await headers(),
   });
 
+  const toc = buildTableOfContents(translation.bodyJson);
+  // The cover belongs to the work, not to one Locale, and the header shows it
+  // whole: the display derivation keeps the original ratio.
+  const cover =
+    article.coverAssetId === null
+      ? null
+      : { address: buildAssetAddress({ assetId: article.coverAssetId, variant: "display", format: "webp" }) };
+
+  const category =
+    article.category === null
+      ? null
+      : {
+          name: pickLocalised(article.category.names, locale, article.category.slug),
+          href: buildCategoryPath({ locale, categoryPath: article.category.path }),
+        };
+  // The shell keeps the breadcrumb on the Category page and the long-form page,
+  // out of the top bar: the Article shows where it sits in the one tree it
+  // belongs to, and its own title closes the walk.
+  const breadcrumbs = [
+    { href: buildCategoryIndexPath(locale), label: t.reader.category.heading },
+    ...(category === null ? [] : [{ href: category.href, label: category.name }]),
+    { href: buildArticlePath({ locale, slug: article.slug }), label: translation.title },
+  ];
+
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <article className="reader-article">
-        <header className="reader-article-header">
-          <h1>{translation.title}</h1>
-          <p className="reader-article-meta">
-            {article.publishTime !== null && (
-              <>
-                <span>{t.reader.article.publishedOn}</span>{" "}
-                <time dateTime={article.publishTime}>
-                  {formatPublishDate(article.publishTime, locale)}
-                </time>
-              </>
-            )}
-            {article.category !== null && (
-              <>
-                {" · "}
-                <Link href={buildCategoryPath({ locale, categoryPath: article.category.path })}>
-                  {pickLocalised(article.category.names, locale, article.category.slug)}
-                </Link>
-              </>
-            )}
-          </p>
-          {article.tags.length > 0 && (
-            <ul className="reader-tags">
-              {article.tags.map((tag) => (
-                <li key={tag.id}>
-                  <Link href={buildTagPath({ locale, slug: tag.slug })}>
-                    {pickLocalised(tag.names, locale, tag.slug)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </header>
-        {fellBack && (
-          <FallbackNotice
-            labels={t.reader.fallback}
-            requested={t.chrome.localeNames[locale]}
-            shown={t.chrome.localeNames[translation.locale]}
-          />
-        )}
-        <ArticleLanguageVersions
-          current={locale}
-          versions={links.versions}
-          names={t.chrome.localeNames}
-          labels={t.reader.languages}
+      <div className="reader-article-page">
+        <Breadcrumbs label={t.reader.breadcrumb.label} items={breadcrumbs} />
+        <ArticleView
+          title={translation.title}
+          summary={translation.summary}
+          publishTime={article.publishTime}
+          publishedOn={
+            article.publishTime === null ? "" : formatPublishDate(article.publishTime, locale)
+          }
+          category={category}
+          cover={cover}
+          bodyHtml={html}
+          toc={toc}
+          versions={{ current: locale, links: links.versions, names: t.chrome.localeNames }}
+          fallback={
+            fellBack
+              ? {
+                  requested: t.chrome.localeNames[locale],
+                  shown: t.chrome.localeNames[translation.locale],
+                }
+              : null
+          }
+          tags={article.tags.map((tag) => ({
+            name: pickLocalised(tag.names, locale, tag.slug),
+            href: buildTagPath({ locale, slug: tag.slug }),
+          }))}
+          neighbours={{
+            previous:
+              neighbours?.older == null
+                ? null
+                : {
+                    title: neighbours.older.title,
+                    href: buildArticlePath({ locale, slug: neighbours.older.slug }),
+                  },
+            next:
+              neighbours?.newer == null
+                ? null
+                : {
+                    title: neighbours.newer.title,
+                    href: buildArticlePath({ locale, slug: neighbours.newer.slug }),
+                  },
+          }}
+          labels={{
+            article: t.reader.article,
+            languages: t.reader.languages,
+            fallback: t.reader.fallback,
+            lightbox: t.reader.lightbox,
+          }}
         />
-        <ImageZoom labels={t.reader.lightbox}>
-          <ArticleBody html={html} />
-        </ImageZoom>
-        <nav className="reader-article-nav" aria-label={translation.title}>
-          {neighbours?.older != null && (
-            <Link
-              className="reader-article-previous"
-              href={buildArticlePath({ locale, slug: neighbours.older.slug })}
-            >
-              <span>{t.reader.article.previous}</span>
-              {neighbours.older.title}
-            </Link>
-          )}
-          {neighbours?.newer != null && (
-            <Link
-              className="reader-article-next"
-              href={buildArticlePath({ locale, slug: neighbours.newer.slug })}
-            >
-              <span>{t.reader.article.next}</span>
-              {neighbours.newer.title}
-            </Link>
-          )}
-        </nav>
-      </article>
+      </div>
     </main>
   );
 }

@@ -1,0 +1,405 @@
+/* The Feed reads as a journal, not as a stack of controls: one 42rem column
+   centred in the reading area, the date in its own margin rail from 48rem up,
+   a hairline *between* two Posts, and no frame, no shadow and no hover
+   displacement anywhere in it. A Post has no page of its own, so nothing in
+   this file may suggest that a Post is something you open. */
+
+/* The page head. The Tag filter lives up here rather than at the foot of the
+   stream: it is the scope of the whole page, so it reads as a kicker over the
+   title, the way a Category sits over an Article's H1. The bare header rule in
+   base.css is the console's too, so the padding is reset rather than inherited. */
+.feed-heading {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 42rem;
+  margin-inline: auto;
+  padding: 0 0 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.feed-title {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.feed-lead {
+  max-width: 34rem;
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* A kicker: 12px, tracked, upper case. A han glyph ignores the case and keeps
+   the tracking; the Tag name is the only content that changes. */
+.feed-filter {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.feed-filter a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* One column, and the Posts divide it themselves. There is no gap here: a gap
+   plus a hairline would read as two separate lists. */
+.feed {
+  display: grid;
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+.post-card {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+  padding-block: 2rem;
+}
+
+.post-card:first-child {
+  padding-top: 1.75rem;
+}
+
+/* The line separates two Posts; it never frames one. Only a sibling gets it, so
+   the stream opens under the head's own rule instead of with a second one. */
+.post-card + .post-card {
+  border-top: 1px solid var(--border);
+}
+
+/* The kicker: the time is the only label a Post carries, so it is set as one —
+   tracked and upper case. The size stays at the 14px reading floor rather than
+   the kicker's 12px: a Post's timestamp is content to read, not a label over a
+   title. The tracking is still the kicker's, so the form survives the floor. */
+.post-time {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-body-wrap {
+  min-width: 0;
+}
+
+.post-body {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.post-body p {
+  margin: 0 0 0.85rem;
+}
+
+.post-body > :first-child {
+  margin-top: 0;
+}
+
+.post-body > :last-child {
+  margin-bottom: 0;
+}
+
+.post-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.6rem;
+}
+
+.post-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.post-body blockquote {
+  margin: 0 0 0.85rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--accent);
+  color: var(--muted);
+}
+
+.post-body pre {
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.875rem;
+}
+
+/* A grid child's automatic minimum width is its content's, and the content here
+   is a rich-text body and a scroller. Zeroing it is what keeps forty Posts
+   scrolling inside their galleries instead of sideways across the page. */
+.post-body-measure,
+.post-gallery {
+  min-width: 0;
+}
+
+/* The clamp is only ever applied by the client after it has measured the body;
+   without JavaScript the body simply reads long. */
+.post-body-folded {
+  position: relative;
+  overflow: hidden;
+}
+
+.post-body-folded::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3rem;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}
+
+.post-expand {
+  margin-top: 0.35rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.post-gallery {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.post-gallery-track {
+  display: flex;
+  gap: 0.5rem;
+  /* A real list, with the browser's list furniture removed; the padding is the
+     room the cell's focus ring needs inside the scroller. max-width is what
+     bounds the scroller to the column: its cells are 85% of it, never of the
+     page. */
+  margin: 0;
+  padding: 0.25rem;
+  max-width: 100%;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.post-gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each cell takes most of the track, so the next picture's edge peeks out and
+   the Reader can see there is more to scroll. The box is viewport-relative and
+   the picture fills it with `cover` — deliberately unlike an Article body
+   image, which keeps its original ratio. */
+.post-gallery-cell {
+  flex: 0 0 85%;
+  scroll-snap-align: start;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+/* The focus ring goes on the cell: the picture fills the button, and the cell
+   is what clips it. */
+.post-gallery-cell:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.post-gallery-open {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.post-gallery-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The counter is a chip on the picture rather than a caption under it: it says
+   where you are in the set while you are looking at the set. */
+.post-gallery-counter {
+  position: absolute;
+  left: 1rem;
+  bottom: 0.9rem;
+  margin: 0;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--fg);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The visible counter is "3/9"; this is the sentence a screen reader hears. */
+.post-gallery-counter-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-tag {
+  display: inline-block;
+  padding: 0.1rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.post-tag:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* The end of the stream: one centred ghost pill on its own line, with the
+   notice that belongs to it directly beneath. */
+.feed-more {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  padding-block: 2.5rem 0.5rem;
+}
+
+.feed-more-button {
+  padding: 0.5rem 1.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.feed-more-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.feed-more-button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.feed-more-notice {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.875rem;
+}
+
+.feed-more-notice:empty {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  /* Desktop cells turn landscape; the crop is the same rule, the box moves. */
+  .post-gallery-cell {
+    aspect-ratio: 16 / 9;
+  }
+
+  /* The date moves into its own margin rail and the Post reads to the right of
+     it, so a dozen Posts in a row line up their bodies on one edge. */
+  .post-card {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    column-gap: 2rem;
+  }
+
+  /* The head takes the same date rail, so the H1 and every Post body start on
+     the same edge. */
+  .feed-heading {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    column-gap: 2rem;
+  }
+
+  .feed-heading > * {
+    grid-column: 2;
+  }
+
+  .post-time {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    padding-top: 0.2rem;
+  }
+
+  .post-card > :not(.post-time) {
+    grid-column: 2;
+  }
+}
+
+/* The page H1 takes the same 64rem step as every other browse surface. 48rem is
+   the Feed's own gallery breakpoint, not the site's type scale. */
+@media (min-width: 64rem) {
+  .feed-title {
+    font-size: 3rem;
+  }
+}
+
+.feed-more-button:active,
+.post-expand:active {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .post-gallery-track {
+    scroll-behavior: smooth;
+  }
+
+  /* Colour only. Nothing in the Feed may move on hover: a Post is not an entry
+     point, and a line that lifts is a promise that it is one. */
+  .post-tag,
+  .feed-more-button,
+  .post-expand {
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+}
+
+/* Phone-width reading. A Post renders the same rich text as an Article, so it
+   needs the same rule for a long code line. */
+.post-body pre {
+  overflow-x: auto;
+}
+
+/* Thumb targets, in the one place the contract test reads them. */
+.post-expand,
+.feed-more-button,
+.post-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}

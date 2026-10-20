@@ -10,7 +10,10 @@ import {
   type ReactNode,
 } from "react";
 
+import { wrapIndex } from "@/domain/carousel";
 import type { Messages } from "@/messages";
+
+export { wrapIndex };
 
 export type LightboxLabels = Messages["reader"]["lightbox"];
 
@@ -30,14 +33,6 @@ const FOCUSABLE = [
   "textarea:not([disabled])",
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
-
-/** The picture after `delta`, wrapping at both ends of the set. */
-export function wrapIndex(current: number, delta: number, length: number): number {
-  if (length <= 0) {
-    return 0;
-  }
-  return (((current + delta) % length) + length) % length;
-}
 
 export type TrapTarget = "first" | "last" | null;
 

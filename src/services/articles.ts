@@ -10,9 +10,11 @@ import {
   articleSlugHistory,
   articleTag,
   articleTranslation,
+  asset,
   assetReference,
 } from "@/db/schema";
 import type { Clock } from "@/domain/clock";
+import { buildAssetAddress } from "@/domain/asset-address";
 import { EMPTY_DOCUMENT, isRichTextDocument } from "@/domain/rich-text";
 import {
   isIndexable,
@@ -82,6 +84,8 @@ export interface ArticleRecord<TTranslation extends ArticleTranslationSummary> {
   visibility: PublicationVisibility;
   categoryId: string | null;
   category: CategoryView | null;
+  /** Chosen by the Author; shared by every Locale, because it belongs to the work. */
+  coverAssetId: string | null;
   tags: TagView[];
   translations: TTranslation[];
   createdAt: string;
@@ -115,6 +119,7 @@ export type ArticleMutationFailure =
         | "invalid-publish-time"
         | "unknown-category"
         | "unknown-tag"
+        | "unknown-asset"
         | "default-locale"
         | "last-translation"
         | "not-published"
@@ -247,6 +252,7 @@ function loadRecords<TTranslation extends ArticleTranslationSummary>(
       ),
       categoryId: row.categoryId,
       category: row.categoryId === null ? null : (categoryViews.get(row.categoryId) ?? null),
+      coverAssetId: row.coverAssetId,
       tags,
       translations: (translationsByArticle.get(row.id) ?? [])
         .sort((left, right) => localeOrder(left.locale) - localeOrder(right.locale))
@@ -266,6 +272,12 @@ function loadArticle(ctx: ArticleContext, articleId: string): ArticleDetail | nu
   return detail ?? null;
 }
 
+/**
+ * The Asset references an Article owns: whatever its bodies address, plus the
+ * cover, which lives on the work rather than in the prose. Registering the cover
+ * here is what keeps a chosen image out of the console's unreferenced list and
+ * out of reach of `deleteAsset`.
+ */
 async function syncArticleAssets(ctx: ArticleContext, articleId: string): Promise<void> {
   const translations = ctx.database.db
     .select({
@@ -275,12 +287,29 @@ async function syncArticleAssets(ctx: ArticleContext, articleId: string): Promis
     .from(articleTranslation)
     .where(eq(articleTranslation.articleId, articleId))
     .all();
+  const row = ctx.database.db
+    .select({ coverAssetId: article.coverAssetId })
+    .from(article)
+    .where(eq(article.id, articleId))
+    .get();
 
   await syncTranslationAssets(ctx, {
     contentKind: ARTICLE_CONTENT_KIND,
     contentId: articleId,
     translations,
+    extra:
+      row?.coverAssetId === undefined || row.coverAssetId === null
+        ? []
+        : [buildAssetAddress({ assetId: row.coverAssetId, variant: "display", format: "webp" })],
   });
+}
+
+/** Whether the id names an Asset this site actually stores. */
+function isKnownAsset(ctx: ArticleContext, assetId: string): boolean {
+  return (
+    ctx.database.db.select({ id: asset.id }).from(asset).where(eq(asset.id, assetId)).get() !==
+    undefined
+  );
 }
 
 function isSlugTaken(ctx: ArticleContext, slug: string, articleId: string | null): boolean {
@@ -601,6 +630,7 @@ export async function updateArticleMeta(
     slug?: string;
     defaultLocale?: Locale;
     categoryId?: string | null;
+    coverAssetId?: string | null;
     tagIds?: readonly string[];
   },
 ): Promise<ArticleMutation> {
@@ -636,6 +666,17 @@ export async function updateArticleMeta(
     }
   }
 
+  if (input.coverAssetId !== undefined) {
+    if (input.coverAssetId === null) {
+      updates.coverAssetId = null;
+    } else {
+      if (!isKnownAsset(ctx, input.coverAssetId)) {
+        return { ok: false, reason: "unknown-asset" };
+      }
+      updates.coverAssetId = input.coverAssetId;
+    }
+  }
+
   if (input.slug !== undefined) {
     const failure = renameArticleSlug(ctx, input.articleId, input.slug);
     if (failure !== null) {
@@ -663,6 +704,10 @@ export async function updateArticleMeta(
     .set({ ...updates, updatedAt: ctx.clock.now().toISOString() })
     .where(eq(article.id, input.articleId))
     .run();
+
+  // A cover chosen here is an address outside any body, so the reference has to
+  // be rewritten from the row we just wrote — the same path the bodies use.
+  await syncArticleAssets(ctx, input.articleId);
 
   return finishMutation("article", () => loadArticle(ctx, input.articleId));
 }

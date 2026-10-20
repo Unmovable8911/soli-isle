@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 
+import { AdminPageHead } from "@/components/admin/page-head";
 import { TagManager } from "@/components/admin/tag-manager";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
@@ -20,8 +21,15 @@ export default async function AdminTagsPage() {
 
   return (
     <>
-      <h1>{t.admin.tags.title}</h1>
-      <p>{t.admin.tags.description}</p>
+      <AdminPageHead
+        title={t.admin.tags.title}
+        description={t.admin.tags.description}
+        actions={
+          <a className="admin-page-action" href="#tag-create">
+            {t.admin.tags.create.title}
+          </a>
+        }
+      />
       <TagManager
         tags={tags}
         locale={locale}

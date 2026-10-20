@@ -7,6 +7,8 @@ import type { Messages } from "@/messages";
 import type { ArticleSummary } from "@/services/articles";
 import type { PostSummary } from "@/services/posts";
 
+import { EmptyState } from "../empty-state";
+
 export type DashboardLabels = Messages["admin"]["dashboard"];
 
 /** What the row actions need to know: which work, and how it stands right now. */
@@ -44,82 +46,94 @@ export function DashboardTable({ articles, posts, labels, renderActions }: Dashb
       <section className="dashboard-section" aria-labelledby="dashboard-articles">
         <h2 id="dashboard-articles">{labels.articles.title}</h2>
         {articles.length === 0 ? (
-          <p className="article-empty">{labels.articles.empty}</p>
+          <EmptyState
+            title={labels.articles.emptyTitle}
+            body={labels.articles.empty}
+            action={<Link href="/admin/articles">{labels.articles.newArticle}</Link>}
+          />
         ) : (
-          <table className="article-table">
-            <thead>
-              <tr>
-                <th scope="col">{labels.articles.columns.title}</th>
-                <th scope="col">{labels.articles.columns.slug}</th>
-                <th scope="col">{labels.articles.columns.state}</th>
-                <th scope="col">{labels.articles.columns.publishTime}</th>
-                <th scope="col">{labels.articles.columns.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {articles.map((article) => (
-                <tr key={article.id}>
-                  <td>
-                    <Link href={`/admin/articles/${article.id}`}>
-                      {displayTitle(article, labels.untitled)}
-                    </Link>
-                  </td>
-                  <td>
-                    <code>{article.slug}</code>
-                  </td>
-                  <td>
-                    <span className={`publication-state publication-state-${article.visibility}`}>
-                      {labels.state[article.visibility]}
-                    </span>
-                  </td>
-                  <td>{publishTimeCell(article.publishTime, labels.neverPublished)}</td>
-                  <td>
-                    {renderActions({
-                      kind: "article",
-                      id: article.id,
-                      visibility: article.visibility,
-                    })}
-                  </td>
+          <div className="table-scroll">
+            <table className="article-table">
+              <thead>
+                <tr>
+                  <th scope="col">{labels.articles.columns.title}</th>
+                  <th scope="col">{labels.articles.columns.slug}</th>
+                  <th scope="col">{labels.articles.columns.state}</th>
+                  <th scope="col">{labels.articles.columns.publishTime}</th>
+                  <th scope="col">{labels.articles.columns.actions}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {articles.map((article) => (
+                  <tr key={article.id}>
+                    <td>
+                      <Link href={`/admin/articles/${article.id}`}>
+                        {displayTitle(article, labels.untitled)}
+                      </Link>
+                    </td>
+                    <td>
+                      <code>{article.slug}</code>
+                    </td>
+                    <td>
+                      <span className={`publication-state publication-state-${article.visibility}`}>
+                        {labels.state[article.visibility]}
+                      </span>
+                    </td>
+                    <td>{publishTimeCell(article.publishTime, labels.neverPublished)}</td>
+                    <td>
+                      {renderActions({
+                        kind: "article",
+                        id: article.id,
+                        visibility: article.visibility,
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
       <section className="dashboard-section" aria-labelledby="dashboard-posts">
         <h2 id="dashboard-posts">{labels.posts.title}</h2>
         {posts.length === 0 ? (
-          <p className="article-empty">{labels.posts.empty}</p>
+          <EmptyState
+            title={labels.posts.emptyTitle}
+            body={labels.posts.empty}
+            action={<Link href="/admin/posts">{labels.posts.newPost}</Link>}
+          />
         ) : (
-          <table className="article-table">
-            <thead>
-              <tr>
-                <th scope="col">{labels.posts.columns.open}</th>
-                <th scope="col">{labels.posts.columns.state}</th>
-                <th scope="col">{labels.posts.columns.publishTime}</th>
-                <th scope="col">{labels.posts.columns.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => (
-                <tr key={post.id}>
-                  <td>
-                    <Link href={`/admin/posts/${post.id}`}>{labels.actions.open}</Link>
-                  </td>
-                  <td>
-                    <span className={`publication-state publication-state-${post.visibility}`}>
-                      {labels.state[post.visibility]}
-                    </span>
-                  </td>
-                  <td>{publishTimeCell(post.publishTime, labels.neverPublished)}</td>
-                  <td>
-                    {renderActions({ kind: "post", id: post.id, visibility: post.visibility })}
-                  </td>
+          <div className="table-scroll">
+            <table className="article-table">
+              <thead>
+                <tr>
+                  <th scope="col">{labels.posts.columns.open}</th>
+                  <th scope="col">{labels.posts.columns.state}</th>
+                  <th scope="col">{labels.posts.columns.publishTime}</th>
+                  <th scope="col">{labels.posts.columns.actions}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {posts.map((post) => (
+                  <tr key={post.id}>
+                    <td>
+                      <Link href={`/admin/posts/${post.id}`}>{labels.actions.open}</Link>
+                    </td>
+                    <td>
+                      <span className={`publication-state publication-state-${post.visibility}`}>
+                        {labels.state[post.visibility]}
+                      </span>
+                    </td>
+                    <td>{publishTimeCell(post.publishTime, labels.neverPublished)}</td>
+                    <td>
+                      {renderActions({ kind: "post", id: post.id, visibility: post.visibility })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>

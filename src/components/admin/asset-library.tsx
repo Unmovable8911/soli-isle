@@ -16,6 +16,8 @@ import {
 import type { Messages } from "@/messages";
 import type { AssetSummary } from "@/services/assets";
 
+import { EmptyState } from "../empty-state";
+
 export type AssetLabels = Messages["admin"]["assets"];
 
 export const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp,image/avif,image/gif";
@@ -246,7 +248,7 @@ export function AssetLibrary({ assets, locale, labels }: AssetLibraryProps) {
 
   return (
     <div className="asset-library">
-      <section className="asset-section">
+      <section className="asset-section" id="asset-upload">
         <h2>{labels.upload.label}</h2>
         <p className="asset-hint">{labels.upload.hint}</p>
         <div className="asset-uploader">
@@ -278,7 +280,7 @@ export function AssetLibrary({ assets, locale, labels }: AssetLibraryProps) {
       <section className="asset-section">
         <h2>{labels.list.title}</h2>
         {assets.length === 0 ? (
-          <p className="asset-empty">{labels.list.empty}</p>
+          <EmptyState title={labels.list.emptyTitle} body={labels.list.empty} />
         ) : (
           <ul className="asset-grid">
             {assets.map((asset) => (
@@ -302,7 +304,7 @@ export function AssetLibrary({ assets, locale, labels }: AssetLibraryProps) {
           {deleteNotice ?? ""}
         </p>
         {orphans.length === 0 ? (
-          <p className="asset-empty">{labels.orphans.empty}</p>
+          <EmptyState title={labels.orphans.emptyTitle} body={labels.orphans.empty} />
         ) : (
           <ul className="asset-grid">
             {orphans.map((asset) => (

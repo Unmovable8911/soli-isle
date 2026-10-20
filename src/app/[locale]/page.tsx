@@ -1,25 +1,28 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ArticleList } from "@/components/article-list";
+import { ReaderHome } from "@/components/reader-home";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
-import {
-  buildArchivePath,
-  buildCategoryIndexPath,
-  buildSearchPath,
-} from "@/domain/public-paths";
+import { resolveCategoryPath } from "@/domain/home-listing";
+import { parsePageNumber } from "@/domain/pagination";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { listRecentArticles } from "@/services/reading";
+import { listReaderCategories, listRecentArticles } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const RECENT_LIMIT = 20;
-
 type LocaleParams = { locale: string };
+
+/**
+ * The query string is a URL anyone can edit, so both halves are optional: a
+ * Category path and a page number, and nothing else on Home changes.
+ */
+type HomeSearchParams = {
+  category?: string | string[];
+  page?: string | string[];
+};
 
 export async function generateMetadata({
   params,
@@ -37,41 +40,39 @@ export async function generateMetadata({
   };
 }
 
-export default async function HomePage({ params }: { params: Promise<LocaleParams> }) {
+export default async function HomePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<LocaleParams>;
+  searchParams: Promise<HomeSearchParams>;
+}) {
   const { locale } = await params;
+  const query = await searchParams;
   if (!isLocale(locale)) {
     notFound();
   }
 
-  const t = messages[locale];
   const context = getAppContext();
-  const articles = await listRecentArticles(context.reading, {
-    locale,
-    limit: RECENT_LIMIT,
-  });
+  // The hero, the grid and the paging are one newest-first list, so the whole
+  // set is read once and the component decides how much of it to show.
+  const [articles, categories] = await Promise.all([
+    listRecentArticles(context.reading, { locale }),
+    listReaderCategories(context.reading, { locale }),
+  ]);
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <h1>{t.reader.home.title}</h1>
-      <p className="reader-lead">{t.reader.home.lead}</p>
-      <nav className="reader-entries" aria-label={t.reader.home.title}>
-        <ul>
-          <li>
-            <Link href={buildCategoryIndexPath(locale)}>{t.reader.nav.categories}</Link>
-          </li>
-          <li>
-            <Link href={buildArchivePath(locale)}>{t.reader.nav.archive}</Link>
-          </li>
-          <li>
-            <Link href={buildSearchPath({ locale })}>{t.reader.nav.search}</Link>
-          </li>
-        </ul>
-      </nav>
-      {articles.length === 0 ? (
-        <p className="reader-empty">{t.reader.home.empty}</p>
-      ) : (
-        <ArticleList articles={articles} locale={locale} labels={t.reader.list} />
-      )}
+      <ReaderHome
+        articles={articles}
+        categories={categories}
+        locale={locale}
+        categoryPath={resolveCategoryPath(
+          categories.map((category) => category.path),
+          query.category,
+        )}
+        page={parsePageNumber(query.page)}
+      />
     </main>
   );
 }

@@ -1,0 +1,331 @@
+/* The published body, once. The editor mounts the same rich text through
+   .article-editor-surface, so a table, a callout or a fold block looks the same
+   in the console and on the site by construction rather than by maintenance. */
+
+.article-body {
+  max-width: 65ch;
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.78;
+  /* A pasted URL is one unbreakable word; at 360px it must wrap rather than
+     scroll the whole document sideways. */
+  overflow-wrap: anywhere;
+}
+
+/* The first paragraph opens the piece. A drop cap in the accent is the one
+   ornament the prose gets: it tells the eye where the essay starts, which a
+   heading does not, and it is a classical move rather than a decorative one.
+   It is only ever applied to the first child when that child is a paragraph;
+   an Article that opens on a picture or a heading simply has no drop cap. */
+:lang(en) .article-body > p:first-child::first-letter {
+  float: left;
+  margin: 0.08em 0.12em 0 0;
+  color: var(--accent);
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 3.4em;
+  font-weight: 600;
+  line-height: 0.82;
+}
+
+/* Prose spacing follows the larger type: a paragraph is a beat, a heading is a
+   break, and neither is a font-size change on its own. */
+.article-body p {
+  margin: 0 0 1.6rem;
+}
+
+/* A section opens with a short accent rule instead of an underline: the
+   heading below it stays ink, and the rule is what a Reader's eye catches when
+   scrolling for the next part. */
+.article-body h2 {
+  margin: 3.5rem 0 1.25rem;
+  font-size: 1.75rem;
+  line-height: 1.25;
+  letter-spacing: -0.022em;
+}
+
+.article-body h2::before {
+  content: "";
+  display: block;
+  width: 2.25rem;
+  height: 2px;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.article-body h3 {
+  margin: 2.5rem 0 0.85rem;
+  font-size: 1.375rem;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+}
+
+.article-body h4 {
+  margin: 2rem 0 0.6rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.article-body ul,
+.article-body ol {
+  margin: 0 0 1.6rem;
+  padding-left: 1.35rem;
+}
+
+.article-body li + li {
+  margin-top: 0.4rem;
+}
+
+/* The shell's top bar is sticky, so a table-of-contents link has to stop below
+   it rather than let the heading slide underneath. */
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  scroll-margin-top: 5.5rem;
+}
+
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
+
+/* The quote is set in the display face and pulled out of the column by its
+   rule, because it is the one voice in the piece that is not the author's. */
+.article-body blockquote {
+  margin: 2.5rem 0;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--accent);
+  color: var(--muted);
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.1875rem;
+  line-height: 1.7;
+}
+
+.article-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.article-body pre {
+  overflow-x: auto;
+  margin: 0 0 1.6rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.article-body code {
+  font-size: 0.875em;
+}
+
+/* Inline code gets a tinted chip; a block's own <code> keeps the block's
+   background. */
+.article-body :not(pre) > code {
+  padding: 0.12em 0.35em;
+  border-radius: 0.3rem;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.article-body mark {
+  padding: 0 0.1em;
+  border-radius: 0.15rem;
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg));
+  color: inherit;
+}
+
+.article-body hr {
+  margin: 3rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* A link inside prose is text with a link in it: the underline is what a
+   Reader without colour vision has to go on. The underline is thinned to the
+   accent so the line supports the word instead of striking it through. */
+.article-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.article-body a:hover {
+  text-decoration-color: var(--accent);
+}
+
+.article-body ul[data-type="taskList"] {
+  padding-left: 0;
+  list-style: none;
+}
+
+.article-body ul[data-type="taskList"] li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.article-body ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* Power blocks (issue 09). The same markup is produced for the admin preview
+   and for the public page, so one rule set covers both surfaces; the editor's
+   own surface reuses it through .article-editor-surface. */
+
+/* Tables are read as a list of records, so they are ruled horizontally rather
+   than boxed: a header row with a heavier rule under it, and hairlines between
+   the rows. */
+.article-body table,
+.article-editor-surface table {
+  width: 100%;
+  margin: 0 0 1.75rem;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.article-body th,
+.article-body td,
+.article-editor-surface th,
+.article-editor-surface td {
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-body th,
+.article-editor-surface th {
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.article-body th > p,
+.article-body td > p,
+.article-editor-surface th > p,
+.article-editor-surface td > p {
+  margin: 0;
+}
+
+/* A wide formula scrolls inside the column instead of breaking the layout. */
+.article-body .katex-display,
+.article-editor-surface .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.15rem;
+}
+
+/* The callout is a note beside the prose, not a second article: one rule in the
+   margin and a quiet plate behind it. */
+.article-body .callout,
+.article-editor-surface .callout {
+  margin: 0 0 1.75rem;
+  padding: 1rem 1.25rem;
+  border-left: 2px solid var(--accent);
+  border-radius: 0 0.6rem 0.6rem 0;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+}
+
+.article-body .callout[data-tone="note"],
+.article-editor-surface .callout[data-tone="note"] {
+  border-left-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.article-body .callout[data-tone="warn"],
+.article-editor-surface .callout[data-tone="warn"] {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+}
+
+.article-body .callout[data-tone="danger"],
+.article-editor-surface .callout[data-tone="danger"] {
+  border-left-color: var(--fg);
+  background: var(--surface);
+}
+
+.article-body .callout > .callout-body > :last-child,
+.article-editor-surface .callout > .callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Fold blocks expand through native <details>, so the public page needs no
+   JavaScript. The editor renders its own wrapper with a toggle button. */
+.article-body details {
+  margin: 0 0 1.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+}
+
+.article-body summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.article-body summary::marker {
+  color: var(--accent);
+}
+
+.article-body details[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+.article-editor-surface [data-type="details"] {
+  margin: 0 0 1rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.article-editor-surface .details-toggle {
+  padding: 0 0.35rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.25rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.article-editor-surface summary {
+  font-weight: 600;
+}
+
+/* Footnotes are apparatus: smaller than the prose, separated by the rule that
+   says "the piece is over, the notes begin". */
+.article-body .footnotes {
+  margin: 3rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.article-body .footnote-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.article-body .footnote-list > li {
+  margin-bottom: 0.5rem;
+}
+
+.article-body .footnote-ref,
+.article-body .footnote-back {
+  text-decoration: none;
+}
+
+.article-body .footnote-back {
+  margin-left: 0.35rem;
+}

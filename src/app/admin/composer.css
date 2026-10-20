@@ -1,0 +1,227 @@
+/* The post composer. */
+
+.post-composer button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.post-composer button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.post-composer button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+/* Post composer (ticket 08) — Author side. */
+
+.post-composer {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.post-composer-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.post-composer-header a {
+  color: var(--accent);
+}
+
+.post-composer-save {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.post-composer-main {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.post-composer-surface {
+  min-height: 12rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  outline: none;
+}
+
+/* The writing surface removes the UA ring, so it has to put one back — the same
+   one the Article editor draws. */
+.post-composer-surface:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.post-composer-surface p {
+  margin: 0 0 0.6rem;
+}
+
+.post-composer-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.post-composer-panel h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.post-composer-locales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.post-composer-locales button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.post-composer-remove-locale,
+.post-composer-default-locale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-left: 0.75rem;
+}
+
+.post-composer-default-locale select {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.post-images {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-images li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+}
+
+.post-images img {
+  width: 4rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+.post-images-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.post-composer-hint,
+.post-composer-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.post-composer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-composer-tags li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.post-composer-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.post-composer-inline input,
+.post-composer-inline select,
+.post-composer-publish input {
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.post-composer-publish {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.post-composer-publish .post-composer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.post-composer-state {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.post-composer-error {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  color: var(--fg);
+}
+
+@media (min-width: 64rem) {
+  .post-composer-main {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+/* Reduced motion (ticket 12). The transitions above already sit inside the
+   no-preference query; this block is the belt for anything a later ticket adds,
+   and the one rule that shortens rather than removes — a 0.01ms duration keeps
+   transitionend/animationend firing, so nothing that listens for them breaks.
+   Smooth scrolling is a motion source too, so the preference turns it off. */

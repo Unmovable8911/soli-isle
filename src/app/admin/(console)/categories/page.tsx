@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 
 import { CategoryManager } from "@/components/admin/category-manager";
+import { AdminPageHead } from "@/components/admin/page-head";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
@@ -20,8 +21,15 @@ export default async function AdminCategoriesPage() {
 
   return (
     <>
-      <h1>{t.admin.categories.title}</h1>
-      <p>{t.admin.categories.description}</p>
+      <AdminPageHead
+        title={t.admin.categories.title}
+        description={t.admin.categories.description}
+        actions={
+          <a className="admin-page-action" href="#category-create">
+            {t.admin.categories.create.title}
+          </a>
+        }
+      />
       <CategoryManager
         tree={tree}
         locale={locale}

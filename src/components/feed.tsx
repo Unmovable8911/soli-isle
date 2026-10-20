@@ -8,6 +8,7 @@ import type { FeedCardView } from "@/domain/feed-view";
 import { buildFeedPath } from "@/domain/public-paths";
 import type { Messages } from "@/messages";
 
+import { EmptyState } from "./empty-state";
 import type { LightboxLabels } from "./lightbox";
 import { PostCard, type FeedLabels } from "./post-card";
 
@@ -69,7 +70,7 @@ export function Feed({
   }
 
   if (posts.length === 0) {
-    return <p className="post-empty">{labels.empty}</p>;
+    return <EmptyState title={labels.emptyTitle} body={labels.empty} />;
   }
 
   return (
@@ -109,21 +110,27 @@ export function FeedHeading({
   tag,
   labels,
   title,
+  lead,
 }: {
   locale: Locale;
   tag: { slug: string; name: string } | null;
   labels: FeedLabels;
   title: string;
+  /** One sentence under the title, when the surface wants to introduce itself. */
+  lead?: string;
 }) {
   return (
     <header className="feed-heading">
-      <h1 className="feed-title">{title}</h1>
+      {/* The Tag filter scopes the page, so it sits in the page head as a kicker
+          over the title rather than at the foot of the stream. */}
       {tag !== null && (
         <p className="feed-filter">
           <span>{labels.tagFiltered.replaceAll("{name}", tag.name)}</span>{" "}
           <Link href={buildFeedPath({ locale })}>{labels.clearTag}</Link>
         </p>
       )}
+      <h1 className="feed-title">{title}</h1>
+      {lead !== undefined && <p className="feed-lead">{lead}</p>}
     </header>
   );
 }

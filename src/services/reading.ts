@@ -58,6 +58,19 @@ export interface ReaderTagRef {
   name: string;
 }
 
+/**
+ * The cover a card draws, as the display derivation of the chosen image: cards
+ * crop it, the Article header shows it whole, and both want the same file.
+ * Nullable on the DTO because "no cover" is a legal Article — a list fixture
+ * with no cover still is a ReaderArticleCard, and null is the only way to say
+ * so. Every caller asks `hasCover` rather than re-testing emptiness.
+ */
+export interface ReaderCover {
+  address: string;
+  width: number;
+  height: number;
+}
+
 export interface ReaderArticleCard {
   id: string;
   slug: string;
@@ -65,6 +78,8 @@ export interface ReaderArticleCard {
   summary: string;
   publishTime: string | null;
   category: ReaderCategoryRef | null;
+  /** Null is the one way to say "no cover": a designed state, not a gap. */
+  cover: ReaderCover | null;
   tags: ReaderTagRef[];
   /**
    * Only a search result carries one: the body prose around the keyword it
@@ -72,6 +87,14 @@ export interface ReaderArticleCard {
    * body holds none of the terms.
    */
   snippet?: string | null;
+}
+
+/**
+ * The one test for "does this have a cover", shared by the card, the front
+ * page's lead and the Article header. Absence has exactly one spelling: null.
+ */
+export function hasCover(cover: ReaderCover | null): cover is ReaderCover {
+  return cover !== null;
 }
 
 export interface ReaderCategoryNode {
@@ -131,6 +154,8 @@ interface CardRow {
   article: ArticleRow;
   translation: typeof articleTranslation.$inferSelect;
   slug: string;
+  /** Left-joined: null on every row of an Article that has no cover. */
+  cover: { assetId: string; width: number; height: number } | null;
 }
 
 /**
@@ -140,6 +165,17 @@ interface CardRow {
  */
 function publishedFilter(nowIso: string) {
   return visibleToReader(article.publicationState, article.publishTime, nowIso);
+}
+
+function toCover(row: CardRow["cover"]): ReaderCover | null {
+  if (row === null) {
+    return null;
+  }
+  return {
+    address: buildAssetAddress({ assetId: row.assetId, variant: "display", format: "webp" }),
+    width: row.width,
+    height: row.height,
+  };
 }
 
 function toCard(
@@ -169,6 +205,7 @@ function toCard(
             path: category.path,
             name: pickLocalised(category.names, locale, category.slug),
           },
+    cover: toCover(row.cover),
     tags: tagIds
       .map((tagId) => tags.get(tagId))
       .filter((view): view is NonNullable<typeof view> => view !== undefined)
@@ -202,11 +239,29 @@ function loadTagLinks(
   return links;
 }
 
+/**
+ * The cover half of a card, as one left join on the display derivation. A
+ * missing cover stays a null row rather than a second query per Article.
+ */
+function coverColumns() {
+  return { assetId: assetVariant.assetId, width: assetVariant.width, height: assetVariant.height };
+}
+
+const COVER_JOIN = and(
+  eq(assetVariant.assetId, article.coverAssetId),
+  eq(assetVariant.variant, "display"),
+);
+
 /** The card query, narrowed by whichever publication predicate the surface needs. */
 function queryCards(ctx: ReadingContext, locale: Locale, filter: SQL): ReaderArticleCard[] {
   const db = ctx.database.db;
   const rows = db
-    .select({ article, translation: articleTranslation, slug: articleSlug.slug })
+    .select({
+      article,
+      translation: articleTranslation,
+      slug: articleSlug.slug,
+      cover: coverColumns(),
+    })
     .from(article)
     .innerJoin(
       articleTranslation,
@@ -216,6 +271,7 @@ function queryCards(ctx: ReadingContext, locale: Locale, filter: SQL): ReaderArt
       ),
     )
     .innerJoin(articleSlug, eq(articleSlug.articleId, article.id))
+    .leftJoin(assetVariant, COVER_JOIN)
     .where(filter)
     .orderBy(desc(article.publishTime), desc(article.id))
     .all();
@@ -369,7 +425,12 @@ export async function searchArticles(
   });
 
   const rows = db
-    .select({ article, translation: articleTranslation, slug: articleSlug.slug })
+    .select({
+      article,
+      translation: articleTranslation,
+      slug: articleSlug.slug,
+      cover: coverColumns(),
+    })
     .from(article)
     .innerJoin(
       articleTranslation,
@@ -379,6 +440,7 @@ export async function searchArticles(
       ),
     )
     .innerJoin(articleSlug, eq(articleSlug.articleId, article.id))
+    .leftJoin(assetVariant, COVER_JOIN)
     .where(and(publishedFilter(ctx.clock.now().toISOString()), ...perTerm))
     .orderBy(desc(article.publishTime), desc(article.id))
     .all();

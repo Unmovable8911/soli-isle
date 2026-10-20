@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ReaderArticleCard } from "@/services/reading";
 
-import { ArticleList } from "./article-list";
+import { ArticleGrid } from "./article-grid";
 import { Breadcrumbs } from "./breadcrumbs";
 import { HighlightedText } from "./highlighted-text";
 
@@ -14,8 +14,11 @@ const CARD: ReaderArticleCard = {
   summary: "syntax highlighting for a static site",
   publishTime: "2025-06-15T08:30:00.000Z",
   category: { slug: "notes", path: "notes", name: "Notes" },
+  cover: null,
   tags: [{ slug: "editor", name: "Editor" }],
 };
+
+const COVER = { address: "/media/01JGRID/display.webp", width: 1600, height: 1000 };
 
 describe("highlighted text", () => {
   it("wraps each keyword occurrence in a mark, keeping case", () => {
@@ -60,53 +63,55 @@ describe("breadcrumbs", () => {
   });
 });
 
-describe("article list", () => {
-  const labels = { empty: "Nothing here yet." };
+describe("the Article grid", () => {
+  const empty = "Nothing here yet.";
 
-  it("shows the title, summary, Publish Time and Category of each Article", () => {
-    const html = renderToStaticMarkup(
-      <ArticleList articles={[CARD]} locale="en" labels={labels} />,
-    );
+  it("draws the front page's card, in the front page's grid", () => {
+    const html = renderToStaticMarkup(<ArticleGrid articles={[CARD]} locale="en" empty={empty} />);
 
+    expect(html).toContain('<ul class="article-grid">');
+    expect(html).toContain('class="article-card"');
     expect(html).toContain('href="/en/articles/hello-world"');
     expect(html).toContain("Hello, World");
     expect(html).toContain("syntax highlighting for a static site");
     expect(html).toContain('dateTime="2025-06-15T08:30:00.000Z"');
     expect(html).toContain("June 15, 2025");
+    // The Category is the card's kicker, and it links where it names.
     expect(html).toContain('href="/en/categories/notes"');
+    expect(html).toContain("Notes");
   });
 
-  it("links Tags on the card", () => {
+  it("crops a cover in the card's own frame", () => {
     const html = renderToStaticMarkup(
-      <ArticleList articles={[CARD]} locale="zh" labels={labels} />,
+      <ArticleGrid articles={[{ ...CARD, cover: COVER }]} locale="en" />,
     );
 
-    expect(html).toContain('href="/zh/tags/editor"');
+    expect(html).toContain("<img");
+    expect(html).toContain('src="/media/01JGRID/display.webp"');
   });
 
-  it("highlights search keywords in the summary", () => {
+  it("marks search keywords in the excerpt", () => {
     const html = renderToStaticMarkup(
-      <ArticleList articles={[CARD]} locale="en" labels={labels} highlight={["highlighting"]} />,
+      <ArticleGrid articles={[CARD]} locale="en" terms={["highlighting"]} />,
     );
 
     expect(html).toContain("<mark>highlighting</mark>");
   });
 
-  it("highlights search keywords in the title too", () => {
+  it("marks search keywords in the title too", () => {
     const html = renderToStaticMarkup(
-      <ArticleList articles={[CARD]} locale="en" labels={labels} highlight={["Hello"]} />,
+      <ArticleGrid articles={[CARD]} locale="en" terms={["Hello"]} />,
     );
 
     expect(html).toContain("<mark>Hello</mark>, World");
   });
 
-  it("shows the body snippet in place of the summary when the card carries one", () => {
+  it("shows a search result's body excerpt instead of the summary", () => {
     const html = renderToStaticMarkup(
-      <ArticleList
+      <ArticleGrid
         articles={[{ ...CARD, snippet: "…the needle sits here…" }]}
         locale="en"
-        labels={labels}
-        highlight={["needle"]}
+        terms={["needle"]}
       />,
     );
 
@@ -115,8 +120,12 @@ describe("article list", () => {
   });
 
   it("says so when there is nothing to list", () => {
-    const html = renderToStaticMarkup(<ArticleList articles={[]} locale="en" labels={labels} />);
+    const html = renderToStaticMarkup(<ArticleGrid articles={[]} locale="en" empty={empty} />);
 
-    expect(html).toContain("Nothing here yet.");
+    expect(html).toBe('<p class="reader-empty">Nothing here yet.</p>');
+  });
+
+  it("draws no grid at all for a surface that words its own empty state", () => {
+    expect(renderToStaticMarkup(<ArticleGrid articles={[]} locale="en" />)).toBe("");
   });
 });

@@ -99,6 +99,10 @@ export const article = sqliteTable(
     categoryId: text("category_id").references((): AnySQLiteColumn => category.id, {
       onDelete: "set null",
     }),
+    /** The piece's one cover, chosen by the Author and shared by every Locale. */
+    coverAssetId: text("cover_asset_id").references((): AnySQLiteColumn => asset.id, {
+      onDelete: "set null",
+    }),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },

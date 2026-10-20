@@ -1,0 +1,277 @@
+/* The reset, the type faces, the shared shell every surface sits in, and the one
+   motion switch no animation may escape. Colours are named, never written:
+   tokens.css is the only file in this tree that may contain one.
+
+   Both faces are self-hosted latin subsets — no third party learns who is
+   reading, and an offline reader still gets the real type. font-display: swap
+   because the first paint is mostly the Chinese system face anyway; a Latin
+   face must not hold the text back while it arrives.
+
+   The page is set on warm paper with one very wide, very faint wash of the
+   accent behind the masthead. It is not a texture and it is not a gradient
+   "effect": at 4% it is the difference between paper and a screenshot of
+   paper, and it disappears entirely in print. */
+
+@font-face {
+  font-family: "Lora";
+  src: url("/fonts/lora-latin-wght-normal.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* One stack per role, Chinese included: a han glyph falls through to the next
+   family in the same declaration, so no element needs a second rule for it. */
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(
+    72rem 44rem at 72% -14rem,
+    color-mix(in srgb, var(--accent) 5%, transparent),
+    transparent 68%
+  );
+  background-repeat: no-repeat;
+  color: var(--fg);
+  font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Chinese is set by the same two stacks; only the metrics change. A han glyph
+   wants air between the lines and a hair of tracking, and it does not want the
+   negative tracking a Latin display face is cut for. Scoped to the prose
+   surfaces: a console row is a console row in either language. */
+:lang(zh) .article-body,
+:lang(zh) .post-body {
+  line-height: 1.9;
+  letter-spacing: 0.01em;
+}
+
+:lang(zh) h1,
+:lang(zh) h2,
+:lang(zh) h3,
+:lang(zh) h4,
+:lang(zh) h5,
+:lang(zh) h6 {
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+img {
+  max-width: 100%;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--fg);
+}
+
+a {
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Out of the way until it takes focus, then a real, visible control: the first
+   Tab of every public document lands here, the second Enter in `main`. */
+.skip-link {
+  position: absolute;
+  top: -4rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.375rem;
+  background: var(--bg);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.skip-link:focus-visible {
+  top: 0.75rem;
+}
+
+/* The bare-surface state, shared by the reading pages and the console: a title
+   that names what is missing, one sentence about why, and the action where the
+   Reader has one. A rule here rather than per surface is what stops the first
+   empty page someone meets from being the one nobody styled. */
+.empty-state {
+  max-width: 42rem;
+  margin: 0;
+  padding: 3rem 0 4rem;
+}
+
+/* The dead ends' eyebrow: the response code, said in the type it is said in
+   everywhere else on the site. */
+.empty-state-kicker {
+  margin: 0 0 0.75rem;
+  color: var(--accent);
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 3.5rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.empty-state-title {
+  margin: 0 0 0.75rem;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.empty-state-body {
+  max-width: 38ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.empty-state-action {
+  margin: 1.75rem 0 0;
+}
+
+/* A link home and the error page's retry are the same action, so they are the
+   same control: a ghost pill whose shape carries it without an underline. */
+.empty-state-action a,
+.empty-state-action button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  text-decoration: none;
+}
+
+.empty-state-action button {
+  cursor: pointer;
+}
+
+.empty-state-action a:hover,
+.empty-state-action button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .empty-state-action a,
+  .empty-state-action button {
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+}
+
+/* The console's top bar and the sign-in page still use the bare element rules
+   below; the public site overrides them in reader/shell.css. */
+header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.site-name {
+  margin-right: auto;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+header nav ul {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+header nav a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+main {
+  padding: 1.25rem;
+}
+
+/* Reduced motion. Every transition lives inside a no-preference query; this
+   block is the belt for anything a later layer adds, and the one rule that
+   shortens rather than removes — a 0.01ms duration keeps transitionend and
+   animationend firing, so nothing listening for them breaks. Smooth scrolling
+   is a motion source too, so the preference turns it off. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Thumb targets for the two shell bars. A bare `header a` would also reach the
+   Article's kicker and Locale pills, which are type rather than bar controls:
+   they would render 44px tall with their text stuck to the top. The bars each
+   name their own links instead. */
+.site-topbar a,
+.site-topbar button,
+.admin-topbar a,
+.admin-topbar button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}

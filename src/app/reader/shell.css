@@ -1,0 +1,587 @@
+/* The public shell: a 64px sticky top bar carrying the wordmark, the sections,
+   the search field and the language and theme controls; a native <details>
+   drawer below 64rem carrying the same sections and controls; and the footer
+   every page closes on.
+
+   The sections live in the bar on desktop and in the drawer below 64rem. Both
+   copies are in the DOM and the breakpoint decides which one a pointer and a
+   Tab can reach, so the shell needs no client state to open the menu. The
+   reading column is capped and centred rather than stretched across a wide
+   desktop (ADR-0006). */
+
+.site-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  height: 4rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.15);
+}
+
+/* The wordmark: a small drawn island beside the name. The mark is the accent's
+   only appearance in the bar, which is what makes the name read as a masthead
+   rather than as another link. */
+.site-brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.site-brand-mark {
+  flex: none;
+  color: var(--accent);
+}
+
+.site-brand .site-name {
+  margin-right: 0;
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* The sections are in the bar from 64rem up and in the drawer below it. */
+.site-topbar-nav {
+  display: none;
+}
+
+/* The search field is one pill: the input draws the boundary, the submit button
+   sits inside it on the right. The bar hides it below 64rem, where the drawer
+   carries the same form. */
+.site-search {
+  display: none;
+  flex: 0 1 21rem;
+  min-width: 0;
+}
+
+.site-search-field {
+  position: relative;
+}
+
+.site-search-label {
+  display: block;
+  margin-bottom: 0.55rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.site-search input {
+  width: 100%;
+  height: 3.25rem;
+  min-width: 0;
+  padding: 0 3.75rem 0 1.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+.site-search input::placeholder {
+  color: var(--muted);
+}
+
+.site-search input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.site-search-submit {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
+.site-search-submit:hover {
+  background: color-mix(in srgb, var(--accent) 86%, var(--fg));
+}
+
+.site-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* The language menu and the theme button travel together: on desktop they sit
+   at the right of the bar, and below 64rem they sit at the foot of the drawer. */
+.site-topbar-controls {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-search-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+/* The theme button: one control that cycles system → light → dark. The icon is
+   the visible label; the accessible name says which preference is active. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* The language picker is a native disclosure: one summary, one panel of links.
+   It needs no script to open, and the links keep working without JavaScript. */
+.site-locale-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.site-locale-menu summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+}
+
+.site-locale-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-locale-menu summary:hover,
+.site-locale-menu[open] summary {
+  border-color: var(--accent);
+}
+
+.site-locale-menu:not([open]) > .site-locale-panel {
+  display: none;
+}
+
+.site-locale-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  z-index: 5;
+  min-width: 10rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow: 0 18px 40px -24px color-mix(in srgb, var(--fg) 45%, transparent);
+}
+
+.site-locale ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-locale a {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.site-locale a:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.site-locale a[aria-current="page"] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.site-menu summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 0.9375rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.site-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A closed drawer must not be reachable by Tab, and the UA's own hiding of a
+   closed <details> is not something to depend on once the panel is positioned:
+   say it here. */
+.site-menu:not([open]) > *:not(summary) {
+  display: none;
+}
+
+/* The drawer hangs under the bar instead of pushing the page down: the bar is
+   sticky, so it is the containing block for this absolutely positioned panel. */
+.site-menu-panel {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem 2.5rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.site-menu-panel .site-search {
+  display: block;
+  margin: 0 0 1.75rem;
+}
+
+.site-menu-heading {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.site-menu-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+/* In the drawer the language panel opens upward: the control sits at the foot
+   of the panel, where a downward panel would be clipped. */
+.site-menu-panel .site-locale-panel {
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+}
+
+.site-nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  color: var(--fg);
+}
+
+.site-nav a[aria-current="page"] {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* The drawer marks the current section with a short accent rule in the gutter,
+   not a dot inside the line: every label then starts on the same edge whether
+   it is current or not. The bar has no gutter, so it drops the rule. */
+.site-nav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  width: 2px;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.site-content {
+  width: 100%;
+  max-width: 80rem;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+/* The sign-off. One compact rule: the masthead and its one-line description on
+   the left, the two sections and the year on the right. The old footer stacked
+   three full-width bands and read like a second masthead. */
+.site-footer {
+  margin-top: 2.5rem;
+  padding: 1.25rem 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.site-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 1.5rem;
+}
+
+.site-footer-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.125rem 0.75rem;
+  min-width: 0;
+}
+
+.site-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--fg);
+  font-family: "Lora", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+}
+
+.site-footer-note {
+  display: none;
+  margin: 0;
+  max-width: 24rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.site-footer-nav {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.site-footer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.site-footer-nav a:hover {
+  color: var(--accent);
+}
+
+.site-footer-meta {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.site-footer-meta p {
+  margin: 0;
+}
+
+.site-footer-top-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-footer-top-link:hover {
+  color: var(--accent);
+}
+
+@media (min-width: 48rem) {
+  .site-footer-inner {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .site-footer-note {
+    display: block;
+  }
+
+  .site-footer-nav {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .site-footer-meta {
+    grid-column: auto;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+}
+
+/* Thumb targets. The bar's own links come from base.css; these are the ones the
+   bar's controls, the drawer and the footer add. */
+.site-menu summary,
+.site-locale-menu summary,
+.theme-toggle,
+.site-search-submit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+@media (min-width: 64rem) {
+  /* Keep the bar's content on the same left edge as the capped reading column:
+     80rem column, 2.5rem main padding, so the text edge is 75rem wide. */
+  .site-topbar {
+    padding-inline: max(2.5rem, calc((100% - 75rem) / 2));
+  }
+
+  .site-topbar-nav {
+    display: block;
+    margin-left: 0.5rem;
+  }
+
+  .site-topbar .site-nav ul {
+    flex-direction: row;
+    gap: 1.25rem;
+  }
+
+  .site-topbar .site-nav a[aria-current="page"]::before {
+    display: none;
+  }
+
+  .site-search {
+    display: block;
+    margin-left: auto;
+  }
+
+  /* The search field, not the action group, is what absorbs the free space. */
+  .site-topbar-actions {
+    margin-left: 0;
+  }
+
+  .site-topbar-controls {
+    display: flex;
+  }
+
+  /* More specific than base.css's `.site-topbar a`, which is what sets a bar
+     link's display in the first place. */
+  .site-topbar .site-search-link {
+    display: none;
+  }
+
+  .site-menu {
+    display: none;
+  }
+
+  .site-content > main {
+    padding: 2.5rem 2.5rem 3rem;
+  }
+
+  .site-footer {
+    margin-top: 3rem;
+    padding: 1.5rem 2.5rem 2rem;
+  }
+}
+
+.site-search-submit:active,
+.theme-toggle:active,
+.site-locale-menu summary:active,
+.site-menu summary:active {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-nav a,
+  .site-locale a,
+  .site-footer-nav a,
+  .site-footer-top-link,
+  .site-search-submit,
+  .theme-toggle,
+  .site-locale-menu summary {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  }
+
+  .site-locale-menu summary svg {
+    transition: transform 150ms ease;
+  }
+
+  .site-locale-menu[open] summary svg {
+    transform: rotate(180deg);
+  }
+
+  .site-brand-mark {
+    transition: transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .site-brand:hover .site-brand-mark {
+    transform: rotate(-8deg);
+  }
+}

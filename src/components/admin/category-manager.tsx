@@ -153,7 +153,11 @@ export function CategoryManager({ tree, locale, labels, localeNames }: CategoryM
         </p>
       )}
 
-      <section className="category-create" aria-labelledby={`${nameId}-heading`}>
+      <section
+        className="category-create"
+        id="category-create"
+        aria-labelledby={`${nameId}-heading`}
+      >
         <h2 id={`${nameId}-heading`}>{labels.create.title}</h2>
         <form
           className="category-create-form"

@@ -7,6 +7,7 @@ import { PostBody, PostCard, PostGallery, galleryNextIndex } from "./post-card";
 
 const LABELS = {
   title: "Feed",
+  emptyTitle: "The stream is empty",
   empty: "No posts yet.",
   loadOlder: "Load older",
   loading: "Loading…",
@@ -15,6 +16,7 @@ const LABELS = {
   gallery: { label: "Image gallery", counter: "Image {current} of {total}" },
   tagFiltered: "Tag: {name}",
   clearTag: "Show every post",
+  lead: "Shorter thoughts, newest first.",
 };
 
 const LIGHTBOX_LABELS = {
@@ -80,6 +82,19 @@ describe("a feed card", () => {
     expect(html).not.toContain("/posts/");
     expect(html).not.toContain("share");
     expect(html).not.toContain("like");
+  });
+
+  it("offers no control that suggests the card itself is something to open", () => {
+    const html = render(
+      <PostCard post={POST} locale="zh" labels={LABELS} lightboxLabels={LIGHTBOX_LABELS} />,
+    );
+
+    // An article, not a link and not a button: the card has no interactive role
+    // of its own, and the gallery is the only control inside it.
+    expect(html).toMatch(/^<article class="post-card"/);
+    expect(html).not.toContain('role="link"');
+    const controls = [...html.matchAll(/<button[^>]*class="([^"]*)"/g)].map((match) => match[1]);
+    expect(controls).toEqual(["post-gallery-open", "post-gallery-open"]);
   });
 
   it("emits a machine-readable absolute time and the exact minute on hover", () => {
@@ -188,6 +203,16 @@ describe("the fold", () => {
     expect(html).toContain('class="post-body post-body-folded"');
     expect(html).toContain("max-height:320px");
     expect(html).toContain("Read more");
+  });
+
+  it("folds in place: the control is a button, and nothing here navigates", () => {
+    const html = folded(true);
+
+    expect(html).toContain('<button type="button" class="post-expand">Read more</button>');
+    // Expanding is client state. An anchor is the only element that can change
+    // the URL or fetch a document, and the folded body holds none.
+    expect(html).not.toContain("<a ");
+    expect(html).not.toContain("href");
   });
 
   it("leaves a body that fits alone", () => {

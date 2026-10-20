@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { Locale } from "@/config/site";
@@ -22,6 +23,7 @@ import {
   findArticleNeighbours,
   findReaderCategory,
   findReaderTag,
+  hasCover,
   listArchiveArticles,
   listIndexableArticlePaths,
   listReaderCategories,
@@ -720,5 +722,93 @@ describe("body images", () => {
     );
 
     expect(images.size).toBe(0);
+  });
+});
+describe("the cover on a card", () => {
+  /** An upload always has a display variant; the card is served that one. */
+  function insertCover(fixture: Fixture, assetId: string, width: number, height: number): void {
+    const sqlite = fixture.harness.database.sqlite;
+    sqlite
+      .prepare(
+        "INSERT INTO asset (id, file_name, mime_type, byte_size, width, height, content_hash, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(assetId, "cover.png", "image/png", 2048, width, height, "hash", "2025-06-01T00:00:00.000Z");
+    sqlite
+      .prepare(
+        "INSERT INTO asset_variant (asset_id, variant, byte_size, width, height, format) VALUES (?, ?, ?, ?, ?, ?)",
+      )
+      .run(assetId, "display", 900, width, height, "webp");
+  }
+
+  it("carries the cover address and the ratio the crop needs", async () => {
+    const fixture = await createFixture();
+    const seeded = await seedPublished(fixture, {
+      title: "Covered",
+      publishTime: "2025-06-01T00:00:00.000Z",
+    });
+    const coverId = randomUUID();
+    insertCover(fixture, coverId, 1600, 1000);
+    await updateArticleMeta(fixture.articles, { articleId: seeded.id, coverAssetId: coverId });
+
+    const cards = await listRecentArticles(fixture.reading, { locale: "zh" });
+
+    expect(cards[0]?.cover).toEqual({
+      address: `/media/${coverId}/display.webp`,
+      width: 1600,
+      height: 1000,
+    });
+  });
+
+  it("has no cover when the Article has none", async () => {
+    const fixture = await createFixture();
+    await seedPublished(fixture, { title: "Plain", publishTime: "2025-06-01T00:00:00.000Z" });
+
+    const cards = await listRecentArticles(fixture.reading, { locale: "zh" });
+
+    expect(cards[0]?.cover).toBeNull();
+  });
+
+  it.each(["search", "archive", "neighbours"] as const)(
+    "carries the cover on %s results too",
+    async (surface) => {
+      const fixture = await createFixture();
+      const older = await seedPublished(fixture, {
+        title: "Older",
+        publishTime: "2025-06-01T00:00:00.000Z",
+      });
+      const newer = await seedPublished(fixture, {
+        title: "Newer",
+        publishTime: "2025-06-02T00:00:00.000Z",
+      });
+      const coverId = randomUUID();
+      insertCover(fixture, coverId, 1600, 1000);
+      await updateArticleMeta(fixture.articles, { articleId: newer.id, coverAssetId: coverId });
+
+      const address = `/media/${coverId}/display.webp`;
+      if (surface === "search") {
+        const found = await searchArticles(fixture.reading, { locale: "zh", query: "Newer" });
+        expect(found.results[0]?.cover?.address).toBe(address);
+      } else if (surface === "archive") {
+        const listed = await listArchiveArticles(fixture.reading, { locale: "zh" });
+        expect(listed.map((card) => card.cover?.address ?? null)).toEqual([address, null]);
+      } else {
+        const neighbours = await findArticleNeighbours(fixture.reading, {
+          locale: "zh",
+          articleId: older.id,
+        });
+        expect(neighbours?.newer?.cover?.address).toBe(address);
+      }
+    },
+  );
+});
+
+describe("a card's cover", () => {
+  const cover = { address: "/media/01JCOVER/display.webp", width: 1600, height: 1000 };
+
+  it("is one nullable field with one test, shared by every surface", () => {
+    // "No cover" is a legal Article, not a missing one: null is the only way to
+    // say so, and the predicate is the only way to ask.
+    expect(hasCover(null)).toBe(false);
+    expect(hasCover(cover)).toBe(true);
   });
 });

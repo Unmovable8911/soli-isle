@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ArticleList } from "@/components/article-list";
+import { ArchiveIndex } from "@/components/archive-index";
+import { CategoryPills } from "@/components/category-pills";
+import { EmptyState } from "@/components/empty-state";
+import { ReaderPageHead } from "@/components/reader-page-head";
 import { MAIN_CONTENT_ID } from "@/components/skip-link";
 import { isLocale } from "@/config/site";
-import { archiveMonths, formatArchiveMonth } from "@/domain/article-time";
+import { archiveMonths } from "@/domain/article-time";
 import { messages } from "@/messages";
 import { getAppContext } from "@/server/app-context";
-import { listArchiveArticles } from "@/services/reading";
+import { listArchiveArticles, listReaderCategories } from "@/services/reading";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -33,23 +36,40 @@ export default async function ArchivePage({ params }: { params: Promise<{ locale
 
   const t = messages[locale];
   const context = getAppContext();
-  const articles = await listArchiveArticles(context.reading, {
-    locale,
-  });
+  const [articles, categories] = await Promise.all([
+    listArchiveArticles(context.reading, {
+      locale,
+    }),
+    listReaderCategories(context.reading, { locale }),
+  ]);
   const months = archiveMonths(articles, (article) => article.publishTime);
 
   return (
     <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-      <h1>{t.reader.archive.title}</h1>
+      <ReaderPageHead
+        locale={locale}
+        title={t.reader.archive.title}
+        lead={t.reader.archive.lead}
+        count={articles.length}
+      />
+      {categories.length > 0 && (
+        <section
+          id="categories"
+          className="archive-categories"
+          aria-labelledby="archive-categories-head"
+        >
+          <h2 id="archive-categories-head" className="archive-categories-head">
+            {t.reader.category.heading}
+          </h2>
+          <div className="reader-category-index">
+            <CategoryPills categories={categories} locale={locale} />
+          </div>
+        </section>
+      )}
       {months.length === 0 ? (
-        <p className="reader-empty">{t.reader.archive.empty}</p>
+        <EmptyState title={t.reader.archive.emptyTitle} body={t.reader.archive.empty} />
       ) : (
-        months.map((month) => (
-          <section key={`${month.year}-${month.month}`} className="reader-month">
-            <h2>{formatArchiveMonth(month.year, month.month, locale)}</h2>
-            <ArticleList articles={month.items} locale={locale} labels={t.reader.list} />
-          </section>
-        ))
+        <ArchiveIndex months={months} locale={locale} />
       )}
     </main>
   );

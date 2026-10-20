@@ -71,6 +71,7 @@ export default async function FeedPage({
         tag={view.tag}
         labels={t.reader.feed}
         title={t.reader.feed.title}
+        lead={t.reader.feed.lead}
       />
       <Feed
         initialPosts={view.posts}

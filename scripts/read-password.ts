@@ -34,6 +34,9 @@ function readHiddenLine(prompt: string): Promise<string> {
 
     process.stdout.write(prompt);
     stdin.setRawMode(true);
+    // In raw mode the TTY delivers Buffers, so "\r" and Ctrl-C (byte 3) would
+    // never match the string comparisons below without decoding first.
+    stdin.setEncoding("utf8");
     stdin.resume();
     stdin.on("data", onData);
   });

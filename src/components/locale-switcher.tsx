@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import { ChevronDownIcon } from "@/components/icons";
 import { siteConfig, type Locale } from "@/config/site";
 import { swapLocalePathname } from "@/domain/locale";
 
@@ -25,23 +26,31 @@ export default function LocaleSwitcher({ current, names, label }: LocaleSwitcher
   }
 
   return (
-    <nav aria-label={label}>
-      <ul>
-        {siteConfig.locales.map((locale) => {
-          const href = `${swapLocalePathname(pathname, locale)}${query ? `?${query}` : ""}`;
-          return (
-            <li key={locale}>
-              <Link
-                href={href}
-                aria-current={locale === current ? "page" : undefined}
-                onClick={() => handleClick(locale)}
-              >
-                {names[locale]}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <details className="site-locale-menu">
+      <summary aria-label={`${label}: ${names[current]}`}>
+        <span>{names[current]}</span>
+        <ChevronDownIcon width="14" height="14" />
+      </summary>
+      <div className="site-locale-panel">
+        <nav className="site-locale" aria-label={label}>
+          <ul>
+            {siteConfig.locales.map((locale) => {
+              const href = `${swapLocalePathname(pathname, locale)}${query ? `?${query}` : ""}`;
+              return (
+                <li key={locale}>
+                  <Link
+                    href={href}
+                    aria-current={locale === current ? "page" : undefined}
+                    onClick={() => handleClick(locale)}
+                  >
+                    {names[locale]}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+    </details>
   );
 }

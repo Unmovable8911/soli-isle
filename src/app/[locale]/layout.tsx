@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import LocaleSwitcher from "@/components/locale-switcher";
-import { SiteNav } from "@/components/site-nav";
-import { SkipLink } from "@/components/skip-link";
-import ThemeToggle from "@/components/theme-toggle";
+import { SiteShell } from "@/components/site-shell";
 import { isLocale } from "@/config/site";
 import { messages } from "@/messages";
 import { themeInitScript } from "../theme-init";
@@ -53,29 +49,14 @@ export default async function LocaleLayout({
         <script data-theme-init dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        <SkipLink label={t.chrome.skipToContent} />
-        <header>
-          <Link href={`/${locale}`} className="site-name">
-            {t.chrome.siteName}
-          </Link>
-          <Suspense fallback={null}>
-            <LocaleSwitcher
-              current={locale}
-              names={t.chrome.localeNames}
-              label={t.chrome.switchLocaleLabel}
-            />
-          </Suspense>
-          <SiteNav locale={locale} labels={t.reader.nav} />
-          <ThemeToggle
-            labels={{
-              system: t.chrome.themeSystem,
-              light: t.chrome.themeLight,
-              dark: t.chrome.themeDark,
-            }}
-            ariaLabel={t.chrome.themeLabel}
-          />
-        </header>
-        {children}
+        <SiteShell
+          locale={locale}
+          chrome={t.chrome}
+          nav={t.reader.nav}
+          search={t.reader.search}
+        >
+          {children}
+        </SiteShell>
       </body>
     </html>
   );

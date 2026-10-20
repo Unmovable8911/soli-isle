@@ -1,0 +1,47 @@
+/* The palette, in one place and nowhere else. src/app/globals-css.test.ts reads
+   this file as data and asserts every registered pair in both themes, so a hex
+   value edited here for looks is a hex value that has to pass WCAG on the way
+   out.
+
+   The light theme is printed on warm paper, not on a screen's white: a
+   publication that people read for an hour should not be lit like a control
+   panel. --surface is the same paper lifted by one step, for cards, panels and
+   the search field. The dark theme is the same page under a reading lamp:
+   near-black paper with a warm cast, never pure #000.
+
+   Two of the eight roles are the same warm grey family but not the same job:
+   --border is decoration (a hairline between two things nobody has to perceive
+   as an edge, 1.2:1 in the light theme), --border-strong is the boundary of a
+   control, and WCAG 1.4.11 asks that one for 3:1. Keeping them apart is what
+   stops "make it look cleaner" from quietly lowering an input's edge to the
+   hairline. --on-accent is the label colour on a filled accent control; in the
+   light theme the accent is dark enough for paper, in the dark theme it is
+   light enough that ink has to be dark.
+
+   The backplate behind a dialog is deliberately not a token: it stays
+   color-mix(in srgb, var(--fg) 55%, transparent), so it darkens with the theme
+   without inventing a ninth role. */
+
+:root {
+  --bg: #f8f5ef;
+  --surface: #fffdf9;
+  --fg: #1a1815;
+  --muted: #6a645b;
+  --border: #e6e0d5;
+  --border-strong: #857e72;
+  --accent: #2f5c45;
+  --on-accent: #fbf9f4;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #111110;
+  --surface: #1a1917;
+  --fg: #f2eee6;
+  --muted: #a8a29a;
+  --border: #2a2825;
+  --border-strong: #7d766b;
+  --accent: #86c5a0;
+  --on-accent: #0d120f;
+  color-scheme: dark;
+}

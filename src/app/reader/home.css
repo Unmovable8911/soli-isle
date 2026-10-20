@@ -1,0 +1,507 @@
+/* The front page: the newest five Articles as a hero, then the rest as a
+   borderless grid of covers and titles.
+
+   The hero is one cover at a time with the type laid over it. Its shade and its
+   type are a single inversion — the scrim is painted from --fg, the words on it
+   from --bg — so light theme sets paper on ink and dark theme sets ink on paper,
+   both from measured token pairs rather than a colour invented over a
+   photograph. The cards below keep the ordinary paper and ink.
+
+   No Article has to have a cover. A covered card is a picture and its caption;
+   a bare one becomes a bordered plate of type, so the absence reads as a chosen
+   state rather than as a failed image. The hero makes the same promise: a bare
+   slide is a solid plate of ink with the same type on it. In a grid row the
+   cards grow to the row's height and the meta line is pushed to the bottom, so
+   a covered card and a bare one line up without either looking broken. */
+
+/* The visible page starts with the cover, but the document still needs a
+   first-level heading: the site's name is kept for assistive technology. */
+.home-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The hero. Every slide shares one grid cell, so the frame is as tall as its
+   longest slide: a long title decides the height instead of being cropped by a
+   fixed aspect ratio. */
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0 0 4.5rem;
+  border-radius: 1rem;
+  background: var(--fg);
+}
+
+.home-hero-slides {
+  display: grid;
+}
+
+.home-hero-slide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: clamp(24rem, 52vw, 36rem);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  padding-bottom: clamp(3.75rem, 6vw, 4.5rem);
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.home-hero-slide--active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* A bare slide is a plate of ink with the same type on it, not a hole where a
+   picture should have been. */
+.home-hero-slide--bare {
+  background: var(--fg);
+}
+
+/* The picture is the ground, the shade is the ink it is read through, and the
+   type is the only thing above both. */
+.home-hero-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-hero-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    var(--fg) 0%,
+    color-mix(in srgb, var(--fg) 94%, transparent) 40%,
+    color-mix(in srgb, var(--fg) 80%, transparent) 68%,
+    color-mix(in srgb, var(--fg) 34%, transparent) 88%,
+    transparent 100%
+  );
+}
+
+.home-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 46rem;
+  min-width: 0;
+}
+.home-hero-category {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 1rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.home-hero-title {
+  margin: 0 0 0.9rem;
+  color: var(--bg);
+  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.home-hero-title a {
+  color: var(--bg);
+  text-decoration: none;
+}
+
+.home-hero-title a:hover,
+.home-hero-title a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+/* Two lines, then an ellipsis: the excerpt is a way in, not the Article. */
+.home-hero-summary {
+  display: -webkit-box;
+  max-width: 40rem;
+  overflow: hidden;
+  margin: 0 0 1rem;
+  color: var(--bg);
+  font-size: clamp(0.9375rem, 1.4vw, 1.0625rem);
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.home-hero-meta {
+  margin: 0;
+  color: var(--bg);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+/* Arrows sit at the height of the picture and stay out of the way until the
+   pointer or the focus ring is inside; the cover is the reason to look. */
+.home-hero-arrow,
+.home-hero-pause {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.home-hero-arrow {
+  top: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.home-hero-arrow--previous {
+  left: 1rem;
+}
+
+.home-hero-arrow--next {
+  right: 1rem;
+}
+
+.home-hero:hover .home-hero-arrow,
+.home-hero:focus-within .home-hero-arrow {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Pause is always visible: a moving carousel has to offer its own stop. */
+.home-hero-pause {
+  top: 1rem;
+  right: 1rem;
+}
+
+/* The hero's ground is the inverse of the page, so the page's accent ring would
+   disappear into it. The paper ring is the same token the words use. */
+.home-hero-arrow:focus-visible,
+.home-hero-pause:focus-visible,
+.home-hero-dot:focus-visible {
+  outline-color: var(--bg);
+}
+
+/* The arrows get a gutter of their own, so a slide whose type reaches the left
+   edge never has a control sitting on its first word. */
+@media (min-width: 48rem) {
+  .home-hero-content {
+    padding-left: 2.5rem;
+  }
+}
+
+/* A thumb has no hover to reveal an arrow; the dots are the way through. */
+@media (hover: none) {
+  .home-hero-arrow {
+    display: none;
+  }
+}
+
+.home-hero-dots {
+  position: absolute;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(0.75rem, 2vw, 1.25rem);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.home-hero-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bg);
+  cursor: pointer;
+}
+
+/* A dot is a place; the current one stretches into the long line that says
+   where the carousel is. */
+.home-hero-dot::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.home-hero-dot--active::before {
+  width: 1.5rem;
+}
+
+/* The one choice the front page offers: everything, or a top-level Category.
+   The row runs sideways instead of wrapping, so the page's width never depends
+   on how many Categories the site has. The scrollbar stays hidden because the
+   strip is short enough to read as one line. */
+.home-filter {
+  margin: 2.25rem 0 2rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.home-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.home-filter-list {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+/* A tab row, not a second set of Category chips: plain words, the quiet ink for
+   the places the Reader is not in, and the ink plus an accent underline for the
+   one they are. The underline sits under the word rather than under a pill, and
+   the box stays 44px tall so a thumb still lands on the label. */
+.home-filter-list a {
+  display: inline-flex;
+  align-items: flex-end;
+  min-height: 2.75rem;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.home-filter-list a:hover {
+  color: var(--fg);
+}
+
+.home-filter-list a[aria-current="page"] {
+  border-bottom-color: var(--accent);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* The way through the listing, under the cards: the words either side of the
+   numbers, on the site's own pill so the row reads as one control. Only the
+   layout and the current page's mark live here; the pill itself lives in
+   lists.css, where every other pill on the site is drawn. A listing that fits
+   on one page draws none of this rather than a disabled row. */
+.home-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2.75rem;
+}
+
+.home-pagination-pages {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The words either side wear the pill as the anchor itself, so they still name
+   their own ink: they leave the listing rather than count a page in it, and a
+   link's own underline would read as a third kind of control in the row. */
+.home-pagination > .reader-pill {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+/* The page being read is the only pill marked, and its mark is the accent edge
+   that already means "chosen" on every other pill on the site. */
+.home-pagination .reader-pill:has(> a[aria-current="page"]) {
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.article-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 2.75rem 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-grid > li {
+  display: flex;
+  min-width: 0;
+}
+
+/* The card itself draws no box: the cover is the frame and the type beneath it
+   is the caption. */
+.article-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* A bare card has no picture to be its frame, so it becomes a plate of type. */
+.article-card:not(:has(.article-card-cover)) {
+  padding: 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.article-card-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+/* The crop: one ratio for every card, so a row of covers is a row of the same
+   shape whatever the photographs inside them are. */
+.article-card-cover {
+  aspect-ratio: 3 / 2;
+  margin-bottom: 1.15rem;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.article-card-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.article-card-kicker {
+  margin: 0 0 0.55rem;
+  overflow-wrap: anywhere;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.article-card-kicker a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.article-card-title {
+  margin: 0 0 0.55rem;
+  overflow-wrap: anywhere;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+}
+
+.article-card-title a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+/* Three lines, then an ellipsis: the excerpt is a way in, not the Article. */
+.article-card-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.article-card-meta {
+  margin: 0;
+  margin-top: auto;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 64rem) {
+  .article-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 90rem) {
+  .article-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero-slide {
+    transition: opacity 420ms ease;
+  }
+
+  .home-hero-arrow {
+    transition: opacity 180ms ease;
+  }
+
+  .home-hero-dot::before {
+    transition: width 220ms ease;
+  }
+
+  .article-card-cover img {
+    transition: transform 600ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .article-card:hover .article-card-cover img,
+  .article-card:focus-within .article-card-cover img {
+    transform: scale(1.04);
+  }
+
+  .article-card-title a,
+  .article-card-kicker a,
+  .article-card:not(:has(.article-card-cover)) {
+    transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+  }
+
+  .article-card-title a:hover,
+  .article-card:focus-within .article-card-title a {
+    color: var(--accent);
+  }
+
+  .article-card:not(:has(.article-card-cover)):hover {
+    border-color: var(--border-strong);
+  }
+}

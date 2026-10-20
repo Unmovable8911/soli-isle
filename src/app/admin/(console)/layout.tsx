@@ -1,3 +1,5 @@
+import { AdminNav } from "@/components/admin/admin-nav";
+import { BrandMark } from "@/components/icons";
 import { SESSION_COOKIE_NAME } from "@/config/auth";
 import { negotiateLocale } from "@/domain/locale";
 import { messages } from "@/messages";
@@ -39,31 +41,13 @@ export default async function AdminConsoleLayout({
 
   return (
     <AdminDocument locale={locale}>
-      <header>
-        <span className="site-name">{t.chrome.siteName}</span>
+      <header className="admin-topbar">
+        <Link href="/admin" className="site-name">
+          <BrandMark size={20} />
+          {t.chrome.siteName}
+        </Link>
         <span className="admin-badge">{t.admin.shell.badge}</span>
-        <nav aria-label={t.admin.shell.navLabel}>
-          <ul>
-            <li>
-              <Link href="/admin">{t.admin.shell.nav.dashboard}</Link>
-            </li>
-            <li>
-              <Link href="/admin/articles">{t.admin.shell.nav.articles}</Link>
-            </li>
-            <li>
-              <Link href="/admin/posts">{t.admin.shell.nav.posts}</Link>
-            </li>
-            <li>
-              <Link href="/admin/categories">{t.admin.shell.nav.categories}</Link>
-            </li>
-            <li>
-              <Link href="/admin/tags">{t.admin.shell.nav.tags}</Link>
-            </li>
-            <li>
-              <Link href="/admin/assets">{t.admin.shell.nav.assets}</Link>
-            </li>
-          </ul>
-        </nav>
+        <AdminNav shell={t.admin.shell} />
         <form action="/admin/logout" method="post">
           <button type="submit">{t.admin.shell.logout}</button>
         </form>
